@@ -1,0 +1,67 @@
+{
+  "_note": "Semilla de sedes: seis sucursales del sitio oficial. Direcciones y coordenadas aproximadas, pendientes de confirmar por el cliente. Horario uniforme 12:45–21:30. El teléfono/WhatsApp es un PLACEHOLDER de la beta: reemplazar por el número real de TOTO'S antes de publicar.",
+  "phone": "100000000",
+  "phoneDisplay": "100 000 000",
+  "whatsapp": "100000000",
+  "defaultHours": {
+    "open": "12:45",
+    "close": "21:30",
+    "days": [1, 2, 3, 4, 5, 6, 7]
+  },
+  "branches": [
+    {
+      "id": "huancayo",
+      "name": "HUANCAYO",
+      "address": "Prolongación San Carlos 123, Huancayo",
+      "lat": -12.0651,
+      "lng": -75.2049,
+      "delivers": true,
+      "closedDates": []
+    },
+    {
+      "id": "el-tambo",
+      "name": "EL TAMBO",
+      "address": "Av. 13 de Noviembre 510, El Tambo",
+      "lat": -12.0520,
+      "lng": -75.2180,
+      "delivers": true,
+      "closedDates": []
+    },
+    {
+      "id": "chilca",
+      "name": "CHILCA",
+      "address": "Calle Real 421, Chilca",
+      "lat": -12.0830,
+      "lng": -75.2010,
+      "delivers": true,
+      "closedDates": []
+    },
+    {
+      "id": "pio-pata",
+      "name": "PÍO PATA",
+      "address": "Jr. Bolognesi 1390, Pío Pata",
+      "lat": -12.0560,
+      "lng": -75.1960,
+      "delivers": true,
+      "closedDates": []
+    },
+    {
+      "id": "chupaca",
+      "name": "CHUPACA",
+      "address": "Pasaje Turístico s/n, Chupaca",
+      "lat": -12.0560,
+      "lng": -75.2830,
+      "delivers": true,
+      "closedDates": []
+    },
+    {
+      "id": "jauja",
+      "name": "JAUJA",
+      "address": "Jirón Junín 938, Jauja",
+      "lat": -11.7750,
+      "lng": -75.4990,
+      "delivers": false,
+      "closedDates": []
+    }
+  ]
+}

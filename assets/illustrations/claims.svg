@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="220" height="160" viewBox="0 0 220 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Ilustración de Reclamos de TOTO'S: burbuja de conversación + porción -->
+  <rect x="1" y="1" width="218" height="158" rx="20" fill="#5B0F11" stroke="#000000" stroke-width="2"/>
+  <path d="M36 40h96a10 10 0 0 1 10 10v44a10 10 0 0 1-10 10H72l-22 18v-18h-14a10 10 0 0 1-10-10V50a10 10 0 0 1 10-10Z" fill="#741B1E" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M52 62h64M52 76h48M52 90h30" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="164" cy="86" r="34" fill="#B74624" stroke="#000000" stroke-width="3"/>
+  <path d="M164 54a32 32 0 0 1 30 21l-30 13V54Z" fill="#FFFFFF"/>
+  <circle cx="159" cy="76" r="3.5" fill="#5B0F11"/>
+  <circle cx="170" cy="82" r="3" fill="#5B0F11"/>
+  <path d="M146 102l36-14" stroke="#000000" stroke-width="3" stroke-linecap="round"/>
+  <path d="M38 128h64" stroke="#B74624" stroke-width="3" stroke-linecap="round"/>
+  <path d="M112 128h26" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+  <circle cx="194" cy="34" r="9" fill="none" stroke="#B74624" stroke-width="3"/>
+</svg>

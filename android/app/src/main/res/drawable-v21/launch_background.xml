@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Color sólido de marca: nunca un bitmap estirado de 1×1 ni el fondo
+         del sistema, que en modo claro es blanco. -->
+    <item android:drawable="@color/brand_maroon" />
+    <item>
+        <bitmap android:gravity="center" android:src="@drawable/splash" />
+    </item>
+</layer-list>

@@ -1,0 +1,11 @@
+{
+  "_note": "Motivos de reclamo (carta de reclamos). El detalle libre va en el mensaje del reclamo.",
+  "reasons": [
+    { "id": "producto", "label": "Problema con un producto" },
+    { "id": "pedido", "label": "Problema con mi pedido" },
+    { "id": "demora", "label": "Demora en la entrega" },
+    { "id": "pago", "label": "Problema con el pago" },
+    { "id": "atencion", "label": "Atención recibida" },
+    { "id": "otro", "label": "Otro motivo" }
+  ]
+}

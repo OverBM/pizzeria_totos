@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#5b0f11</color>
+    <!-- Fondo de arranque y barra de estado: vino de marca. -->
+    <color name="brand_maroon">#5b0f11</color>
+    <!-- Barra de navegación: negro de marca. -->
+    <color name="sign_black">#000000</color>
+</resources>

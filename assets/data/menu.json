@@ -1,0 +1,1260 @@
+{
+  "_note": "Semilla de carta (ver menu-seed.md). Precios en soles, con IGV incluido. Origen: sitio oficial donde existe; pastas/lasañas/combos/guarniciones/bebidas de Rappi. El cliente confirma por WhatsApp.",
+  "categories": [
+    {
+      "id": "pizzas",
+      "name": "PIZZAS",
+      "order": 1
+    },
+    {
+      "id": "medias",
+      "name": "MEDIAS",
+      "order": 2
+    },
+    {
+      "id": "familiares",
+      "name": "FAMILIARES",
+      "order": 3
+    },
+    {
+      "id": "dulces",
+      "name": "DULCES",
+      "order": 4
+    },
+    {
+      "id": "pastas",
+      "name": "PASTAS",
+      "order": 5
+    },
+    {
+      "id": "lasanas",
+      "name": "LASAÑAS",
+      "order": 6
+    },
+    {
+      "id": "combos",
+      "name": "COMBOS",
+      "order": 7
+    },
+    {
+      "id": "guarniciones",
+      "name": "GUARNICIONES",
+      "order": 8
+    },
+    {
+      "id": "bebidas",
+      "name": "BEBIDAS",
+      "order": 9
+    }
+  ],
+  "products": [
+    {
+      "id": "pizza-totos",
+      "categoryId": "pizzas",
+      "name": "PIZZA TOTO'S",
+      "description": "La de la casa, con nuestra salsa especial.",
+      "image": "pizza-totos",
+      "tags": [
+        "casa",
+        "picante"
+      ],
+      "ingredients": [
+        "Masa madre",
+        "Salsa de la casa",
+        "Mozzarella",
+        "Pepperoni",
+        "Orégano"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Sirve 2 (entera) · 4 (media)",
+      "calories": 1120,
+      "gallery": [
+        "pizza-totos",
+        "pizza-totos-2"
+      ],
+      "available": true,
+      "featured": true,
+      "variants": [
+        {
+          "label": "entera",
+          "slices": 8,
+          "price": 44
+        },
+        {
+          "label": "media",
+          "slices": 4,
+          "price": 23
+        }
+      ]
+    },
+    {
+      "id": "pizza-americana",
+      "categoryId": "pizzas",
+      "name": "PIZZA AMERICANA",
+      "description": "Clásica de jamón y queso.",
+      "image": "pizza-americana",
+      "tags": [],
+      "available": true,
+      "featured": true,
+      "variants": [
+        {
+          "label": "entera",
+          "slices": 8,
+          "price": 28
+        },
+        {
+          "label": "media",
+          "slices": 4,
+          "price": 15
+        }
+      ],
+      "ingredients": [
+        "Masa madre",
+        "Salsa de tomate",
+        "Mozzarella",
+        "Jamón",
+        "Queso"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Sirve 2"
+    },
+    {
+      "id": "pizza-peperoni",
+      "categoryId": "pizzas",
+      "name": "PIZZA PEPERONI",
+      "description": "Peperoni y queso.",
+      "image": "pizza-peperoni",
+      "tags": [],
+      "ingredients": [
+        "Masa madre",
+        "Salsa de tomate",
+        "Mozzarella",
+        "Pepperoni"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Sirve 2",
+      "calories": 1050,
+      "available": true,
+      "featured": true,
+      "variants": [
+        {
+          "label": "entera",
+          "slices": 8,
+          "price": 36
+        },
+        {
+          "label": "media",
+          "slices": 4,
+          "price": 18
+        }
+      ]
+    },
+    {
+      "id": "pizza-hawaiana",
+      "categoryId": "pizzas",
+      "name": "PIZZA HAWAIANA",
+      "description": "Jamón y piña.",
+      "image": "pizza-hawaiana",
+      "tags": [],
+      "ingredients": [
+        "Masa madre",
+        "Salsa de tomate",
+        "Mozzarella",
+        "Jamón",
+        "Piña"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Sirve 2",
+      "calories": 980,
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "entera",
+          "slices": 8,
+          "price": 32
+        },
+        {
+          "label": "media",
+          "slices": 4,
+          "price": 16
+        }
+      ]
+    },
+    {
+      "id": "pizza-vegetales",
+      "categoryId": "pizzas",
+      "name": "PIZZA CON VEGETALES",
+      "description": "Pimiento, cebolla y champiñón.",
+      "image": "pizza-vegetales",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "entera",
+          "slices": 8,
+          "price": 30
+        },
+        {
+          "label": "media",
+          "slices": 4,
+          "price": 15
+        }
+      ],
+      "ingredients": [
+        "Masa madre",
+        "Salsa de tomate",
+        "Mozzarella",
+        "Pimiento",
+        "Cebolla",
+        "Champiñón"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Sirve 2"
+    },
+    {
+      "id": "pizza-mexicana",
+      "categoryId": "pizzas",
+      "name": "PIZZA MEXICANA",
+      "description": "Carne, jalapeño y maíz.",
+      "image": "pizza-mexicana",
+      "tags": [
+        "picante"
+      ],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "entera",
+          "slices": 8,
+          "price": 34
+        },
+        {
+          "label": "media",
+          "slices": 4,
+          "price": 17
+        }
+      ],
+      "ingredients": [
+        "Masa madre",
+        "Salsa de tomate",
+        "Mozzarella",
+        "Carne",
+        "Jalapeño",
+        "Maíz"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Sirve 2"
+    },
+    {
+      "id": "pizza-4quesos",
+      "categoryId": "pizzas",
+      "name": "PIZZA 4 QUESOS",
+      "description": "Mezcla de quesos.",
+      "image": "pizza-4quesos",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "entera",
+          "slices": 8,
+          "price": 38
+        },
+        {
+          "label": "media",
+          "slices": 4,
+          "price": 19
+        }
+      ],
+      "ingredients": [
+        "Masa madre",
+        "Salsa de tomate",
+        "Mozzarella",
+        "Queso parmesano",
+        "Queso azul",
+        "Queso edam"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Sirve 2"
+    },
+    {
+      "id": "pizza-chorizo",
+      "categoryId": "pizzas",
+      "name": "PIZZA CHORIZO",
+      "description": "Chorizo y queso.",
+      "image": "pizza-chorizo",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "entera",
+          "slices": 8,
+          "price": 34
+        },
+        {
+          "label": "media",
+          "slices": 4,
+          "price": 17
+        }
+      ],
+      "ingredients": [
+        "Masa madre",
+        "Salsa de tomate",
+        "Mozzarella",
+        "Chorizo"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Sirve 2"
+    },
+    {
+      "id": "media-totos",
+      "categoryId": "medias",
+      "name": "MEDIA TOTO'S",
+      "description": "La de la casa.",
+      "image": "media-totos",
+      "tags": [
+        "casa"
+      ],
+      "available": true,
+      "featured": true,
+      "variants": [
+        {
+          "label": "media",
+          "slices": 4,
+          "price": 23
+        }
+      ],
+      "ingredients": [
+        "Masa madre",
+        "Salsa de la casa",
+        "Mozzarella",
+        "Pepperoni",
+        "Orégano"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Sirve 1 a 2"
+    },
+    {
+      "id": "media-americana",
+      "categoryId": "medias",
+      "name": "MEDIA AMERICANA",
+      "description": "Clásica de jamón y queso.",
+      "image": "media-americana",
+      "tags": [],
+      "available": true,
+      "featured": true,
+      "variants": [
+        {
+          "label": "media",
+          "slices": 4,
+          "price": 15
+        }
+      ],
+      "ingredients": [
+        "Masa madre",
+        "Salsa de tomate",
+        "Mozzarella",
+        "Jamón",
+        "Queso"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Sirve 1 a 2"
+    },
+    {
+      "id": "media-peperoni",
+      "categoryId": "medias",
+      "name": "MEDIA PEPERONI",
+      "description": "Peperoni y queso.",
+      "image": "media-peperoni",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "media",
+          "slices": 4,
+          "price": 18
+        }
+      ],
+      "ingredients": [
+        "Masa madre",
+        "Salsa de tomate",
+        "Mozzarella",
+        "Pepperoni"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Sirve 1 a 2"
+    },
+    {
+      "id": "media-hawaiana",
+      "categoryId": "medias",
+      "name": "MEDIA HAWAIANA",
+      "description": "Jamón y piña.",
+      "image": "media-hawaiana",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "media",
+          "slices": 4,
+          "price": 17
+        }
+      ],
+      "ingredients": [
+        "Masa madre",
+        "Salsa de tomate",
+        "Mozzarella",
+        "Jamón",
+        "Piña"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Sirve 1 a 2"
+    },
+    {
+      "id": "familiar-totos",
+      "categoryId": "familiares",
+      "name": "FAMILIAR TOTO'S",
+      "description": "La de la casa.",
+      "image": "familiar-totos",
+      "tags": [
+        "casa"
+      ],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "familiar",
+          "slices": 8,
+          "price": 46
+        }
+      ],
+      "ingredients": [
+        "Masa madre",
+        "Salsa de la casa",
+        "Mozzarella",
+        "Pepperoni",
+        "Orégano"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Sirve 4"
+    },
+    {
+      "id": "familiar-americana",
+      "categoryId": "familiares",
+      "name": "FAMILIAR AMERICANA",
+      "description": "Clásica de jamón y queso.",
+      "image": "familiar-americana",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "familiar",
+          "slices": 8,
+          "price": 30
+        }
+      ],
+      "ingredients": [
+        "Masa madre",
+        "Salsa de tomate",
+        "Mozzarella",
+        "Jamón",
+        "Queso"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Sirve 4"
+    },
+    {
+      "id": "familiar-peperoni",
+      "categoryId": "familiares",
+      "name": "FAMILIAR PEPERONI",
+      "description": "Peperoni y queso.",
+      "image": "familiar-peperoni",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "familiar",
+          "slices": 8,
+          "price": 38
+        }
+      ],
+      "ingredients": [
+        "Masa madre",
+        "Salsa de tomate",
+        "Mozzarella",
+        "Pepperoni"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Sirve 4"
+    },
+    {
+      "id": "familiar-hawaiana",
+      "categoryId": "familiares",
+      "name": "FAMILIAR HAWAIANA",
+      "description": "Jamón y piña.",
+      "image": "familiar-hawaiana",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "familiar",
+          "slices": 8,
+          "price": 34
+        }
+      ],
+      "ingredients": [
+        "Masa madre",
+        "Salsa de tomate",
+        "Mozzarella",
+        "Jamón",
+        "Piña"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Sirve 4"
+    },
+    {
+      "id": "dulce-chocolate",
+      "categoryId": "dulces",
+      "name": "PIZZA DE CHOCOLATE",
+      "description": "Chocolate y avena.",
+      "image": "dulce-chocolate",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 26
+        }
+      ],
+      "ingredients": [
+        "Masa dulce",
+        "Chocolate",
+        "Avena"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "6 porciones"
+    },
+    {
+      "id": "dulce-nutella",
+      "categoryId": "dulces",
+      "name": "PIZZA DE NUTELLA",
+      "description": "Nutella y fresas.",
+      "image": "dulce-nutella",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 28
+        }
+      ],
+      "ingredients": [
+        "Masa dulce",
+        "Nutella",
+        "Fresas"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos",
+        "Frutos secos"
+      ],
+      "portion": "6 porciones"
+    },
+    {
+      "id": "dulce-manjar",
+      "categoryId": "dulces",
+      "name": "PIZZA DE MANJAR",
+      "description": "Manjar blanco.",
+      "image": "dulce-manjar",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 26
+        }
+      ],
+      "ingredients": [
+        "Masa dulce",
+        "Manjar blanco"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "6 porciones"
+    },
+    {
+      "id": "tallarin-huancaina",
+      "categoryId": "pastas",
+      "name": "TALLARINES A LA HUANCAÍNA",
+      "description": "Crema huancaína.",
+      "image": "tallarin-huancaina",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 16
+        }
+      ],
+      "ingredients": [
+        "Fideos",
+        "Crema huancaína",
+        "Queso"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "1 porción"
+    },
+    {
+      "id": "tallarin-bolonesa",
+      "categoryId": "pastas",
+      "name": "TALLARINES A LA BOLOÑESA",
+      "description": "Salsa boloñesa.",
+      "image": "tallarin-bolonesa",
+      "tags": [],
+      "available": true,
+      "featured": true,
+      "variants": [
+        {
+          "label": "única",
+          "price": 18
+        }
+      ],
+      "ingredients": [
+        "Fideos",
+        "Carne boloñesa",
+        "Tomate"
+      ],
+      "allergens": [
+        "Gluten"
+      ],
+      "portion": "1 porción"
+    },
+    {
+      "id": "tallarin-alfredo",
+      "categoryId": "pastas",
+      "name": "TALLARINES ALFREDO",
+      "description": "Crema alfredo.",
+      "image": "tallarin-alfredo",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 20
+        }
+      ],
+      "ingredients": [
+        "Fideos",
+        "Crema alfredo",
+        "Queso parmesano"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "1 porción"
+    },
+    {
+      "id": "tallarin-carbonara",
+      "categoryId": "pastas",
+      "name": "TALLARINES A LA CARBONARA",
+      "description": "Crema carbonara.",
+      "image": "tallarin-carbonara",
+      "tags": [],
+      "ingredients": [
+        "Fideos",
+        "Crema",
+        "Tocino",
+        "Queso parmesano"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos",
+        "Huevo"
+      ],
+      "portion": "1 porción generosa",
+      "calories": 890,
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 20
+        }
+      ]
+    },
+    {
+      "id": "espagueti-bolonesa",
+      "categoryId": "pastas",
+      "name": "ESPAGUETI A LA BOLOÑESA",
+      "description": "Salsa boloñesa.",
+      "image": "espagueti-bolonesa",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 18
+        }
+      ],
+      "ingredients": [
+        "Fideos",
+        "Carne boloñesa",
+        "Tomate"
+      ],
+      "allergens": [
+        "Gluten"
+      ],
+      "portion": "1 porción"
+    },
+    {
+      "id": "espagueti-alfredo",
+      "categoryId": "pastas",
+      "name": "ESPAGUETI ALFREDO",
+      "description": "Crema alfredo.",
+      "image": "espagueti-alfredo",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 20
+        }
+      ],
+      "ingredients": [
+        "Fideos",
+        "Crema alfredo",
+        "Queso parmesano"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "1 porción"
+    },
+    {
+      "id": "lasana-bolonesa",
+      "categoryId": "lasanas",
+      "name": "LASAÑA A LA BOLOÑESA",
+      "description": "Clásica.",
+      "image": "lasana-bolonesa",
+      "tags": [],
+      "ingredients": [
+        "Láminas de pasta",
+        "Carne boloñesa",
+        "Bechamel",
+        "Queso"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "1 porción",
+      "calories": 780,
+      "available": true,
+      "featured": true,
+      "variants": [
+        {
+          "label": "única",
+          "price": 18
+        }
+      ]
+    },
+    {
+      "id": "lasana-huancaina",
+      "categoryId": "lasanas",
+      "name": "LASAÑA A LA HUANCAÍNA",
+      "description": "Crema huancaína.",
+      "image": "lasana-huancaina",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 21
+        }
+      ],
+      "ingredients": [
+        "Láminas de pasta",
+        "Crema huancaína",
+        "Queso"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "1 porción"
+    },
+    {
+      "id": "lasana-pollo",
+      "categoryId": "lasanas",
+      "name": "LASAÑA DE POLLO",
+      "description": "Pollo y bechamel.",
+      "image": "lasana-pollo",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 20
+        }
+      ],
+      "ingredients": [
+        "Láminas de pasta",
+        "Pollo",
+        "Bechamel",
+        "Queso"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "1 porción"
+    },
+    {
+      "id": "combo-1",
+      "categoryId": "combos",
+      "name": "COMBO 1",
+      "description": "Pizza + gaseosa 600 ml.",
+      "image": "combo-1",
+      "tags": [],
+      "available": true,
+      "featured": true,
+      "variants": [
+        {
+          "label": "única",
+          "price": 21
+        }
+      ],
+      "ingredients": [
+        "Pizza mediana",
+        "Gaseosa 600 ml"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Para 1 a 2 personas"
+    },
+    {
+      "id": "combo-2",
+      "categoryId": "combos",
+      "name": "COMBO 2",
+      "description": "Pizza + gaseosa 1.5 L.",
+      "image": "combo-2",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 30
+        }
+      ],
+      "ingredients": [
+        "Pizza mediana",
+        "Gaseosa 1.5 L"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Para 2 personas"
+    },
+    {
+      "id": "combo-3",
+      "categoryId": "combos",
+      "name": "COMBO 3",
+      "description": "2 pizzas + gaseosa.",
+      "image": "combo-3",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 45
+        }
+      ],
+      "ingredients": [
+        "2 pizzas medianas",
+        "Gaseosa 1.5 L"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Para 3 a 4 personas"
+    },
+    {
+      "id": "combo-familiar",
+      "categoryId": "combos",
+      "name": "COMBO FAMILIAR",
+      "description": "Pizza familiar + gaseosa.",
+      "image": "combo-familiar",
+      "tags": [],
+      "ingredients": [
+        "Pizza familiar (8 rebanadas)",
+        "Gaseosa 1.5 L"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "Sirve 4",
+      "calories": 2100,
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 55
+        }
+      ]
+    },
+    {
+      "id": "pan-ajo-6",
+      "categoryId": "guarniciones",
+      "name": "PAN AL AJO (6 UND)",
+      "description": "Pan al ajo.",
+      "image": "pan-ajo-6",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 6
+        }
+      ],
+      "ingredients": [
+        "Pan",
+        "Mantequilla de ajo",
+        "Queso"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "6 unidades"
+    },
+    {
+      "id": "pan-ajo-12",
+      "categoryId": "guarniciones",
+      "name": "PAN AL AJO (12 UND)",
+      "description": "Pan al ajo.",
+      "image": "pan-ajo-12",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 12
+        }
+      ],
+      "ingredients": [
+        "Pan",
+        "Mantequilla de ajo",
+        "Queso"
+      ],
+      "allergens": [
+        "Gluten",
+        "Lácteos"
+      ],
+      "portion": "12 unidades"
+    },
+    {
+      "id": "papas-fritas",
+      "categoryId": "guarniciones",
+      "name": "PAPAS FRITAS",
+      "description": "Porción de papas.",
+      "image": "papas-fritas",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 8
+        }
+      ],
+      "ingredients": [
+        "Papa",
+        "Aceite",
+        "Sal"
+      ],
+      "allergens": [],
+      "portion": "Porción personal"
+    },
+    {
+      "id": "ensalada",
+      "categoryId": "guarniciones",
+      "name": "ENSALADA FRESCA",
+      "description": "Ensalada fresca.",
+      "image": "ensalada",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 10
+        }
+      ],
+      "ingredients": [
+        "Lechuga",
+        "Tomate",
+        "Cebolla",
+        "Limón"
+      ],
+      "allergens": [],
+      "portion": "Porción personal"
+    },
+    {
+      "id": "alitas-6",
+      "categoryId": "guarniciones",
+      "name": "ALITAS (6 UND)",
+      "description": "Alitas de pollo.",
+      "image": "alitas-6",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 14
+        }
+      ],
+      "ingredients": [
+        "Alitas de pollo",
+        "Salsa de la casa"
+      ],
+      "allergens": [],
+      "portion": "6 unidades"
+    },
+    {
+      "id": "inca-600",
+      "categoryId": "bebidas",
+      "name": "INCA KOLA 600 ML",
+      "description": "Gaseosa.",
+      "image": "inca-600",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 5
+        }
+      ],
+      "ingredients": [
+        "Gaseosa Inca Kola"
+      ],
+      "allergens": [],
+      "portion": "600 ml"
+    },
+    {
+      "id": "inca-1500",
+      "categoryId": "bebidas",
+      "name": "INCA KOLA 1.5 L",
+      "description": "Gaseosa.",
+      "image": "inca-1500",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 12
+        }
+      ],
+      "ingredients": [
+        "Gaseosa Inca Kola"
+      ],
+      "allergens": [],
+      "portion": "1.5 L"
+    },
+    {
+      "id": "coca-600",
+      "categoryId": "bebidas",
+      "name": "COCA COLA 600 ML",
+      "description": "Gaseosa.",
+      "image": "coca-600",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 5
+        }
+      ],
+      "ingredients": [
+        "Gaseosa Coca-Cola"
+      ],
+      "allergens": [],
+      "portion": "600 ml"
+    },
+    {
+      "id": "coca-1500",
+      "categoryId": "bebidas",
+      "name": "COCA COLA 1.5 L",
+      "description": "Gaseosa.",
+      "image": "coca-1500",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 12
+        }
+      ],
+      "ingredients": [
+        "Gaseosa Coca-Cola"
+      ],
+      "allergens": [],
+      "portion": "1.5 L"
+    },
+    {
+      "id": "agua-500",
+      "categoryId": "bebidas",
+      "name": "AGUA MINERAL 500 ML",
+      "description": "Agua.",
+      "image": "agua-500",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 3
+        }
+      ],
+      "ingredients": [
+        "Agua mineral"
+      ],
+      "allergens": [],
+      "portion": "500 ml"
+    },
+    {
+      "id": "cerveza-pilsen",
+      "categoryId": "bebidas",
+      "name": "CERVEZA PILSEN",
+      "description": "Botella.",
+      "image": "cerveza-pilsen",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 8
+        }
+      ],
+      "ingredients": [
+        "Cerveza"
+      ],
+      "allergens": [
+        "Gluten"
+      ],
+      "portion": "Botella"
+    },
+    {
+      "id": "vino-copa",
+      "categoryId": "bebidas",
+      "name": "VINO (COPA)",
+      "description": "Copa de vino.",
+      "image": "vino-copa",
+      "tags": [],
+      "available": true,
+      "featured": false,
+      "variants": [
+        {
+          "label": "única",
+          "price": 10
+        }
+      ],
+      "ingredients": [
+        "Vino tinto"
+      ],
+      "allergens": [
+        "Sulfitos"
+      ],
+      "portion": "Copa"
+    }
+  ]
+}

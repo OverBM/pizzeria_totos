@@ -1,0 +1,7 @@
+{
+  "_note": "Fórmula de costo de delivery (estimación por distancia en línea recta desde la sede). Valores en SOLES: base + por km; gratis desde gratisDesdeKm. El cliente ajusta.",
+  "base": 3,
+  "porKm": 1,
+  "gratisDesdeKm": 6,
+  "maxKm": 12
+}

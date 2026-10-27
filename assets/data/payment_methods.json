@@ -1,0 +1,7 @@
+{
+  "_note": "Medios de pago declarados. La beta no procesa pagos: solo simula el cobro. El cliente agrega o quita.",
+  "methods": [
+    { "id": "efectivo", "label": "EFECTIVO" },
+    { "id": "yape-plin", "label": "YAPE / PLIN" }
+  ]
+}

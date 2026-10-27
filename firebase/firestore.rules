@@ -1,0 +1,115 @@
+rules_version = '2';
+
+// TOTO'S Pizza — reglas de Firestore (esquema en español).
+//
+// Modelo de seguridad:
+//   · El contenido del negocio (`productos`, `categorias`, `promociones`,
+//     `sedes` y `configuracion`) es de lectura pública y solo lo escribe la
+//     semilla con Admin SDK, que omite estas reglas.
+//   · Cada usuario autenticado solo lee y escribe su propio documento, pedidos
+//     y reclamos.
+//   · No existe rol ni panel de administración: ningún documento concede
+//     privilegios y todo lo no contemplado se deniega.
+//
+// Los importes van en soles (`total` como número), no en céntimos.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // ── Contenido público de solo lectura ─────────────────────────────────
+    match /productos/{productoId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /categorias/{categoriaId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /sedes/{sedeId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /promociones/{promocionId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /configuracion/{documento} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ── Perfil propio (`usuarios/{uid}`) ──────────────────────────────────
+    // El perfil nunca guarda un rol. El uid y el email no se pueden cambiar
+    // desde el cliente.
+    match /usuarios/{uid} {
+      allow read: if isOwner(uid);
+
+      allow create: if isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.email is string
+        && request.resource.data.nombre is string
+        && !('role' in request.resource.data);
+
+      allow update: if isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.email == resource.data.email
+        && !('role' in request.resource.data);
+
+      allow delete: if false;
+    }
+
+    // ── Pedidos propios (`pedidos/{pedidoId}`) ────────────────────────────
+    // Se crean pendientes de confirmación; el cliente solo puede marcar que
+    // envió el resumen por WhatsApp. No hay pagos ni cambios de estado.
+    match /pedidos/{pedidoId} {
+      allow read: if isOwner(resource.data.uid);
+
+      allow create: if isOwner(request.resource.data.uid)
+        && request.resource.data.estado == 'pendiente_confirmacion'
+        && request.resource.data.items is list
+        && request.resource.data.items.size() > 0
+        && request.resource.data.total is number
+        && request.resource.data.total >= 0;
+
+      allow update: if isOwner(resource.data.uid)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.diff(resource.data)
+             .affectedKeys()
+             .hasOnly(['enviadoWhatsapp'])
+        && request.resource.data.enviadoWhatsapp == true;
+
+      allow delete: if false;
+    }
+
+    // ── Reclamos propios (`reclamos/{reclamoId}`) ─────────────────────────
+    // Estado único «enviado». El seguimiento se hace por WhatsApp, así que el
+    // cliente no edita ni borra reclamos ya enviados.
+    match /reclamos/{reclamoId} {
+      allow read: if isOwner(resource.data.uid);
+
+      allow create: if isOwner(request.resource.data.uid)
+        && request.resource.data.estado == 'enviado'
+        && request.resource.data.mensaje is string
+        && request.resource.data.mensaje.size() > 0
+        && request.resource.data.motivoId is string;
+
+      allow update, delete: if false;
+    }
+
+    // Negación por defecto para cualquier ruta no contemplada.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

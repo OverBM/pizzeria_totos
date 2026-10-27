@@ -1,0 +1,17 @@
+{
+  "name": "pizzeria-totos-seed",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Semilla idempotente de Firestore para la app de TOTO'S Pizza.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "seed": "node seed_firestore.mjs",
+    "seed:dry": "node seed_firestore.mjs --dry-run"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.5.0"
+  }
+}

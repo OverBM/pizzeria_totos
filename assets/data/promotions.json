@@ -1,0 +1,43 @@
+{
+  "_note": "Promociones de la beta. `discountPercent` aplica un porcentaje; `price` fija un precio especial en SOLES. `startsAt`/`endsAt` son opcionales y se evalúan en hora America/Lima. `image` usa una clave de assets/images/ o un ID de Drive; si falta, la app hereda la foto del producto promocionado.",
+  "promotions": [
+    {
+      "id": "promo-totos",
+      "title": "PIZZA TOTO'S -20%",
+      "subtitle": "La de la casa, más barata",
+      "productId": "pizza-totos",
+      "discountPercent": 20,
+      "image": "pizza-totos",
+      "banner": true
+    },
+    {
+      "id": "promo-familiar",
+      "title": "FAMILIAR TOTO'S -15%",
+      "subtitle": "Para compartir en casa",
+      "productId": "familiar-totos",
+      "discountPercent": 15,
+      "image": "familiar-totos",
+      "startsAt": "2026-01-01T00:00:00",
+      "endsAt": "2027-12-31T23:59:00",
+      "banner": true
+    },
+    {
+      "id": "promo-combo-familiar",
+      "title": "COMBO FAMILIAR",
+      "subtitle": "Precio especial de la beta",
+      "productId": "combo-familiar",
+      "price": 49.9,
+      "image": "combo-familiar",
+      "banner": true
+    },
+    {
+      "id": "promo-carbonara",
+      "title": "CARBONARA -10%",
+      "subtitle": "Solo para los que aman la pasta",
+      "productId": "tallarin-carbonara",
+      "discountPercent": 10,
+      "image": "tallarin-carbonara",
+      "banner": false
+    }
+  ]
+}

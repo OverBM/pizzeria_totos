@@ -1,0 +1,112 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# TOTO'S Pizza — qué NO se publica en un repositorio público.
+#
+# Se versionan: código (lib/), pruebas, assets de marca, reglas de Firebase,
+# scripts de semilla y la carta de ejemplo (assets/data/).
+# No se versionan: artefactos de compilación, credenciales, cachés locales,
+# configuración por máquina, documentación interna ni herramientas de agentes.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Sistema operativo ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editores e IDE ───────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# ── Flutter / Dart ───────────────────────────────────────────────────────────
+.dart_tool/
+.pub-cache/
+.pub/
+/build/
+/coverage/
+.flutter-plugins
+.flutter-plugins-dependencies
+**/doc/api/
+**/ios/Flutter/.last_build_id
+app.*.symbols
+app.*.map.json
+.widget_preview/
+
+# ── Android ──────────────────────────────────────────────────────────────────
+/android/app/debug
+/android/app/profile
+/android/app/release
+android/local.properties
+android/key.properties
+android/.gradle/
+android/.cxx/
+android/captures/
+*.jks
+*.keystore
+
+# ── iOS / macOS / Linux / Windows ────────────────────────────────────────────
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+macos/Pods/
+macos/Flutter/ephemeral/
+**/xcuserdata/
+*.xcuserstate
+linux/flutter/ephemeral/
+windows/flutter/ephemeral/
+
+# ── Artefactos de compilación ────────────────────────────────────────────────
+*.apk
+*.aab
+*.ipa
+*.dSYM/
+
+# ── Credenciales y configuración local (NUNCA versionar) ─────────────────────
+# Configuración de Firebase por plataforma: cada clon debe añadir la suya
+# (ver docs/firebase-setup.md).
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+macos/Runner/GoogleService-Info.plist
+lib/firebase_options.dart
+
+# Variables de entorno y claves de servicio del Admin SDK.
+.env
+.env.*
+!.env.example
+*service-account*.json
+*serviceaccount*.json
+*adminsdk*.json
+serviceAccount*.json
+*.pem
+*.p12
+
+# Mapa de fotos de Drive. Usa tool/drive_media.example.json como plantilla:
+# puede contener enlaces privados del negocio.
+tool/drive_media.json
+
+# ── Node (script de semilla) ─────────────────────────────────────────────────
+# Se versionan tool/package.json y tool/package-lock.json para reproducir la
+# instalación; solo se excluyen los módulos descargados.
+node_modules/
+.firebase/
+firebase-debug.log
+
+# ── Documentación interna (no se publica) ────────────────────────────────────
+# Biblia de marca y decisiones de producto.
+/design.md
+# Guía de configuración con esquema, reglas y datos del negocio.
+docs/firebase-setup.md
+# Propuestas, diseños, specs y tareas de OpenSpec: describen el negocio y sus
+# reglas. Se mantienen en local para el desarrollo, fuera del repositorio.
+/openspec/
+
+# ── Herramientas de agentes (no forman parte de la app) ──────────────────────
+.agents/
+.opencode/
+.freebuff/
+
+# ── Logs y temporales ────────────────────────────────────────────────────────
+*.log
+*.tmp
