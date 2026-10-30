@@ -1,0 +1,45 @@
+import 'dart:math' as math;
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:latlong2/latlong.dart' hide Path;
+import 'package:provider/provider.dart';
+
+import '../core/data/product_images.dart';
+import '../core/data/product_summary.dart';
+import '../core/format/money.dart';
+import '../core/motion/motion.dart';
+import '../core/motion/motion_widgets.dart';
+import '../core/theme/brand.dart';
+import '../core/theme/brand_logo.dart';
+import '../core/theme/product_family.dart';
+import '../core/theme/theme_context.dart';
+import '../models/media_ref.dart';
+import '../models/product.dart';
+import '../models/promotion.dart';
+import '../services/connectivity_service.dart';
+import '../services/drive_image_service.dart';
+import '../services/maps/maps_service.dart';
+
+part 'brand/brand_mark.dart';
+part 'brand/display_title.dart';
+part 'cards/branch_map_card.dart';
+part 'cards/featured_card.dart';
+part 'cards/product_row_card.dart';
+part 'controls/buttons.dart';
+part 'controls/filter_pill.dart';
+part 'controls/quantity_stepper.dart';
+part 'feedback/empty_state.dart';
+part 'feedback/notices.dart';
+part 'feedback/offline_banner.dart';
+part 'feedback/skeleton_list.dart';
+part 'layout/content_width.dart';
+part 'layout/sections.dart';
+part 'media/drive_image.dart';
+part 'media/hero_banner.dart';
+part 'media/promo_banner.dart';
+part 'media/toto_map.dart';
+part 'navigation/bottom_nav.dart';
+part 'navigation/top_bar.dart';

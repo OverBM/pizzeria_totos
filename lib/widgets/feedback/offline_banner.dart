@@ -1,9 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-import '../../core/theme/brand.dart';
-import '../../core/theme/components.dart';
-import '../../services/connectivity_service.dart';
+part of '../widgets.dart';
 
 /// Aviso discreto de modo offline para pantallas con datos cacheados.
 ///

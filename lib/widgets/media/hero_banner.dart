@@ -1,8 +1,4 @@
-import 'package:flutter/material.dart';
-
-import '../../core/theme/brand.dart';
-import '../../core/theme/components.dart';
-import '../../core/theme/theme_context.dart';
+part of '../widgets.dart';
 
 /// Hero fotográfico a sangre con parallax acotado y entrada editorial.
 class HeroBanner extends StatelessWidget {
@@ -10,7 +6,7 @@ class HeroBanner extends StatelessWidget {
     super.key,
     required this.image,
     required this.title,
-    required this.subtitle,
+    this.subtitle,
     required this.onPrimary,
     required this.onSecondary,
     this.eyebrow = 'BIENVENIDO A TOTO\'S',
@@ -26,7 +22,9 @@ class HeroBanner extends StatelessWidget {
   final String eyebrow;
   final String title;
   final String titleTail;
-  final String subtitle;
+
+  /// Bajada opcional: cuando falta, el bloque inferior se compacta.
+  final String? subtitle;
   final String primaryLabel;
   final String secondaryLabel;
   final String badge;
@@ -121,11 +119,13 @@ class HeroBanner extends StatelessWidget {
                   titleTail.toUpperCase(),
                   style: Brand.display(27, h: 1, color: colors.action),
                 ),
-                const SizedBox(height: Brand.s12),
-                Text(
-                  subtitle,
-                  style: Brand.ui(13, color: colors.textPrimary, h: 1.4),
-                ),
+                if (subtitle != null && subtitle!.isNotEmpty) ...[
+                  const SizedBox(height: Brand.s12),
+                  Text(
+                    subtitle!,
+                    style: Brand.ui(13, color: colors.textPrimary, h: 1.4),
+                  ),
+                ],
                 const SizedBox(height: Brand.s16),
                 Wrap(
                   spacing: Brand.s8,

@@ -7,7 +7,7 @@ import '../../controllers/cart_controller.dart';
 import '../../controllers/checkout_controller.dart';
 import '../../core/format/money.dart';
 import '../../core/theme/brand.dart';
-import '../../core/theme/components.dart';
+import '../../widgets/widgets.dart';
 import '../../core/theme/theme_context.dart';
 import '../../models/cart_item.dart';
 import '../../models/media_ref.dart';
@@ -16,7 +16,6 @@ import '../../models/payment_method.dart';
 import '../../services/contact_launcher.dart';
 import '../../services/order_message_builder.dart';
 import '../../services/settings_service.dart';
-import '../common/drive_image.dart';
 
 /// Carrito y checkout derivado del perfil autenticado.
 class CartView extends StatefulWidget {

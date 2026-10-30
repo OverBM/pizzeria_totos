@@ -1,21 +1,27 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/branch_controller.dart';
+import '../../controllers/cart_controller.dart';
 import '../../controllers/catalog_controller.dart';
+import '../../controllers/order_controller.dart';
 import '../../controllers/promotion_controller.dart';
+import '../../core/data/product_summary.dart';
 import '../../core/format/money.dart';
 import '../../core/load_state.dart';
 import '../../core/theme/brand.dart';
-import '../../core/theme/components.dart';
+import '../../widgets/widgets.dart';
 import '../../core/theme/theme_context.dart';
 import '../../core/time/lima_time.dart';
 import '../../models/branch.dart';
 import '../../models/product.dart';
+import '../../services/contact_launcher.dart';
 import '../../services/settings_service.dart';
-import '../common/drive_image.dart';
-import '../common/hero_banner.dart';
-import '../common/promo_banner.dart';
+import '../branches/branch_detail_sheet.dart';
 
 /// Inicio editorial: hero, categorías, favoritas, promoción y sedes.
 class HomeView extends StatefulWidget {
@@ -73,8 +79,13 @@ class _HomeViewState extends State<HomeView> {
     final catalog = context.watch<CatalogController>();
     final promotions = context.watch<PromotionController>();
     final branches = context.watch<BranchController>();
+    final orders = context.watch<OrderController>();
     final settings = Provider.of<SettingsService>(context, listen: false);
     final loading = catalog.state == LoadState.loading && !catalog.hasProducts;
+    final heroHeight = math.min(
+      460.0,
+      math.max(320.0, MediaQuery.sizeOf(context).height * 0.62),
+    );
 
     return CustomScrollView(
       controller: _scroll,
@@ -92,12 +103,11 @@ class _HomeViewState extends State<HomeView> {
                   : DriveImage(
                       media: settings.settings.heroImage,
                       fallbackAssetName: 'hero-1',
+                      requestWidth: MediaQuery.sizeOf(context).width,
                     ),
               title: 'PIZZA',
               titleTail: '(Y PASTAS)',
-              subtitle:
-                  'Masa madre, horno caliente y la receta de la casa. '
-                  'Huancayo, El Tambo, Chilca y Pío Pata.',
+              height: heroHeight,
               scrollOffset: _scroll.hasClients ? _scroll.offset : 0,
               onPrimary: () => widget.onGoToCarta(null),
               onSecondary: widget.onGoToSedes,
@@ -130,11 +140,19 @@ class _HomeViewState extends State<HomeView> {
             ),
           )
         else ...[
-          SliverToBoxAdapter(child: _categories(catalog)),
-          SliverToBoxAdapter(child: _featured(catalog, promotions)),
-          SliverToBoxAdapter(child: _preview(catalog, promotions)),
-          SliverToBoxAdapter(child: _promotions(catalog, promotions)),
-          SliverToBoxAdapter(child: _branches(branches)),
+          SliverToBoxAdapter(child: ContentWidth(child: _categories(catalog))),
+          SliverToBoxAdapter(
+            child: ContentWidth(child: _featured(catalog, promotions)),
+          ),
+          SliverToBoxAdapter(
+            child: ContentWidth(child: _preview(catalog, promotions, orders)),
+          ),
+          SliverToBoxAdapter(
+            child: ContentWidth(child: _promotions(catalog, promotions)),
+          ),
+          SliverToBoxAdapter(
+            child: ContentWidth(child: _branches(branches, settings)),
+          ),
           const SliverToBoxAdapter(child: SizedBox(height: Brand.s32)),
         ],
       ],
@@ -228,16 +246,18 @@ class _HomeViewState extends State<HomeView> {
                         ),
                       ),
                       title: product.name,
-                      description: product.description,
+                      description: product.displaySummary,
                       eyebrow: product.tags.isEmpty
                           ? 'DE LA CASA'
                           : product.tags.first,
                       priceLabel: price == null
                           ? 'No disponible'
                           : Money.format(price),
+                      categoryId: product.categoryId,
+                      summary: ProductSummary.of(product),
                       onTap: () => widget.onGoToProduct(product),
                       onAdd: product.isSellable
-                          ? () => widget.onGoToProduct(product)
+                          ? () => _addToCart(context, product)
                           : null,
                     ),
                   );
@@ -254,9 +274,15 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  /// Sección «Del horno a tu mesa»: productos que no repiten las favoritas.
-  Widget _preview(CatalogController catalog, PromotionController promotions) {
-    final products = catalog.homePreview;
+  /// Sección «Del horno a tu mesa»: combos pedidos recientemente o, si no
+  /// hay historial, productos que no repiten las favoritas.
+  Widget _preview(
+    CatalogController catalog,
+    PromotionController promotions,
+    OrderController orders,
+  ) {
+    final recent = _recentCombos(catalog, orders);
+    final products = recent.isNotEmpty ? recent : catalog.homePreview;
     if (products.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.fromLTRB(Brand.s16, Brand.s24, Brand.s16, 0),
@@ -264,24 +290,45 @@ class _HomeViewState extends State<HomeView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SectionHeading(
-            eyebrow: 'Recién horneadas',
-            title: 'Del horno a tu mesa',
+            eyebrow: recent.isNotEmpty ? 'Tu último pedido' : 'Recién horneadas',
+            title: recent.isNotEmpty
+                ? 'Tus combos recientes'
+                : 'Del horno a tu mesa',
             actionLabel: 'Ver carta',
             onAction: () => widget.onGoToCarta(null),
           ),
           const SizedBox(height: Brand.s12),
           for (var i = 0; i < products.length; i++) ...[
             if (i > 0) const SizedBox(height: Brand.s12),
-            _previewCard(context, catalog, products[i], promotions),
+            _previewCard(context, products[i], promotions),
           ],
         ],
       ),
     );
   }
 
+  /// Combos de los pedidos del usuario, sin repetir y en orden de historial.
+  List<Product> _recentCombos(
+    CatalogController catalog,
+    OrderController orders,
+  ) {
+    final seen = <String>{};
+    final result = <Product>[];
+    for (final order in orders.orders) {
+      for (final item in order.items) {
+        final product = catalog.byId(item.productId);
+        if (product == null || !product.available) continue;
+        if (product.categoryId != 'combos') continue;
+        if (!seen.add(product.id)) continue;
+        result.add(product);
+        if (result.length >= 6) return result;
+      }
+    }
+    return result;
+  }
+
   Widget _previewCard(
     BuildContext context,
-    CatalogController catalog,
     Product product,
     PromotionController promotions,
   ) {
@@ -292,8 +339,6 @@ class _HomeViewState extends State<HomeView> {
     final price = variant == null
         ? null
         : promotion?.discountedPrice(variant.priceSoles) ?? variant.priceSoles;
-    final categoryName =
-        catalog.menu.categoryById(product.categoryId)?.name ?? 'CARTA';
     return ProductRowCard(
       image: Hero(
         tag: 'product-${product.id}',
@@ -304,14 +349,29 @@ class _HomeViewState extends State<HomeView> {
         ),
       ),
       name: product.name,
-      description: product.description,
-      categoryLabel: categoryName,
+      description: product.displaySummary,
+      categoryId: product.categoryId,
+      summary: ProductSummary.of(product),
       priceLabel: price == null ? 'No disponible' : Money.format(price),
       onTap: () => widget.onGoToProduct(product),
-      onAdd: product.isSellable
-          ? () => widget.onGoToProduct(product)
-          : null,
+      onAdd: product.isSellable ? () => _addToCart(context, product) : null,
     );
+  }
+
+  /// Agrega la variante por defecto y confirma con un aviso breve.
+  void _addToCart(BuildContext context, Product product) {
+    final variant = product.defaultVariantOrNull;
+    if (variant == null) return;
+    context.read<CartController>().add(product, variant);
+    HapticFeedback.lightImpact();
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('${product.name} agregado al pedido'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
   }
 
   Widget _promotions(
@@ -370,7 +430,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Widget _branches(BranchController branches) {
+  Widget _branches(BranchController branches, SettingsService settings) {
     final Branch? branch = branches.branches.isEmpty
         ? null
         : branches.branches.first;
@@ -399,14 +459,61 @@ class _HomeViewState extends State<HomeView> {
               address: branch.address,
               statusLabel: open ? 'ABIERTA' : 'CERRADA',
               open: open,
+              onSelect: () => _openBranch(branch, settings),
+              thumbnail: IgnorePointer(
+                child: TotoMap(
+                  markers: [
+                    TotoMapMarker(
+                      id: branch.id,
+                      point: LatLng(branch.lat, branch.lng),
+                      label: branch.name,
+                    ),
+                  ],
+                  height: 140,
+                  initialZoom: 15.5,
+                  interactive: false,
+                  showFitButton: false,
+                  flush: true,
+                ),
+              ),
               hoursLabel: branch.hours.rangeLabel,
               deliveryLabel: branch.delivers
                   ? 'Delivery disponible'
                   : 'Solo recojo en tienda',
-              onMap: null,
+              onCall: () => ContactLauncher.call(
+                branch.phone.isEmpty ? settings.phone : branch.phone,
+              ),
+              onWhatsapp: () => ContactLauncher.whatsapp(
+                phone: branch.whatsapp.isEmpty
+                    ? settings.whatsapp
+                    : branch.whatsapp,
+                message:
+                    'Hola TOTO\'S, quiero hacer un pedido en la sede '
+                    '${branch.name}.',
+              ),
+              onMap: () => ContactLauncher.openMap(
+                branch.lat,
+                branch.lng,
+                label: "TOTO'S ${branch.name}",
+              ),
             ),
         ],
       ),
     );
+  }
+
+  Future<void> _openBranch(Branch branch, SettingsService settings) async {
+    final goToMap = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BranchDetailSheet(
+        branch: branch,
+        phoneFallback: settings.phone,
+        whatsappFallback: settings.whatsapp,
+      ),
+    );
+    if (!mounted || goToMap != true) return;
+    widget.onGoToSedes();
   }
 }

@@ -47,6 +47,14 @@ class DriveImageService {
   }
 
   /// URL de miniatura pública para un ID de Drive.
+  ///
+  /// El ancho llega ya resuelto por `DriveImage`:
+  /// - miniaturas: `max(ancho, 2 × alto) × DPR`, bucket de 64 px (320-1200),
+  ///   para cubrir el recorte de `BoxFit.cover` sin pedir resolución de pantalla;
+  /// - fotos a sangre: ancho de pantalla exacto.
+  ///
+  /// El clamp de 120-2000 es una red de seguridad: no volver a pasar el ancho
+  /// de la pantalla para una tarjeta.
   static String thumbnailUrl(String id, {int width = 800}) {
     final safeWidth = width.clamp(120, 2000);
     return '$_thumbnailBase?id=$id&sz=w$safeWidth';

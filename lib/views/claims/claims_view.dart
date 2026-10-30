@@ -8,14 +8,13 @@ import '../../controllers/order_controller.dart';
 import '../../core/load_state.dart';
 import '../../core/motion/motion_widgets.dart';
 import '../../core/theme/brand.dart';
-import '../../core/theme/components.dart';
+import '../../widgets/widgets.dart';
 import '../../core/theme/theme_context.dart';
 import '../../core/validation/validators.dart';
 import '../../models/claim.dart';
 import '../../models/order.dart';
 import '../../services/contact_launcher.dart';
 import '../../services/settings_service.dart';
-import '../common/drive_image.dart';
 
 /// Quinto destino: reclamos internos con historial y seguimiento por WhatsApp.
 class ClaimsView extends StatefulWidget {

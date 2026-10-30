@@ -20,6 +20,7 @@ class Product {
     this.allergens = const [],
     this.calories,
     this.portion,
+    this.summary,
     this.gallery = const [],
   });
 
@@ -41,10 +42,20 @@ class Product {
   final int? calories;
   final String? portion;
 
+  /// Resumen corto para la tarjeta, distinto de [description].
+  final String? summary;
+
   /// Imágenes extra para la galería del detalle.
   final List<MediaRef> gallery;
 
   bool get hasVariants => variants.length > 1;
+
+  /// Texto corto de la tarjeta; si no hay `resumen`, usa la descripción.
+  String get displaySummary {
+    final short = summary?.trim();
+    if (short != null && short.isNotEmpty) return short;
+    return description;
+  }
 
   bool get hasDetail =>
       ingredients.isNotEmpty ||
@@ -110,6 +121,7 @@ class Product {
     allergens: ModelUtils.asStringList(json['alergenos'] ?? json['allergens']),
     calories: ModelUtils.asIntOrNull(json['calorias'] ?? json['calories']),
     portion: ModelUtils.asStringOrNull(json['porcion'] ?? json['portion']),
+    summary: ModelUtils.asStringOrNull(json['resumen'] ?? json['summary']),
     gallery: ModelUtils.asMapList(json['galeria'] ?? json['gallery'])
         .map(MediaRef.fromMap)
         .whereType<MediaRef>()
@@ -132,6 +144,7 @@ class Product {
     if (allergens.isNotEmpty) 'alergenos': allergens,
     if (calories != null) 'calorias': calories,
     if (portion != null) 'porcion': portion,
+    if (summary != null) 'resumen': summary,
     if (gallery.isNotEmpty) 'galeria': gallery.map((g) => g.toMap()).toList(),
     'variantes': variants.map((v) => v.toMap()).toList(),
   };

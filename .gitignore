@@ -110,3 +110,6 @@ docs/firebase-setup.md
 # ── Logs y temporales ────────────────────────────────────────────────────────
 *.log
 *.tmp
+
+# Entregables locales (APK/ZIP)
+/dist/

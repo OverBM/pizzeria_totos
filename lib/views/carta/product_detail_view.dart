@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/cart_controller.dart';
@@ -7,12 +8,11 @@ import '../../controllers/catalog_controller.dart';
 import '../../controllers/promotion_controller.dart';
 import '../../core/format/money.dart';
 import '../../core/theme/brand.dart';
-import '../../core/theme/components.dart';
+import '../../widgets/widgets.dart';
+import '../../core/theme/product_family.dart';
 import '../../core/theme/theme_context.dart';
 import '../../models/product.dart';
 import '../../models/variant.dart';
-import '../common/drive_image.dart';
-import '../common/offline_banner.dart';
 
 /// Detalle de producto con imagen a sangre, ficha y selector de variantes.
 class ProductDetailView extends StatefulWidget {
@@ -104,6 +104,7 @@ class _ProductDetailViewState extends State<ProductDetailView> {
                             media: product.image,
                             placeholderLabel: product.name,
                             fallbackAssetName: product.image?.assetName,
+                            requestWidth: MediaQuery.sizeOf(context).width,
                           ),
                         ),
                         const BrandOverlay(opacity: 0.35),
@@ -127,13 +128,24 @@ class _ProductDetailViewState extends State<ProductDetailView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          (category?.name ?? 'CARTA').toUpperCase(),
-                          style: Brand.ui(
-                            10,
-                            weight: FontWeight.w700,
-                            color: colors.action,
-                          ),
+                        Row(
+                          children: [
+                            ProductFamilyIcon(
+                              categoryId: product.categoryId,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                (category?.name ?? 'CARTA').toUpperCase(),
+                                style: Brand.ui(
+                                  10,
+                                  weight: FontWeight.w700,
+                                  color: colors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: Brand.s4),
                         Text(
@@ -175,8 +187,7 @@ class _ProductDetailViewState extends State<ProductDetailView> {
                             color: colors.action,
                           ),
                         ],
-                        if (product.hasDetail) ...[
-                          const SizedBox(height: Brand.s24),
+                        const SizedBox(height: Brand.s24),
                           const SectionHeading(
                             eyebrow: 'La ficha',
                             title: 'Qué lleva',
@@ -186,37 +197,37 @@ class _ProductDetailViewState extends State<ProductDetailView> {
                             _InfoBlock(
                               label: 'INGREDIENTES',
                               value: product.ingredients.join(' · '),
+                              iconAsset: 'assets/icons/ficha_ingredientes.svg',
                             ),
                           if (product.allergens.isNotEmpty) ...[
                             const SizedBox(height: Brand.s12),
                             _InfoBlock(
                               label: 'ALÉRGENOS',
                               value: product.allergens.join(' · '),
+                              iconAsset: 'assets/icons/ficha_alergenos.svg',
                             ),
                           ],
-                          if (product.portion != null ||
-                              product.calories != null) ...[
-                            const SizedBox(height: Brand.s12),
-                            Row(
-                              children: [
-                                if (product.portion != null)
-                                  Expanded(
-                                    child: _InfoBlock(
-                                      label: 'PORCIÓN',
-                                      value: product.portion!,
-                                    ),
-                                  ),
-                                if (product.calories != null)
-                                  Expanded(
-                                    child: _InfoBlock(
-                                      label: 'CALORÍAS',
-                                      value: '${product.calories} kcal',
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ],
+                          const SizedBox(height: Brand.s12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _InfoBlock(
+                                  label: 'PORCIÓN',
+                                  value: product.portion ?? 'No declarado',
+                                  iconAsset: 'assets/icons/ficha_porcion.svg',
+                                ),
+                              ),
+                              Expanded(
+                                child: _InfoBlock(
+                                  label: 'CALORÍAS',
+                                  value: product.calories != null
+                                      ? '${product.calories} kcal'
+                                      : 'No declarado',
+                                  iconAsset: 'assets/icons/nutrition_flame.svg',
+                                ),
+                              ),
+                            ],
+                          ),
                         if (product.images.length > 1) ...[
                           const SizedBox(height: Brand.s24),
                           const SectionHeading(
@@ -386,10 +397,15 @@ class _ProductDetailViewState extends State<ProductDetailView> {
 }
 
 class _InfoBlock extends StatelessWidget {
-  const _InfoBlock({required this.label, required this.value});
+  const _InfoBlock({
+    required this.label,
+    required this.value,
+    this.iconAsset,
+  });
 
   final String label;
   final String value;
+  final String? iconAsset;
 
   @override
   Widget build(BuildContext context) {
@@ -405,9 +421,29 @@ class _InfoBlock extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: Brand.ui(9, weight: FontWeight.w700, color: colors.action),
+          Row(
+            children: [
+              if (iconAsset != null) ...[
+                SvgPicture.asset(
+                  iconAsset!,
+                  width: 11,
+                  height: 11,
+                  colorFilter: ColorFilter.mode(
+                    ProductFamily.flameAccent,
+                    BlendMode.srcIn,
+                  ),
+                ),
+                const SizedBox(width: Brand.s4),
+              ],
+              Text(
+                label,
+                style: Brand.ui(
+                  10,
+                  weight: FontWeight.w700,
+                  color: ProductFamily.flameAccent,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: Brand.s4),
           Text(value, style: Brand.ui(12, color: colors.textSecondary, h: 1.4)),

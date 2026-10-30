@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_services.dart';
 import '../core/theme/brand.dart';
-import '../core/theme/components.dart';
+import '../widgets/widgets.dart';
 import '../core/theme/theme_context.dart';
 import '../services/firebase_bootstrap.dart';
 

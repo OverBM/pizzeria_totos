@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../core/motion/motion_widgets.dart';
 import '../../core/theme/brand.dart';
-import '../../core/theme/components.dart';
+import '../../widgets/widgets.dart';
 import '../../core/theme/theme_context.dart';
 import '../../core/validation/validators.dart';
 import 'register_view.dart';

@@ -584,3 +584,21 @@ Claim sampleClaim({String uid = 'uid-1'}) => Claim(
   createdAt: DateTime(2026, 10, 16, 20),
   updatedAt: DateTime(2026, 10, 16, 20),
 );
+
+/// Producto con la lista de ingredientes más larga de la carta.
+const Product sampleFourCheese = Product(
+  id: 'pizza-4quesos',
+  categoryId: 'pizzas',
+  name: 'PIZZA 4 QUESOS',
+  description: 'Mezcla de quesos.',
+  ingredients: [
+    'Masa madre',
+    'Salsa de tomate',
+    'Mozzarella',
+    'Queso parmesano',
+    'Queso azul',
+    'Queso edam',
+  ],
+  calories: 1120,
+  variants: [Variant(label: 'entera', priceSoles: 38)],
+);

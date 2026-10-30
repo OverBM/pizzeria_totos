@@ -272,6 +272,7 @@ function productDoc(product, media) {
     categoriaId: product.categoryId,
     nombre: product.name,
     descripcion: product.description ?? '',
+    ...(product.summary ? { resumen: product.summary } : {}),
     imagen: mediaFor(imageKey, media),
     etiquetas: product.tags ?? [],
     disponible: product.available !== false,

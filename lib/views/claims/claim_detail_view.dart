@@ -3,13 +3,11 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/brand.dart';
-import '../../core/theme/components.dart';
+import '../../widgets/widgets.dart';
 import '../../core/theme/theme_context.dart';
 import '../../models/claim.dart';
 import '../../services/contact_launcher.dart';
 import '../../services/settings_service.dart';
-import '../common/drive_image.dart';
-import '../common/offline_banner.dart';
 
 /// Detalle de un reclamo con estado «Enviado» y seguimiento por WhatsApp.
 class ClaimDetailView extends StatelessWidget {

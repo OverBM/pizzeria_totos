@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pizzeria_totos/app/app_shell.dart';
-import 'package:pizzeria_totos/core/theme/components.dart';
+import 'package:pizzeria_totos/core/app_info.dart';
+import 'package:pizzeria_totos/widgets/widgets.dart';
 import 'package:pizzeria_totos/models/category.dart';
 import 'package:pizzeria_totos/models/menu_data.dart';
 import 'package:pizzeria_totos/models/product.dart';
@@ -229,7 +230,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('el perfil muestra V1.1.1 sin sesión', (tester) async {
+  testWidgets('el perfil muestra ${AppInfo.label} sin sesión', (tester) async {
     usePhoneViewport(tester, height: 1400);
     final app = await ready();
     addTearDown(app.dispose);
@@ -237,11 +238,11 @@ void main() {
     await tester.pumpWidget(app.wrap(const ProfileView()));
     await tester.pumpAndSettle();
 
-    expect(find.text('V1.1.1'), findsOneWidget);
+    expect(find.text(AppInfo.label), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('el perfil muestra V1.1.1 con sesión y sin número de build', (
+  testWidgets('el perfil muestra ${AppInfo.label} con sesión y sin número de build', (
     tester,
   ) async {
     usePhoneViewport(tester, height: 2400);
@@ -252,9 +253,9 @@ void main() {
     await tester.pumpWidget(app.wrap(const ProfileView()));
     await tester.pumpAndSettle();
 
-    expect(find.text('V1.1.1'), findsOneWidget);
+    expect(find.text(AppInfo.label), findsOneWidget);
     expect(find.textContaining('build'), findsNothing);
-    expect(find.textContaining('V1.1.1+'), findsNothing);
+    expect(find.textContaining('${AppInfo.label}+'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -267,7 +268,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(TotoTopBar), findsOneWidget);
-    expect(find.text('V1.1.1'), findsNothing);
+    expect(find.text(AppInfo.label), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

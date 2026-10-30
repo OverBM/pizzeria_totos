@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Familia dulce: porción de torta con cereza -->
+  <path d="M4 20 12 4l8 16H4Z" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M7.6 13.5h8.8" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/>
+  <circle cx="12" cy="9" r="1.1" fill="#FFFFFF"/>
+</svg>

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -6,20 +8,53 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../controllers/cart_controller.dart';
 import '../../controllers/catalog_controller.dart';
 import '../../controllers/promotion_controller.dart';
+import '../../core/data/product_summary.dart';
 import '../../core/format/money.dart';
 import '../../core/load_state.dart';
 import '../../core/theme/brand.dart';
-import '../../core/theme/components.dart';
+import '../../widgets/widgets.dart';
 import '../../core/theme/theme_context.dart';
 import '../../models/product.dart';
 import '../../services/settings_service.dart';
-import '../common/drive_image.dart';
 
 /// Carta editorial con filtros de categoría y tarjetas horizontales.
-class CartaView extends StatelessWidget {
+class CartaView extends StatefulWidget {
   const CartaView({super.key, required this.onGoToProduct});
 
   final void Function(Product product) onGoToProduct;
+
+  @override
+  State<CartaView> createState() => _CartaViewState();
+}
+
+class _CartaViewState extends State<CartaView>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _fade = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 220),
+    value: 1,
+  );
+  String? _lastCategoryId;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final id = context.read<CatalogController>().selectedCategoryId;
+    if (_lastCategoryId == null) {
+      _lastCategoryId = id;
+      return;
+    }
+    if (id != _lastCategoryId) {
+      _lastCategoryId = id;
+      _fade.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _fade.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,80 +99,80 @@ class CartaView extends StatelessWidget {
     }
 
     final products = catalog.visibleProducts;
+    final width = MediaQuery.sizeOf(context).width;
+    final horizontal = math.max(Brand.s16, (width - 520) / 2 + Brand.s16);
+
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(child: _intro(context, catalog)),
-        SliverToBoxAdapter(child: _filters(context, catalog)),
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              Brand.s16,
-              Brand.s12,
-              Brand.s16,
-              0,
-            ),
-            child: Row(
-              children: [
-                Text(
-                  '${catalog.visibleCount} OPCIONES',
-                  style: Brand.ui(
-                    11,
-                    weight: FontWeight.w700,
-                    color: context.colors.action,
+          child: ContentWidth(child: _intro(context, catalog)),
+        ),
+        SliverToBoxAdapter(
+          child: ContentWidth(child: _filters(context, catalog)),
+        ),
+        SliverToBoxAdapter(
+          child: ContentWidth(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Brand.s16,
+                Brand.s12,
+                Brand.s16,
+                0,
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    '${catalog.visibleCount} OPCIONES',
+                    style: Brand.ui(
+                      11,
+                      weight: FontWeight.w700,
+                      color: context.colors.action,
+                    ),
                   ),
-                ),
-                const Spacer(),
-                if (catalog.state == LoadState.loading)
-                  const SizedBox(
-                    height: 12,
-                    width: 12,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-              ],
+                  const Spacer(),
+                  if (catalog.state == LoadState.loading)
+                    const SizedBox(
+                      height: 12,
+                      width: 12,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                ],
+              ),
             ),
           ),
         ),
-        SliverToBoxAdapter(
-          child: products.isEmpty
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: Brand.s24),
-                  child: EmptyState(
-                    title: 'No hay productos en esta categoría',
-                    message:
-                        'Por ahora no tenemos productos disponibles en '
-                        '«${catalog.selectedCategoryName.toLowerCase()}». '
-                        'Prueba con otra categoría.',
-                    icon: Icons.local_pizza_outlined,
-                    actionLabel: 'VER LAS MÁS PEDIDAS',
-                    onAction: () => catalog.selectCategory(
-                      CatalogController.featuredCategoryId,
-                    ),
-                  ),
-                )
-              : AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  child: Padding(
-                    key: ValueKey(catalog.selectedCategoryId),
-                    padding: const EdgeInsets.all(Brand.s16),
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < products.length; i++) ...[
-                          if (i > 0) const SizedBox(height: Brand.s12),
-                          _card(
-                            context,
-                            products[i],
-                            catalog,
-                            promotions,
-                            cart,
-                          ),
-                        ],
-                      ],
-                    ),
+        if (products.isEmpty)
+          SliverToBoxAdapter(
+            child: ContentWidth(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: Brand.s24),
+                child: EmptyState(
+                  title: 'No hay productos en esta categoría',
+                  message:
+                      'Por ahora no tenemos productos disponibles en '
+                      '«${catalog.selectedCategoryName.toLowerCase()}». '
+                      'Prueba con otra categoría.',
+                  icon: Icons.local_pizza_outlined,
+                  actionLabel: 'VER LAS MÁS PEDIDAS',
+                  onAction: () => catalog.selectCategory(
+                    CatalogController.featuredCategoryId,
                   ),
                 ),
-        ),
+              ),
+            ),
+          )
+        else
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(horizontal, 0, horizontal, 0),
+            sliver: SliverList.separated(
+              itemCount: products.length,
+              separatorBuilder: (_, _) => const SizedBox(height: Brand.s12),
+              itemBuilder: (context, index) => _FadeSlide(
+                animation: _fade,
+                child: _card(context, products[index], promotions, cart),
+              ),
+            ),
+          ),
         const SliverToBoxAdapter(child: SizedBox(height: Brand.s24)),
       ],
     );
@@ -161,7 +196,6 @@ class CartaView extends StatelessWidget {
           const OutlinedDisplayTitle('LA CARTA', size: 40),
           const SizedBox(height: Brand.s8),
           Text(
-            'Pizzas de masa madre, pastas y combos para compartir. '
             'Elige tu favorita y la preparamos al momento.',
             style: context.text.bodySm.copyWith(
               color: context.colors.textSecondary,
@@ -214,7 +248,6 @@ class CartaView extends StatelessWidget {
   Widget _card(
     BuildContext context,
     Product product,
-    CatalogController catalog,
     PromotionController promotions,
     CartController cart,
   ) {
@@ -225,8 +258,6 @@ class CartaView extends StatelessWidget {
     final price = variant == null
         ? null
         : promotion?.discountedPrice(variant.priceSoles) ?? variant.priceSoles;
-    final categoryName =
-        catalog.menu.categoryById(product.categoryId)?.name ?? 'CARTA';
     return ProductRowCard(
       image: Hero(
         tag: 'product-${product.id}',
@@ -237,10 +268,11 @@ class CartaView extends StatelessWidget {
         ),
       ),
       name: product.name,
-      description: product.description,
-      categoryLabel: categoryName,
+      description: product.displaySummary,
+      categoryId: product.categoryId,
+      summary: ProductSummary.of(product),
       priceLabel: price == null ? 'No disponible' : Money.format(price),
-      onTap: () => onGoToProduct(product),
+      onTap: () => widget.onGoToProduct(product),
       onAdd: product.isSellable
           ? () {
               cart.add(product, variant!);
@@ -255,6 +287,29 @@ class CartaView extends StatelessWidget {
               HapticFeedback.lightImpact();
             }
           : null,
+    );
+  }
+}
+
+/// Aplica el fade + 8 dp de desplazamiento del cambio de categoría.
+class _FadeSlide extends StatelessWidget {
+  const _FadeSlide({required this.animation, required this.child});
+
+  final Animation<double> animation;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animation,
+      child: child,
+      builder: (context, child) => Opacity(
+        opacity: animation.value,
+        child: Transform.translate(
+          offset: Offset(0, 8 * (1 - animation.value)),
+          child: child,
+        ),
+      ),
     );
   }
 }

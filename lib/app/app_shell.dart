@@ -5,15 +5,13 @@ import 'package:provider/provider.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/cart_controller.dart';
 import '../controllers/catalog_controller.dart';
-import '../core/theme/components.dart';
+import '../widgets/widgets.dart';
 import '../models/claim.dart';
 import '../models/product.dart';
 import '../views/branches/branches_view.dart';
 import '../views/carta/carta_view.dart';
 import '../views/cart/cart_view.dart';
 import '../views/claims/claims_view.dart';
-import '../views/common/drive_image.dart';
-import '../views/common/offline_banner.dart';
 import '../views/home/home_view.dart';
 import 'routes.dart';
 

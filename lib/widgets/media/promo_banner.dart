@@ -1,12 +1,4 @@
-import 'package:flutter/material.dart';
-
-import '../../core/format/money.dart';
-import '../../core/theme/brand.dart';
-import '../../core/theme/components.dart';
-import '../../core/theme/theme_context.dart';
-import '../../models/product.dart';
-import '../../models/promotion.dart';
-import 'drive_image.dart';
+part of '../widgets.dart';
 
 /// Banner editorial de promoción reutilizado en inicio y en la carta.
 class PromoBanner extends StatelessWidget {

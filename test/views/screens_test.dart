@@ -5,7 +5,7 @@ import 'package:pizzeria_totos/views/carta/carta_view.dart';
 import 'package:pizzeria_totos/views/carta/product_detail_view.dart';
 import 'package:pizzeria_totos/views/cart/orders_view.dart';
 import 'package:pizzeria_totos/views/claims/claims_view.dart';
-import 'package:pizzeria_totos/views/common/hero_banner.dart';
+import 'package:pizzeria_totos/widgets/widgets.dart';
 import 'package:pizzeria_totos/views/home/home_view.dart';
 import 'package:pizzeria_totos/views/profile/profile_view.dart';
 import 'package:pizzeria_totos/views/promotions/promotions_view.dart';

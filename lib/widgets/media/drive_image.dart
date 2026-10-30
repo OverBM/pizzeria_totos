@@ -1,15 +1,11 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-
-import '../../core/data/product_images.dart';
-import '../../core/motion/motion_widgets.dart';
-import '../../core/theme/brand.dart';
-import '../../core/theme/theme_context.dart';
-import '../../models/media_ref.dart';
-import '../../services/drive_image_service.dart';
+part of '../widgets.dart';
 
 /// Imagen de catálogo con la cadena Drive → asset local → placeholder de marca.
+///
+/// Pide y decodifica la imagen al tamaño en que se pinta, no al de la pantalla.
+/// Las miniaturas reservan el recorte de `BoxFit.cover` con
+/// `max(ancho, 2 × alto)`; las fotos a sangre pasan [requestWidth] para
+/// conservar el ancho de pantalla.
 class DriveImage extends StatelessWidget {
   const DriveImage({
     super.key,
@@ -22,6 +18,7 @@ class DriveImage extends StatelessWidget {
     this.placeholderLabel,
     this.borderRadius,
     this.fadeIn = true,
+    this.requestWidth,
   });
 
   /// Referencia remota (Drive o URL directa).
@@ -39,42 +36,61 @@ class DriveImage extends StatelessWidget {
   final BorderRadius? borderRadius;
   final bool fadeIn;
 
+  /// Ancho lógico fijo para fotos a sangre (hero y detalle).
+  ///
+  /// Si es `null`, la imagen se pide con el presupuesto de recorte de una
+  /// miniatura.
+  final double? requestWidth;
+
   @override
   Widget build(BuildContext context) {
     final radius = borderRadius ?? BorderRadius.zero;
-    final url = DriveImageService.resolve(media, width: _targetWidth(context));
-    final local = _localAsset();
-    return ClipRRect(
-      borderRadius: radius,
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: url != null
-            ? CachedNetworkImage(
-                imageUrl: url,
-                fit: fit,
-                width: width,
-                height: height,
-                fadeInDuration: fadeIn
-                    ? const Duration(milliseconds: 220)
-                    : Duration.zero,
-                placeholder: (context, _) =>
-                    const ShimmerBox(height: double.infinity, radius: 0),
-                errorWidget: (context, _, _) =>
-                    _localOrPlaceholder(context, local),
-              )
-            : _localOrPlaceholder(context, local),
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final targetPx = _targetPixels(context, constraints);
+        final url = DriveImageService.resolve(media, width: targetPx);
+        final local = _localAsset();
+        return ClipRRect(
+          borderRadius: radius,
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: url != null
+                ? CachedNetworkImage(
+                    imageUrl: url,
+                    fit: fit,
+                    width: width,
+                    height: height,
+                    memCacheWidth: targetPx,
+                    maxWidthDiskCache: targetPx,
+                    filterQuality: FilterQuality.medium,
+                    fadeInDuration: fadeIn
+                        ? const Duration(milliseconds: 120)
+                        : Duration.zero,
+                    placeholder: (context, _) =>
+                        const ShimmerBox(height: double.infinity, radius: 0),
+                    errorWidget: (context, _, _) =>
+                        _localOrPlaceholder(context, local, targetPx),
+                  )
+                : _localOrPlaceholder(context, local, targetPx),
+          ),
+        );
+      },
     );
   }
 
-  Widget _localOrPlaceholder(BuildContext context, String? local) {
+  Widget _localOrPlaceholder(
+    BuildContext context,
+    String? local,
+    int targetPx,
+  ) {
     if (local != null) {
       return Image.asset(
         local,
         fit: fit,
         width: width,
         height: height,
+        cacheWidth: targetPx,
         errorBuilder: (context, _, _) => _placeholder(context),
       );
     }
@@ -91,10 +107,26 @@ class DriveImage extends StatelessWidget {
     return null;
   }
 
-  int _targetWidth(BuildContext context) {
-    final ratio = MediaQuery.maybeOf(context)?.devicePixelRatio ?? 1;
-    final logical = width ?? MediaQuery.maybeOf(context)?.size.width ?? 800;
-    return (logical * ratio).round();
+  /// Píxeles físicos que se piden a Drive.
+  ///
+  /// - Con [requestWidth] (fotos a sangre): ancho de pantalla exacto.
+  /// - Sin él (miniaturas): `max(ancho, 2 × alto)`, redondeado a 64 px para
+  ///   que el mismo tamaño no cambie de URL entre layouts.
+  int _targetPixels(BuildContext context, BoxConstraints constraints) {
+    final ratio = MediaQuery.maybeOf(context)?.devicePixelRatio ?? 1.0;
+    final requested = requestWidth;
+    if (requested != null) {
+      return (requested * ratio).round().clamp(120, 2000).toInt();
+    }
+    final logicalWidth = constraints.hasBoundedWidth
+        ? constraints.maxWidth
+        : (width ?? 800);
+    final logicalHeight = constraints.hasBoundedHeight
+        ? constraints.maxHeight
+        : (height ?? logicalWidth);
+    final needed = math.max(logicalWidth, logicalHeight * 2);
+    final pixels = (needed * ratio) / 64;
+    return (pixels.ceil() * 64).clamp(320, 1200).toInt();
   }
 
   Widget _placeholder(BuildContext context) {

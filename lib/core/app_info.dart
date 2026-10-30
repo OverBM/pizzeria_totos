@@ -7,12 +7,12 @@ class AppInfo {
   const AppInfo._();
 
   /// `versionName` del APK y parte visible de la etiqueta.
-  static const String version = '1.1.1';
+  static const String version = '1.2.1';
 
-  /// `versionCode` base (el `+2` de `pubspec.yaml`). No se pinta en la UI.
-  static const int build = 2;
+  /// `versionCode` base (el `+3` de `pubspec.yaml`). No se pinta en la UI.
+  static const int build = 3;
 
-  /// Etiqueta visible en el pie del perfil: exactamente `V1.1.1`.
+  /// Etiqueta visible en el pie del perfil: exactamente `V1.2.1`.
   static const String label = 'V$version';
 
   /// Línea completa de `pubspec.yaml`, útil para la prueba de sincronización.

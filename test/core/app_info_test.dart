@@ -13,13 +13,14 @@ void main() {
 
     expect(match, isNotNull, reason: 'pubspec.yaml debe declarar version');
     expect(match!.group(1), AppInfo.pubspecVersion);
-    expect(AppInfo.version, '1.1.1');
-    expect(AppInfo.build, 2);
+    expect(AppInfo.version, '1.2.1');
+    expect(AppInfo.build, 3);
   });
 
-  test('la etiqueta visible es exactamente V1.1.1', () {
-    expect(AppInfo.label, 'V1.1.1');
-    expect(AppInfo.label, isNot(contains('2')));
+  test('la etiqueta visible es exactamente V1.2.1', () {
+    expect(AppInfo.label, 'V1.2.1');
+    expect(AppInfo.label, 'V${AppInfo.version}');
+    expect(AppInfo.label, isNot(contains('+')));
     expect(AppInfo.label, isNot(contains('build')));
   });
 }

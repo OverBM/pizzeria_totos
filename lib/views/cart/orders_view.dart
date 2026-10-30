@@ -6,10 +6,9 @@ import '../../controllers/order_controller.dart';
 import '../../core/format/money.dart';
 import '../../core/load_state.dart';
 import '../../core/theme/brand.dart';
-import '../../core/theme/components.dart';
+import '../../widgets/widgets.dart';
 import '../../core/theme/theme_context.dart';
 import '../../models/order.dart';
-import '../common/offline_banner.dart';
 
 /// Historial de pedidos del usuario autenticado.
 class OrdersView extends StatelessWidget {

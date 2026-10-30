@@ -5,13 +5,14 @@ import '../../controllers/auth_controller.dart';
 import '../../core/app_info.dart';
 import '../../core/motion/motion_widgets.dart';
 import '../../core/theme/brand.dart';
-import '../../core/theme/components.dart';
+import '../../widgets/widgets.dart';
 import '../../core/theme/theme_context.dart';
 import '../../core/validation/validators.dart';
 import '../../models/account.dart';
+import '../../services/maps/maps_service.dart';
 import '../auth/login_view.dart';
 import '../cart/orders_view.dart';
-import '../common/offline_banner.dart';
+import '../common/address_search_sheet.dart';
 
 /// Perfil del usuario: datos de contacto, direcciones e historial.
 ///
@@ -287,7 +288,7 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
-  /// Pie de versión: exactamente `V1.1.1`, sin número de build.
+  /// Pie de versión: exactamente `AppInfo.label` (`V1.2.1`), sin número de build.
   ///
   /// Se pinta con y sin sesión para que cualquier beta tester pueda reportar
   /// la versión instalada.
@@ -609,9 +610,14 @@ class _AddressSheetState extends State<_AddressSheet> {
                   controller: _line,
                   maxLines: 2,
                   textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Dirección completa',
                     hintText: 'Calle, número, distrito',
+                    suffixIcon: IconButton(
+                      onPressed: _searchAddress,
+                      icon: const Icon(Icons.search_rounded),
+                      tooltip: 'Buscar dirección',
+                    ),
                   ),
                   validator: Validators.addressLineError,
                 ),
@@ -636,6 +642,16 @@ class _AddressSheetState extends State<_AddressSheet> {
         ),
       ),
     );
+  }
+
+  Future<void> _searchAddress() async {
+    final place = await showModalBottomSheet<PlaceResult>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => AddressSearchSheet(initialQuery: _line.text),
+    );
+    if (place == null || !mounted) return;
+    setState(() => _line.text = place.label);
   }
 
   void _save() {

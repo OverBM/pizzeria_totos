@@ -52,7 +52,7 @@
       "id": "pizza-totos",
       "categoryId": "pizzas",
       "name": "PIZZA TOTO'S",
-      "description": "La de la casa, con nuestra salsa especial.",
+      "description": "Nuestra pizza insignia: masa madre de fermentación lenta, salsa de la casa, mozzarella fundida, pepperoni y orégano. Horneada al momento, con la corteza dorada y el centro tierno. Rinde 2 porciones como entera y 4 como media.",
       "image": "pizza-totos",
       "tags": [
         "casa",
@@ -88,15 +88,18 @@
           "slices": 4,
           "price": 23
         }
-      ]
+      ],
+      "summary": "Nuestra insignia: masa madre, pepperoni y orégano."
     },
     {
       "id": "pizza-americana",
       "categoryId": "pizzas",
       "name": "PIZZA AMERICANA",
-      "description": "Clásica de jamón y queso.",
+      "description": "La clásica de la casa: masa madre, salsa de tomate, mozzarella, jamón y queso. Una combinación sencilla y contundente, horneada hasta que el queso burbujea. Ideal para compartir en familia.",
       "image": "pizza-americana",
-      "tags": [],
+      "tags": [
+        "clásica"
+      ],
       "available": true,
       "featured": true,
       "variants": [
@@ -122,15 +125,19 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "Sirve 2"
+      "portion": "Sirve 2",
+      "calories": 950,
+      "summary": "Jamón y queso sobre masa madre."
     },
     {
       "id": "pizza-peperoni",
       "categoryId": "pizzas",
       "name": "PIZZA PEPERONI",
-      "description": "Peperoni y queso.",
+      "description": "Masa madre, salsa de tomate, mozzarella y pepperoni en cada porción. El punto justo de picante y el borde dorado la hacen la favorita de los que buscan lo clásico. Sirve 2 porciones.",
       "image": "pizza-peperoni",
-      "tags": [],
+      "tags": [
+        "clásica"
+      ],
       "ingredients": [
         "Masa madre",
         "Salsa de tomate",
@@ -156,15 +163,19 @@
           "slices": 4,
           "price": 18
         }
-      ]
+      ],
+      "summary": "Pepperoni y mozzarella, el clásico."
     },
     {
       "id": "pizza-hawaiana",
       "categoryId": "pizzas",
       "name": "PIZZA HAWAIANA",
-      "description": "Jamón y piña.",
+      "description": "Masa madre, salsa de tomate, mozzarella, jamón y piña. El contraste dulce-salado de siempre, con la piña jugosa y el queso fundido. Una pizza que divide opiniones y gana adeptos.",
       "image": "pizza-hawaiana",
-      "tags": [],
+      "tags": [
+        "dulce",
+        "clásica"
+      ],
       "ingredients": [
         "Masa madre",
         "Salsa de tomate",
@@ -191,15 +202,18 @@
           "slices": 4,
           "price": 16
         }
-      ]
+      ],
+      "summary": "Jamón y piña, dulce y salado."
     },
     {
       "id": "pizza-vegetales",
       "categoryId": "pizzas",
       "name": "PIZZA CON VEGETALES",
-      "description": "Pimiento, cebolla y champiñón.",
+      "description": "Masa madre, salsa de tomate, mozzarella, pimiento, cebolla y champiñón. Verduras frescas salteadas y horneadas con el queso, para una porción llena de color y sabor. Sirve 2 porciones.",
       "image": "pizza-vegetales",
-      "tags": [],
+      "tags": [
+        "vegetariana"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -226,13 +240,15 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "Sirve 2"
+      "portion": "Sirve 2",
+      "calories": 880,
+      "summary": "Pimiento, cebolla y champiñón frescos."
     },
     {
       "id": "pizza-mexicana",
       "categoryId": "pizzas",
       "name": "PIZZA MEXICANA",
-      "description": "Carne, jalapeño y maíz.",
+      "description": "Masa madre, salsa de tomate, mozzarella, carne, jalapeño y maíz. El toque picante del jalapeño con el dulzor del maíz y la carne sazonada. Para los que quieren algo con carácter.",
       "image": "pizza-mexicana",
       "tags": [
         "picante"
@@ -263,15 +279,20 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "Sirve 2"
+      "portion": "Sirve 2",
+      "calories": 1050,
+      "summary": "Carne, jalapeño y maíz con carácter."
     },
     {
       "id": "pizza-4quesos",
       "categoryId": "pizzas",
       "name": "PIZZA 4 QUESOS",
-      "description": "Mezcla de quesos.",
+      "description": "Masa madre, salsa de tomate, mozzarella, queso parmesano, queso azul y queso edam. Cuatro quesos que se funden en capas: suave, intenso y cremoso a la vez. La favorita de los amantes del queso.",
       "image": "pizza-4quesos",
-      "tags": [],
+      "tags": [
+        "clásica",
+        "para compartir"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -298,15 +319,19 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "Sirve 2"
+      "portion": "Sirve 2",
+      "calories": 1200,
+      "summary": "Cuatro quesos fundidos en capas."
     },
     {
       "id": "pizza-chorizo",
       "categoryId": "pizzas",
       "name": "PIZZA CHORIZO",
-      "description": "Chorizo y queso.",
+      "description": "Masa madre, salsa de tomate, mozzarella y chorizo. El chorizo se hornea con el queso y suelta su sabor en cada porción. Una pizza directa y sabrosa para 2.",
       "image": "pizza-chorizo",
-      "tags": [],
+      "tags": [
+        "clásica"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -331,16 +356,19 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "Sirve 2"
+      "portion": "Sirve 2",
+      "calories": 1100,
+      "summary": "Chorizo y queso, sabor directo."
     },
     {
       "id": "media-totos",
       "categoryId": "medias",
       "name": "MEDIA TOTO'S",
-      "description": "La de la casa.",
+      "description": "La insignia de la casa en tamaño personal: masa madre, salsa de la casa, mozzarella, pepperoni y orégano. Ideal para una persona o para probar varias. Rinde 1 a 2 porciones.",
       "image": "media-totos",
       "tags": [
-        "casa"
+        "casa",
+        "individual"
       ],
       "available": true,
       "featured": true,
@@ -362,15 +390,19 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "Sirve 1 a 2"
+      "portion": "Sirve 1 a 2",
+      "calories": 560,
+      "summary": "La insignia en tamaño personal."
     },
     {
       "id": "media-americana",
       "categoryId": "medias",
       "name": "MEDIA AMERICANA",
-      "description": "Clásica de jamón y queso.",
+      "description": "Masa madre, salsa de tomate, mozzarella, jamón y queso en formato mediano. La clásica de siempre, perfecta para una comida individual. Rinde 1 a 2 porciones.",
       "image": "media-americana",
-      "tags": [],
+      "tags": [
+        "individual"
+      ],
       "available": true,
       "featured": true,
       "variants": [
@@ -391,15 +423,19 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "Sirve 1 a 2"
+      "portion": "Sirve 1 a 2",
+      "calories": 475,
+      "summary": "Jamón y queso en formato mediano."
     },
     {
       "id": "media-peperoni",
       "categoryId": "medias",
       "name": "MEDIA PEPERONI",
-      "description": "Peperoni y queso.",
+      "description": "Masa madre, salsa de tomate, mozzarella y pepperoni, en tamaño mediano. El clásico pepperoni con el borde dorado, para uno o para compartir. Rinde 1 a 2 porciones.",
       "image": "media-peperoni",
-      "tags": [],
+      "tags": [
+        "individual"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -419,15 +455,19 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "Sirve 1 a 2"
+      "portion": "Sirve 1 a 2",
+      "calories": 525,
+      "summary": "Pepperoni y mozzarella para uno."
     },
     {
       "id": "media-hawaiana",
       "categoryId": "medias",
       "name": "MEDIA HAWAIANA",
-      "description": "Jamón y piña.",
+      "description": "Masa madre, salsa de tomate, mozzarella, jamón y piña en formato mediano. El dulce y el salado en una porción individual. Rinde 1 a 2 porciones.",
       "image": "media-hawaiana",
-      "tags": [],
+      "tags": [
+        "individual"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -448,16 +488,19 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "Sirve 1 a 2"
+      "portion": "Sirve 1 a 2",
+      "calories": 490,
+      "summary": "Jamón y piña en tamaño mediano."
     },
     {
       "id": "familiar-totos",
       "categoryId": "familiares",
       "name": "FAMILIAR TOTO'S",
-      "description": "La de la casa.",
+      "description": "La insignia de la casa en tamaño familiar: masa madre, salsa de la casa, mozzarella, pepperoni y orégano. Pensada para compartir en mesa. Rinde 4 porciones.",
       "image": "familiar-totos",
       "tags": [
-        "casa"
+        "casa",
+        "para compartir"
       ],
       "available": true,
       "featured": false,
@@ -479,15 +522,19 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "Sirve 4"
+      "portion": "Sirve 4",
+      "calories": 1790,
+      "summary": "La insignia para compartir en mesa."
     },
     {
       "id": "familiar-americana",
       "categoryId": "familiares",
       "name": "FAMILIAR AMERICANA",
-      "description": "Clásica de jamón y queso.",
+      "description": "Masa madre, salsa de tomate, mozzarella, jamón y queso en tamaño familiar. La clásica que nunca falla para una reunión. Rinde 4 porciones.",
       "image": "familiar-americana",
-      "tags": [],
+      "tags": [
+        "para compartir"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -508,15 +555,19 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "Sirve 4"
+      "portion": "Sirve 4",
+      "calories": 1520,
+      "summary": "Jamón y queso para toda la mesa."
     },
     {
       "id": "familiar-peperoni",
       "categoryId": "familiares",
       "name": "FAMILIAR PEPERONI",
-      "description": "Peperoni y queso.",
+      "description": "Masa madre, salsa de tomate, mozzarella y pepperoni para toda la mesa. El pepperoni bien repartido y el queso fundido en cada rebanada. Rinde 4 porciones.",
       "image": "familiar-peperoni",
-      "tags": [],
+      "tags": [
+        "para compartir"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -536,15 +587,19 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "Sirve 4"
+      "portion": "Sirve 4",
+      "calories": 1680,
+      "summary": "Pepperoni para cuatro personas."
     },
     {
       "id": "familiar-hawaiana",
       "categoryId": "familiares",
       "name": "FAMILIAR HAWAIANA",
-      "description": "Jamón y piña.",
+      "description": "Masa madre, salsa de tomate, mozzarella, jamón y piña en tamaño familiar. El contraste dulce-salado que gusta a grandes y chicos. Rinde 4 porciones.",
       "image": "familiar-hawaiana",
-      "tags": [],
+      "tags": [
+        "para compartir"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -565,15 +620,20 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "Sirve 4"
+      "portion": "Sirve 4",
+      "calories": 1570,
+      "summary": "Jamón y piña en tamaño familiar."
     },
     {
       "id": "dulce-chocolate",
       "categoryId": "dulces",
       "name": "PIZZA DE CHOCOLATE",
-      "description": "Chocolate y avena.",
+      "description": "Masa dulce horneada con chocolate y avena. Una pizza de postre para compartir, con el chocolate fundido y el crocante de la avena. Rinde 6 porciones.",
       "image": "dulce-chocolate",
-      "tags": [],
+      "tags": [
+        "postre",
+        "dulce"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -591,15 +651,20 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "6 porciones"
+      "portion": "6 porciones",
+      "calories": 1800,
+      "summary": "Masa dulce con chocolate y avena."
     },
     {
       "id": "dulce-nutella",
       "categoryId": "dulces",
       "name": "PIZZA DE NUTELLA",
-      "description": "Nutella y fresas.",
+      "description": "Masa dulce con Nutella y fresas frescas. El chocolate avellana y la fruta se combinan en un postre para compartir. Rinde 6 porciones.",
       "image": "dulce-nutella",
-      "tags": [],
+      "tags": [
+        "postre",
+        "dulce"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -618,15 +683,20 @@
         "Lácteos",
         "Frutos secos"
       ],
-      "portion": "6 porciones"
+      "portion": "6 porciones",
+      "calories": 2100,
+      "summary": "Nutella y fresas sobre masa dulce."
     },
     {
       "id": "dulce-manjar",
       "categoryId": "dulces",
       "name": "PIZZA DE MANJAR",
-      "description": "Manjar blanco.",
+      "description": "Masa dulce con manjar blanco. Sencilla, cremosa y pensada para los golosos, con el dulce de leche peruano como protagonista. Rinde 6 porciones.",
       "image": "dulce-manjar",
-      "tags": [],
+      "tags": [
+        "postre",
+        "dulce"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -643,15 +713,20 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "6 porciones"
+      "portion": "6 porciones",
+      "calories": 1700,
+      "summary": "Manjar blanco sobre masa dulce."
     },
     {
       "id": "tallarin-huancaina",
       "categoryId": "pastas",
       "name": "TALLARINES A LA HUANCAÍNA",
-      "description": "Crema huancaína.",
+      "description": "Tallarines con crema huancaína y queso. Una salsa cremosa con el toque ahumado del ají amarillo, servida al momento. Una porción.",
       "image": "tallarin-huancaina",
-      "tags": [],
+      "tags": [
+        "casa",
+        "picante"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -669,15 +744,19 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "1 porción"
+      "portion": "1 porción",
+      "calories": 820,
+      "summary": "Crema huancaína y queso."
     },
     {
       "id": "tallarin-bolonesa",
       "categoryId": "pastas",
       "name": "TALLARINES A LA BOLOÑESA",
-      "description": "Salsa boloñesa.",
+      "description": "Tallarines con salsa boloñesa de carne y tomate. Cocción al dente y una salsa que se cocina a fuego lento. Una porción.",
       "image": "tallarin-bolonesa",
-      "tags": [],
+      "tags": [
+        "clásica"
+      ],
       "available": true,
       "featured": true,
       "variants": [
@@ -694,15 +773,19 @@
       "allergens": [
         "Gluten"
       ],
-      "portion": "1 porción"
+      "portion": "1 porción",
+      "calories": 760,
+      "summary": "Salsa boloñesa de carne y tomate."
     },
     {
       "id": "tallarin-alfredo",
       "categoryId": "pastas",
       "name": "TALLARINES ALFREDO",
-      "description": "Crema alfredo.",
+      "description": "Tallarines con crema alfredo y queso parmesano. Cremosos, suaves y listos para disfrutar. Una porción.",
       "image": "tallarin-alfredo",
-      "tags": [],
+      "tags": [
+        "clásica"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -720,15 +803,19 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "1 porción"
+      "portion": "1 porción",
+      "calories": 850,
+      "summary": "Crema alfredo y parmesano."
     },
     {
       "id": "tallarin-carbonara",
       "categoryId": "pastas",
       "name": "TALLARINES A LA CARBONARA",
-      "description": "Crema carbonara.",
+      "description": "Tallarines con crema, tocino y queso parmesano. El tocino aporta el sabor ahumado y la crema equilibra el plato. Una porción generosa.",
       "image": "tallarin-carbonara",
-      "tags": [],
+      "tags": [
+        "clásica"
+      ],
       "ingredients": [
         "Fideos",
         "Crema",
@@ -749,15 +836,18 @@
           "label": "única",
           "price": 20
         }
-      ]
+      ],
+      "summary": "Crema, tocino y parmesano."
     },
     {
       "id": "espagueti-bolonesa",
       "categoryId": "pastas",
       "name": "ESPAGUETI A LA BOLOÑESA",
-      "description": "Salsa boloñesa.",
+      "description": "Espagueti con salsa boloñesa de carne y tomate. El clásico de siempre, con la salsa cocida a fuego lento. Una porción.",
       "image": "espagueti-bolonesa",
-      "tags": [],
+      "tags": [
+        "clásica"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -774,15 +864,19 @@
       "allergens": [
         "Gluten"
       ],
-      "portion": "1 porción"
+      "portion": "1 porción",
+      "calories": 700,
+      "summary": "Boloñesa de carne y tomate."
     },
     {
       "id": "espagueti-alfredo",
       "categoryId": "pastas",
       "name": "ESPAGUETI ALFREDO",
-      "description": "Crema alfredo.",
+      "description": "Espagueti con crema alfredo y queso parmesano. Una salsa suave que envuelve la pasta. Una porción.",
       "image": "espagueti-alfredo",
-      "tags": [],
+      "tags": [
+        "clásica"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -800,15 +894,19 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "1 porción"
+      "portion": "1 porción",
+      "calories": 800,
+      "summary": "Crema alfredo y parmesano."
     },
     {
       "id": "lasana-bolonesa",
       "categoryId": "lasanas",
       "name": "LASAÑA A LA BOLOÑESA",
-      "description": "Clásica.",
+      "description": "Láminas de pasta con carne boloñesa, bechamel y queso. Capas horneadas hasta gratinar, con el relleno jugoso. Una porción.",
       "image": "lasana-bolonesa",
-      "tags": [],
+      "tags": [
+        "clásica"
+      ],
       "ingredients": [
         "Láminas de pasta",
         "Carne boloñesa",
@@ -828,15 +926,19 @@
           "label": "única",
           "price": 18
         }
-      ]
+      ],
+      "summary": "Carne, bechamel y queso gratinado."
     },
     {
       "id": "lasana-huancaina",
       "categoryId": "lasanas",
       "name": "LASAÑA A LA HUANCAÍNA",
-      "description": "Crema huancaína.",
+      "description": "Láminas de pasta con crema huancaína y queso. El ají amarillo le da un sabor cremoso y ligeramente picante. Una porción.",
       "image": "lasana-huancaina",
-      "tags": [],
+      "tags": [
+        "casa",
+        "picante"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -854,15 +956,19 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "1 porción"
+      "portion": "1 porción",
+      "calories": 820,
+      "summary": "Crema huancaína y queso."
     },
     {
       "id": "lasana-pollo",
       "categoryId": "lasanas",
       "name": "LASAÑA DE POLLO",
-      "description": "Pollo y bechamel.",
+      "description": "Láminas de pasta con pollo, bechamel y queso. Pollo desmenuzado y una bechamel suave entre capas. Una porción.",
       "image": "lasana-pollo",
-      "tags": [],
+      "tags": [
+        "clásica"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -881,15 +987,19 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "1 porción"
+      "portion": "1 porción",
+      "calories": 760,
+      "summary": "Pollo y bechamel entre capas."
     },
     {
       "id": "combo-1",
       "categoryId": "combos",
       "name": "COMBO 1",
-      "description": "Pizza + gaseosa 600 ml.",
+      "description": "Una pizza mediana a elección y una gaseosa de 600 ml. El combo justo para una persona o para compartir entre dos. Ideal para el almuerzo o la cena.",
       "image": "combo-1",
-      "tags": [],
+      "tags": [
+        "para compartir"
+      ],
       "available": true,
       "featured": true,
       "variants": [
@@ -906,15 +1016,19 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "Para 1 a 2 personas"
+      "portion": "Para 1 a 2 personas",
+      "calories": 1050,
+      "summary": "Pizza mediana y gaseosa 600 ml."
     },
     {
       "id": "combo-2",
       "categoryId": "combos",
       "name": "COMBO 2",
-      "description": "Pizza + gaseosa 1.5 L.",
+      "description": "Una pizza mediana y una gaseosa de 1.5 L. Pensado para dos personas que quieren pizza y bebida sin complicarse. Listo para compartir.",
       "image": "combo-2",
-      "tags": [],
+      "tags": [
+        "para compartir"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -931,15 +1045,20 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "Para 2 personas"
+      "portion": "Para 2 personas",
+      "calories": 1430,
+      "summary": "Pizza mediana y gaseosa 1.5 L."
     },
     {
       "id": "combo-3",
       "categoryId": "combos",
       "name": "COMBO 3",
-      "description": "2 pizzas + gaseosa.",
+      "description": "Dos pizzas medianas y una gaseosa de 1.5 L. El combo para tres o cuatro personas, con variedad para elegir. Perfecto para una reunión.",
       "image": "combo-3",
-      "tags": [],
+      "tags": [
+        "para compartir",
+        "familiar"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -956,15 +1075,20 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "Para 3 a 4 personas"
+      "portion": "Para 3 a 4 personas",
+      "calories": 2230,
+      "summary": "Dos pizzas medianas y gaseosa 1.5 L."
     },
     {
       "id": "combo-familiar",
       "categoryId": "combos",
       "name": "COMBO FAMILIAR",
-      "description": "Pizza familiar + gaseosa.",
+      "description": "Una pizza familiar de 8 rebanadas y una gaseosa de 1.5 L. El combo para cuatro personas, con la pizza de la casa y bebida para todos. Sirve 4.",
       "image": "combo-familiar",
-      "tags": [],
+      "tags": [
+        "para compartir",
+        "familiar"
+      ],
       "ingredients": [
         "Pizza familiar (8 rebanadas)",
         "Gaseosa 1.5 L"
@@ -982,15 +1106,19 @@
           "label": "única",
           "price": 55
         }
-      ]
+      ],
+      "summary": "Pizza familiar y gaseosa 1.5 L."
     },
     {
       "id": "pan-ajo-6",
       "categoryId": "guarniciones",
       "name": "PAN AL AJO (6 UND)",
-      "description": "Pan al ajo.",
+      "description": "Pan horneado con mantequilla de ajo y queso. Seis unidades para compartir como entrada o acompañamiento. Recién horneado.",
       "image": "pan-ajo-6",
-      "tags": [],
+      "tags": [
+        "para compartir",
+        "crujiente"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -1008,15 +1136,20 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "6 unidades"
+      "portion": "6 unidades",
+      "calories": 720,
+      "summary": "Seis panes con ajo y queso."
     },
     {
       "id": "pan-ajo-12",
       "categoryId": "guarniciones",
       "name": "PAN AL AJO (12 UND)",
-      "description": "Pan al ajo.",
+      "description": "Pan horneado con mantequilla de ajo y queso. Doce unidades, ideales para una mesa grande o para acompañar la pizza. Recién horneado.",
       "image": "pan-ajo-12",
-      "tags": [],
+      "tags": [
+        "para compartir",
+        "crujiente"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -1034,15 +1167,20 @@
         "Gluten",
         "Lácteos"
       ],
-      "portion": "12 unidades"
+      "portion": "12 unidades",
+      "calories": 1440,
+      "summary": "Doce panes con ajo y queso."
     },
     {
       "id": "papas-fritas",
       "categoryId": "guarniciones",
       "name": "PAPAS FRITAS",
-      "description": "Porción de papas.",
+      "description": "Papas fritas crocantes con aceite y sal. Una porción personal para acompañar la pizza o comer como entrada. Recién fritas.",
       "image": "papas-fritas",
-      "tags": [],
+      "tags": [
+        "crujiente",
+        "para compartir"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -1057,15 +1195,20 @@
         "Sal"
       ],
       "allergens": [],
-      "portion": "Porción personal"
+      "portion": "Porción personal",
+      "calories": 350,
+      "summary": "Papas crocantes con sal."
     },
     {
       "id": "ensalada",
       "categoryId": "guarniciones",
       "name": "ENSALADA FRESCA",
-      "description": "Ensalada fresca.",
+      "description": "Lechuga, tomate, cebolla y limón. Una ensalada fresca y ligera para acompañar la pizza. Porción personal.",
       "image": "ensalada",
-      "tags": [],
+      "tags": [
+        "fresca",
+        "vegetariana"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -1081,15 +1224,20 @@
         "Limón"
       ],
       "allergens": [],
-      "portion": "Porción personal"
+      "portion": "Porción personal",
+      "calories": 90,
+      "summary": "Lechuga, tomate, cebolla y limón."
     },
     {
       "id": "alitas-6",
       "categoryId": "guarniciones",
       "name": "ALITAS (6 UND)",
-      "description": "Alitas de pollo.",
+      "description": "Alitas de pollo con salsa de la casa. Seis unidades horneadas y bañadas en la salsa, para compartir como entrada. Recién preparadas.",
       "image": "alitas-6",
-      "tags": [],
+      "tags": [
+        "picante",
+        "para compartir"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -1103,15 +1251,19 @@
         "Salsa de la casa"
       ],
       "allergens": [],
-      "portion": "6 unidades"
+      "portion": "6 unidades",
+      "calories": 540,
+      "summary": "Seis alitas con salsa de la casa."
     },
     {
       "id": "inca-600",
       "categoryId": "bebidas",
       "name": "INCA KOLA 600 ML",
-      "description": "Gaseosa.",
+      "description": "Gaseosa Inca Kola de 600 ml. Bien fría, para acompañar la pizza. Botella personal.",
       "image": "inca-600",
-      "tags": [],
+      "tags": [
+        "helada"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -1124,15 +1276,19 @@
         "Gaseosa Inca Kola"
       ],
       "allergens": [],
-      "portion": "600 ml"
+      "portion": "600 ml",
+      "calories": 250,
+      "summary": "Inca Kola bien fría, 600 ml."
     },
     {
       "id": "inca-1500",
       "categoryId": "bebidas",
       "name": "INCA KOLA 1.5 L",
-      "description": "Gaseosa.",
+      "description": "Gaseosa Inca Kola de 1.5 L. Para compartir en la mesa, bien fría. Botella familiar.",
       "image": "inca-1500",
-      "tags": [],
+      "tags": [
+        "helada"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -1145,15 +1301,19 @@
         "Gaseosa Inca Kola"
       ],
       "allergens": [],
-      "portion": "1.5 L"
+      "portion": "1.5 L",
+      "calories": 630,
+      "summary": "Inca Kola para compartir, 1.5 L."
     },
     {
       "id": "coca-600",
       "categoryId": "bebidas",
       "name": "COCA COLA 600 ML",
-      "description": "Gaseosa.",
+      "description": "Gaseosa Coca-Cola de 600 ml. Bien fría, para acompañar la pizza. Botella personal.",
       "image": "coca-600",
-      "tags": [],
+      "tags": [
+        "helada"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -1166,15 +1326,19 @@
         "Gaseosa Coca-Cola"
       ],
       "allergens": [],
-      "portion": "600 ml"
+      "portion": "600 ml",
+      "calories": 250,
+      "summary": "Coca-Cola bien fría, 600 ml."
     },
     {
       "id": "coca-1500",
       "categoryId": "bebidas",
       "name": "COCA COLA 1.5 L",
-      "description": "Gaseosa.",
+      "description": "Gaseosa Coca-Cola de 1.5 L. Para compartir en la mesa, bien fría. Botella familiar.",
       "image": "coca-1500",
-      "tags": [],
+      "tags": [
+        "helada"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -1187,15 +1351,19 @@
         "Gaseosa Coca-Cola"
       ],
       "allergens": [],
-      "portion": "1.5 L"
+      "portion": "1.5 L",
+      "calories": 630,
+      "summary": "Coca-Cola para compartir, 1.5 L."
     },
     {
       "id": "agua-500",
       "categoryId": "bebidas",
       "name": "AGUA MINERAL 500 ML",
-      "description": "Agua.",
+      "description": "Agua mineral de 500 ml. Sin gas, para acompañar la comida. Botella personal.",
       "image": "agua-500",
-      "tags": [],
+      "tags": [
+        "helada"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -1208,15 +1376,20 @@
         "Agua mineral"
       ],
       "allergens": [],
-      "portion": "500 ml"
+      "portion": "500 ml",
+      "calories": 0,
+      "summary": "Agua mineral sin gas, 500 ml."
     },
     {
       "id": "cerveza-pilsen",
       "categoryId": "bebidas",
       "name": "CERVEZA PILSEN",
-      "description": "Botella.",
+      "description": "Cerveza Pilsen en botella. Rubia y ligera, para acompañar la pizza. Servir bien fría.",
       "image": "cerveza-pilsen",
-      "tags": [],
+      "tags": [
+        "helada",
+        "con alcohol"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -1231,15 +1404,19 @@
       "allergens": [
         "Gluten"
       ],
-      "portion": "Botella"
+      "portion": "Botella",
+      "calories": 140,
+      "summary": "Cerveza rubia en botella."
     },
     {
       "id": "vino-copa",
       "categoryId": "bebidas",
       "name": "VINO (COPA)",
-      "description": "Copa de vino.",
+      "description": "Copa de vino tinto. Para acompañar la pizza o la pasta. Servir a temperatura ambiente.",
       "image": "vino-copa",
-      "tags": [],
+      "tags": [
+        "con alcohol"
+      ],
       "available": true,
       "featured": false,
       "variants": [
@@ -1254,7 +1431,9 @@
       "allergens": [
         "Sulfitos"
       ],
-      "portion": "Copa"
+      "portion": "Copa",
+      "calories": 120,
+      "summary": "Copa de vino tinto."
     }
   ]
 }

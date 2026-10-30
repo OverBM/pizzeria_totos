@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Familia combo: bolsa para llevar con asa -->
+  <path d="M5.5 9h13l-1.2 11H6.7L5.5 9Z" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M9 9V7a3 3 0 0 1 6 0v2" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M9.5 13.5h5" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/>
+</svg>
