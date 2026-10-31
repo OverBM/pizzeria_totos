@@ -7,6 +7,7 @@ import 'package:pizzeria_totos/models/category.dart';
 import 'package:pizzeria_totos/models/claim.dart';
 import 'package:pizzeria_totos/models/delivery_config.dart';
 import 'package:pizzeria_totos/models/menu_data.dart';
+import 'package:pizzeria_totos/models/nutrition.dart';
 import 'package:pizzeria_totos/models/order.dart';
 import 'package:pizzeria_totos/models/payment_method.dart';
 import 'package:pizzeria_totos/models/product.dart';
@@ -404,10 +405,23 @@ final MenuData sampleMenu = MenuData(
       description: 'La de la casa.',
       featured: true,
       ingredients: ['Masa madre', 'Mozzarella'],
+      allergens: ['Gluten'],
       calories: 1120,
+      nutrition: NutritionInfo(
+        portion: '1 pizza entera (550 g)',
+        portionGrams: 550,
+        calories: 1120,
+        proteinG: 50.4,
+        carbsG: 134.4,
+        fatG: 42.3,
+        saturatedFatG: 16.9,
+        sugarsG: 6.7,
+        fiberG: 11,
+        sodiumMg: 3025,
+      ),
       variants: [
-        Variant(label: 'entera', priceSoles: 4400, slices: 8),
-        Variant(label: 'media', priceSoles: 2300, slices: 4),
+        Variant(label: 'entera', priceSoles: 43.90, slices: 8),
+        Variant(label: 'media', priceSoles: 22.90, slices: 4),
       ],
     ),
     Product(
@@ -415,7 +429,21 @@ final MenuData sampleMenu = MenuData(
       categoryId: 'bebidas',
       name: 'COCA COLA 600 ML',
       description: 'Bien fría.',
-      variants: [Variant(label: 'única', priceSoles: 500)],
+      calories: 250,
+      nutrition: NutritionInfo(
+        portion: '600 ml',
+        portionGrams: 600,
+        calories: 250,
+        proteinG: 0,
+        carbsG: 62.5,
+        fatG: 0,
+        saturatedFatG: 0,
+        sugarsG: 62.5,
+        fiberG: 0,
+        sodiumMg: 48,
+        glutenFree: true,
+      ),
+      variants: [Variant(label: 'única', priceSoles: 4.90)],
     ),
   ],
 );
@@ -453,7 +481,7 @@ final List<Branch> sampleBranches = [
     lat: -12.0651,
     lng: -75.2049,
     delivers: true,
-    deliveryFeeSoles: 300,
+    deliveryFeeSoles: 3.00,
     hours: sampleHours,
     phone: '51900000000',
     whatsapp: '51900000000',
@@ -467,7 +495,7 @@ final List<Branch> sampleBranches = [
     lat: -12.0520,
     lng: -75.2180,
     delivers: true,
-    deliveryFeeSoles: 300,
+    deliveryFeeSoles: 3.00,
     hours: sampleHours,
     sortOrder: 2,
   ),
@@ -490,7 +518,7 @@ final List<Branch> sampleBranches = [
     lat: -12.0560,
     lng: -75.1960,
     delivers: true,
-    deliveryFeeSoles: 300,
+    deliveryFeeSoles: 3.00,
     hours: sampleHours,
     sortOrder: 4,
   ),
@@ -499,10 +527,11 @@ final List<Branch> sampleBranches = [
 final List<Promotion> samplePromotions = [
   const Promotion(
     id: 'promo-totos',
-    title: "PIZZA TOTO'S -20%",
+    title: "PIZZA TOTO'S",
     subtitle: 'La de la casa, más barata',
     productId: 'pizza-totos',
-    discountPercent: 20,
+    variantLabel: 'entera',
+    priceSoles: 34.90,
     banner: true,
   ),
 ];
@@ -557,21 +586,22 @@ Order sampleOrder({
       productId: 'pizza-totos',
       name: "PIZZA TOTO'S",
       variantLabel: 'ENTERA',
-      unitPriceSoles: 3520,
+      unitPriceSoles: 34.90,
       quantity: 1,
-      originalUnitPriceSoles: 4400,
+      originalUnitPriceSoles: 43.90,
     ),
   ],
-  subtotalSoles: 3520,
-  shippingSoles: 300,
-  totalSoles: 3820,
+  subtotalSoles: 43.90,
+  shippingSoles: 3.00,
+  discountSoles: 9.00,
+  totalSoles: 37.90,
   customerName: 'Ana Torres',
   phone: '999 111 222',
   paymentMethodId: 'efectivo',
   paymentMethodLabel: 'Efectivo contra entrega',
   status: OrderStatus.fromName(status),
   address: 'Av. Giráldez 123, Huancayo',
-  savingsSoles: 880,
+  savingsSoles: 9.00,
 );
 
 Claim sampleClaim({String uid = 'uid-1'}) => Claim(

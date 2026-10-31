@@ -22,6 +22,9 @@ class PromoBanner extends StatelessWidget {
     final basePrice = item == null ? 0.0 : promotion.basePriceFor(item);
     final promoPrice = promotion.discountedPrice(basePrice);
     final hasDiscount = item != null && promoPrice < basePrice;
+    final discountPercent = item == null
+        ? 0
+        : promotion.effectiveDiscountPercent(basePrice);
     // Promoción abierta a cualquier variante: el precio es el más barato.
     final fromPrice =
         item != null &&
@@ -58,8 +61,8 @@ class PromoBanner extends StatelessWidget {
               child: Row(
                 children: [
                   PromoBadge(
-                    label: promotion.discountPercent != null
-                        ? '-${promotion.discountPercent}%'
+                    label: discountPercent > 0
+                        ? '-$discountPercent%'
                         : 'PRECIO ESPECIAL',
                   ),
                 ],
@@ -122,11 +125,16 @@ class PromoBanner extends StatelessWidget {
                         ),
                       const Spacer(),
                       if (onTap != null)
-                        PillButton(
-                          label: 'APROVECHAR',
+                        TextButton(
                           onPressed: onTap,
-                          showArrow: true,
-                          height: 44,
+                          child: Text(
+                            'VER ›',
+                            style: Brand.ui(
+                              11,
+                              weight: FontWeight.w700,
+                              color: colors.action,
+                            ),
+                          ),
                         ),
                     ],
                   ),

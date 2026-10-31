@@ -12,6 +12,7 @@ import '../../widgets/widgets.dart';
 import '../../core/theme/product_family.dart';
 import '../../core/theme/theme_context.dart';
 import '../../models/product.dart';
+import '../../models/nutrition.dart';
 import '../../models/variant.dart';
 
 /// Detalle de producto con imagen a sangre, ficha y selector de variantes.
@@ -61,12 +62,15 @@ class _ProductDetailViewState extends State<ProductDetailView> {
     final promotions = context.watch<PromotionController>();
     final colors = context.colors;
     final variant = _variant;
-    final promotion = variant == null
+    final priced = variant == null
         ? null
-        : promotions.forVariant(product.id, variant.label);
-    final unitPrice = variant == null
-        ? 0.0
-        : promotion?.discountedPrice(variant.priceSoles) ?? variant.priceSoles;
+        : promotions.priceFor(product, variant);
+    final promotion = priced?.promotion;
+    final unitPrice = priced?.finalSoles ?? 0.0;
+    final discountPercent = promotion?.effectiveDiscountPercent(
+          variant?.priceSoles ?? 0,
+        ) ??
+        0;
     final category = context.read<CatalogController>().menu.categoryById(
       product.categoryId,
     );
@@ -113,8 +117,8 @@ class _ProductDetailViewState extends State<ProductDetailView> {
                             left: Brand.s16,
                             bottom: Brand.s16,
                             child: PromoBadge(
-                              label: promotion.discountPercent != null
-                                  ? '-${promotion.discountPercent}%'
+                              label: discountPercent > 0
+                                  ? '-$discountPercent%'
                                   : 'PRECIO ESPECIAL',
                             ),
                           ),
@@ -228,6 +232,15 @@ class _ProductDetailViewState extends State<ProductDetailView> {
                               ),
                             ],
                           ),
+                          if (product.nutrition != null) ...[
+                            const SizedBox(height: Brand.s24),
+                            const SectionHeading(
+                              eyebrow: 'Ficha nutricional',
+                              title: 'Valores por porción',
+                            ),
+                            const SizedBox(height: Brand.s12),
+                            _NutritionTable(nutrition: product.nutrition!),
+                          ],
                         if (product.images.length > 1) ...[
                           const SizedBox(height: Brand.s24),
                           const SectionHeading(
@@ -392,6 +405,60 @@ class _ProductDetailViewState extends State<ProductDetailView> {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Producto copiado para compartir')),
+    );
+  }
+}
+
+class _NutritionTable extends StatelessWidget {
+  const _NutritionTable({required this.nutrition});
+
+  final NutritionInfo nutrition;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final rows = <(String, String)>[
+      ('Calorías', '${nutrition.calories} kcal'),
+      ('Proteínas', '${nutrition.proteinG} g'),
+      ('Carbohidratos', '${nutrition.carbsG} g'),
+      ('Grasas', '${nutrition.fatG} g'),
+      ('Grasas saturadas', '${nutrition.saturatedFatG} g'),
+      ('Azúcares', '${nutrition.sugarsG} g'),
+      ('Fibra', '${nutrition.fiberG} g'),
+      ('Sodio', '${nutrition.sodiumMg} mg'),
+      if (nutrition.alcoholG > 0) ('Alcohol', '${nutrition.alcoholG} g'),
+    ];
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(Brand.s12),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: Brand.cardRadius,
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0) const SizedBox(height: Brand.s4),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    rows[i].$1,
+                    style: context.text.bodySm.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ),
+                Text(
+                  rows[i].$2,
+                  style: Brand.ui(12, weight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

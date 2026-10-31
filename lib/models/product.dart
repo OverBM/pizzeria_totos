@@ -1,5 +1,6 @@
 import 'media_ref.dart';
 import 'model_utils.dart';
+import 'nutrition.dart';
 import 'variant.dart';
 
 /// Producto de la carta con una o más variantes.
@@ -22,6 +23,7 @@ class Product {
     this.portion,
     this.summary,
     this.gallery = const [],
+    this.nutrition,
   });
 
   final String id;
@@ -47,6 +49,11 @@ class Product {
 
   /// Imágenes extra para la galería del detalle.
   final List<MediaRef> gallery;
+
+  /// Ficha nutricional completa (opcional).
+  final NutritionInfo? nutrition;
+
+  bool get isGlutenFree => nutrition?.glutenFree ?? false;
 
   bool get hasVariants => variants.length > 1;
 
@@ -101,35 +108,50 @@ class Product {
   /// Precio más bajo en soles, para mostrar en la tarjeta.
   double get minPriceSoles => cheapestVariant?.priceSoles ?? 0;
 
-  factory Product.fromMap(Map<String, dynamic> json) => Product(
-    id: ModelUtils.asString(json['id']),
-    categoryId: ModelUtils.asString(json['categoriaId'] ?? json['categoryId']),
-    name: ModelUtils.asString(json['nombre'] ?? json['name']),
-    description: ModelUtils.asString(
-      json['descripcion'] ?? json['description'],
-    ),
-    image: MediaRef.fromValue(json['imagen'] ?? json['image']),
-    tags: ModelUtils.asStringList(json['etiquetas'] ?? json['tags']),
-    available: ModelUtils.asBool(
-      json['disponible'] ?? json['available'],
-      fallback: true,
-    ),
-    featured: ModelUtils.asBool(json['destacado'] ?? json['featured']),
-    ingredients: ModelUtils.asStringList(
-      json['ingredientes'] ?? json['ingredients'],
-    ),
-    allergens: ModelUtils.asStringList(json['alergenos'] ?? json['allergens']),
-    calories: ModelUtils.asIntOrNull(json['calorias'] ?? json['calories']),
-    portion: ModelUtils.asStringOrNull(json['porcion'] ?? json['portion']),
-    summary: ModelUtils.asStringOrNull(json['resumen'] ?? json['summary']),
-    gallery: ModelUtils.asMapList(json['galeria'] ?? json['gallery'])
-        .map(MediaRef.fromMap)
-        .whereType<MediaRef>()
-        .toList(),
-    variants: ModelUtils.asMapList(
-      json['variantes'] ?? json['variants'],
-    ).map(Variant.fromMap).toList(),
-  );
+  factory Product.fromMap(Map<String, dynamic> json) {
+    final nutritionJson = json['nutricion'] ?? json['nutrition'];
+    final nutrition = nutritionJson is Map
+        ? NutritionInfo.fromMap(Map<String, dynamic>.from(nutritionJson))
+        : null;
+    return Product(
+      id: ModelUtils.asString(json['id']),
+      categoryId: ModelUtils.asString(
+        json['categoriaId'] ?? json['categoryId'],
+      ),
+      name: ModelUtils.asString(json['nombre'] ?? json['name']),
+      description: ModelUtils.asString(
+        json['descripcion'] ?? json['description'],
+      ),
+      image: MediaRef.fromValue(json['imagen'] ?? json['image']),
+      tags: ModelUtils.asStringList(json['etiquetas'] ?? json['tags']),
+      available: ModelUtils.asBool(
+        json['disponible'] ?? json['available'],
+        fallback: true,
+      ),
+      featured: ModelUtils.asBool(json['destacado'] ?? json['featured']),
+      ingredients: ModelUtils.asStringList(
+        json['ingredientes'] ?? json['ingredients'],
+      ),
+      allergens: ModelUtils.asStringList(
+        json['alergenos'] ?? json['allergens'],
+      ),
+      calories:
+          nutrition?.calories ??
+          ModelUtils.asIntOrNull(json['calorias'] ?? json['calories']),
+      portion:
+          nutrition?.portion ??
+          ModelUtils.asStringOrNull(json['porcion'] ?? json['portion']),
+      summary: ModelUtils.asStringOrNull(json['resumen'] ?? json['summary']),
+      gallery: ModelUtils.asMapList(json['galeria'] ?? json['gallery'])
+          .map(MediaRef.fromMap)
+          .whereType<MediaRef>()
+          .toList(),
+      variants: ModelUtils.asMapList(
+        json['variantes'] ?? json['variants'],
+      ).map(Variant.fromMap).toList(),
+      nutrition: nutrition,
+    );
+  }
 
   Map<String, dynamic> toMap() => {
     'id': id,
@@ -142,6 +164,7 @@ class Product {
     'destacado': featured,
     if (ingredients.isNotEmpty) 'ingredientes': ingredients,
     if (allergens.isNotEmpty) 'alergenos': allergens,
+    if (nutrition != null) 'nutricion': nutrition!.toMap(),
     if (calories != null) 'calorias': calories,
     if (portion != null) 'porcion': portion,
     if (summary != null) 'resumen': summary,

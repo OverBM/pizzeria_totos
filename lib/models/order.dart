@@ -82,7 +82,7 @@ class Order {
   final String? reference;
   final String? note;
 
-  /// Ahorro por promociones (soles).
+  /// Ahorro por promociones (soles). Alias legacy de [discountSoles].
   final double savingsSoles;
   final bool whatsappSent;
 
@@ -109,11 +109,10 @@ class Order {
       'envio',
       centsKey: 'shippingCents',
     ),
-    discountSoles: ModelUtils.asMoney(
-      json,
-      'descuento',
-      centsKey: 'discountCents',
-    ),
+    discountSoles: json.containsKey('descuento') ||
+            json.containsKey('discountCents')
+        ? ModelUtils.asMoney(json, 'descuento', centsKey: 'discountCents')
+        : ModelUtils.asMoney(json, 'ahorro', centsKey: 'savingsCents'),
     totalSoles: ModelUtils.asMoney(json, 'total', centsKey: 'totalCents'),
     customerName: ModelUtils.asString(
       json['cliente'] ?? json['customerName'],
@@ -133,11 +132,10 @@ class Order {
       json['referencia'] ?? json['reference'],
     ),
     note: ModelUtils.asStringOrNull(json['nota'] ?? json['note']),
-    savingsSoles: ModelUtils.asMoney(
-      json,
-      'ahorro',
-      centsKey: 'savingsCents',
-    ),
+    savingsSoles: json.containsKey('ahorro') ||
+            json.containsKey('savingsCents')
+        ? ModelUtils.asMoney(json, 'ahorro', centsKey: 'savingsCents')
+        : ModelUtils.asMoney(json, 'descuento', centsKey: 'discountCents'),
     whatsappSent: ModelUtils.asBool(
       json['enviadoWhatsapp'] ?? json['whatsappSent'],
     ),
@@ -155,8 +153,7 @@ class Order {
     'subtotal': Money.round(subtotalSoles),
     'envio': Money.round(shippingSoles),
     'descuento': Money.round(discountSoles),
-    'total': Money.round(totalSoles),
-    'cliente': customerName,
+    'total': Money.round(totalSoles),    'cliente': customerName,
     'telefono': phone,
     'medioPago': paymentMethodId,
     'medioPagoEtiqueta': paymentMethodLabel,
@@ -164,7 +161,7 @@ class Order {
     if (address != null) 'direccion': address,
     if (reference != null) 'referencia': reference,
     if (note != null) 'nota': note,
-    'ahorro': Money.round(savingsSoles),
+    'ahorro': Money.round(discountSoles),
     'enviadoWhatsapp': whatsappSent,
   };
 }

@@ -22,7 +22,8 @@ enum CheckoutIssue {
   noAddress,
   noBranch,
   branchWithoutDelivery,
-  branchClosed;
+  branchClosed,
+  noPaymentMethod;
 
   String get message => switch (this) {
     CheckoutIssue.emptyCart => 'Agrega al menos un producto a tu pedido.',
@@ -36,6 +37,8 @@ enum CheckoutIssue {
     CheckoutIssue.branchClosed =>
       'La sede está cerrada en este horario. Elige otra sede o vuelve dentro '
           'del horario de atención.',
+    CheckoutIssue.noPaymentMethod =>
+      'No hay medios de pago configurados. Inténtalo de nuevo en un momento.',
   };
 }
 
@@ -123,6 +126,7 @@ class CheckoutController extends ChangeNotifier {
   }
 
   double get subtotalSoles => _cart.subtotalSoles;
+  double get discountSoles => _cart.discountSoles;
   double get savingsSoles => _cart.savingsSoles;
   double get totalSoles => _cart.totalSoles(shippingSoles: shippingSoles);
   List<CartItem> get items => _cart.items;
@@ -176,6 +180,7 @@ class CheckoutController extends ChangeNotifier {
     if (!_auth.isSignedIn) issues.add(CheckoutIssue.noSession);
     final branch = selectedBranch;
     if (branch == null) issues.add(CheckoutIssue.noBranch);
+    if (paymentMethods.isEmpty) issues.add(CheckoutIssue.noPaymentMethod);
     if (branch != null && !branch.isOpenAt(_now())) {
       issues.add(CheckoutIssue.branchClosed);
     }
@@ -201,15 +206,28 @@ class CheckoutController extends ChangeNotifier {
       notifyListeners();
       return null;
     }
-    final account = _auth.account!;
-    final branch = selectedBranch!;
-    final address = selectedAddress;
-    final payment = selectedPaymentMethod;
 
     _submitting = true;
     _error = null;
     notifyListeners();
     try {
+      final account = _auth.account;
+      final branch = selectedBranch;
+      if (account == null) {
+        _error = CheckoutIssue.noSession.message;
+        return null;
+      }
+      if (branch == null) {
+        _error = CheckoutIssue.noBranch.message;
+        return null;
+      }
+      if (paymentMethods.isEmpty) {
+        _error = CheckoutIssue.noPaymentMethod.message;
+        return null;
+      }
+
+      final address = selectedAddress;
+      final payment = selectedPaymentMethod;
       final now = DateTime.now();
       final order = Order(
         id: '',
@@ -222,6 +240,7 @@ class CheckoutController extends ChangeNotifier {
         items: List.unmodifiable(_cart.items),
         subtotalSoles: subtotalSoles,
         shippingSoles: shippingSoles,
+        discountSoles: discountSoles,
         totalSoles: totalSoles,
         customerName: account.name,
         phone: account.phone,

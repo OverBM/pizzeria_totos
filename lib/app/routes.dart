@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../core/motion/motion_widgets.dart';
 import '../models/claim.dart';
+import '../models/order.dart';
 import '../models/product.dart';
 import '../views/auth/login_view.dart';
 import '../views/auth/register_view.dart';
 import '../views/carta/product_detail_view.dart';
+import '../views/cart/cart_screen.dart';
+import '../views/cart/order_detail_view.dart';
 import '../views/cart/orders_view.dart';
+import '../views/claims/claims_screen.dart';
 import '../views/claims/claim_detail_view.dart';
 import '../views/profile/profile_view.dart';
 import '../views/promotions/promotions_view.dart';
@@ -29,6 +33,32 @@ class AppRoutes {
 
   static Route<T> orders<T>() =>
       MotionRoute<T>(builder: (_) => const OrdersView());
+
+  static Route<T> orderDetail<T>(Order order) =>
+      MotionRoute<T>(builder: (_) => OrderDetailView(order: order));
+
+  static Route<T> claims<T>({required VoidCallback onOpenAuth}) =>
+      MotionRoute<T>(
+        builder: (context) => ClaimsScreen(
+          onOpenAuth: onOpenAuth,
+          onOpenClaim: (claim) =>
+              Navigator.of(context).push(AppRoutes.claim(claim)),
+        ),
+      );
+
+  static Route<T> cart<T>({
+    required VoidCallback onGoToCarta,
+    required VoidCallback onOpenAuth,
+    required VoidCallback onOpenProfile,
+    required VoidCallback onOpenOrders,
+  }) => MotionRoute<T>(
+    builder: (_) => CartScreen(
+      onGoToCarta: onGoToCarta,
+      onOpenAuth: onOpenAuth,
+      onOpenProfile: onOpenProfile,
+      onOpenOrders: onOpenOrders,
+    ),
+  );
 
   static Route<T> product<T>(Product product, {String? variantLabel}) =>
       MotionRoute<T>(

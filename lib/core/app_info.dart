@@ -7,10 +7,10 @@ class AppInfo {
   const AppInfo._();
 
   /// `versionName` del APK y parte visible de la etiqueta.
-  static const String version = '1.2.1';
+  static const String version = '1.3.0';
 
-  /// `versionCode` base (el `+3` de `pubspec.yaml`). No se pinta en la UI.
-  static const int build = 3;
+  /// `versionCode` base (el `+4` de `pubspec.yaml`). No se pinta en la UI.
+  static const int build = 4;
 
   /// Etiqueta visible en el pie del perfil: exactamente `V1.2.1`.
   static const String label = 'V$version';

@@ -90,6 +90,8 @@ void main() {
 
     expect(find.text('INGREDIENTES'), findsOneWidget);
     expect(find.text('CALORÍAS'), findsOneWidget);
+    expect(find.text('VALORES POR PORCIÓN'), findsOneWidget);
+    expect(find.text('Proteínas'), findsOneWidget);
     expect(find.text('AGREGAR'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -194,13 +196,33 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Nombre'), findsOneWidget);
-    expect(find.text('Teléfono / WhatsApp'), findsOneWidget);
-    expect(find.text('TUS DIRECCIONES'), findsOneWidget);
+    expect(find.text('Teléfono'), findsOneWidget);
+    expect(find.text('DIRECCIONES'), findsOneWidget);
     expect(find.text('AGREGAR'), findsOneWidget);
     expect(find.text('CASA'), findsOneWidget);
     // Sin conmutador de tema ni acceso a un panel de administración.
     expect(find.byIcon(Icons.brightness_6_rounded), findsNothing);
     expect(find.textContaining('Rol'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('perfil abre la edición y muestra los accesos', (tester) async {
+    usePhoneViewport(tester, height: 2000);
+    final app = await ready();
+    addTearDown(app.dispose);
+    await app.signIn();
+
+    await tester.pumpWidget(app.wrap(const ProfileView()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Mis pedidos'), findsOneWidget);
+    expect(find.text('Reclamos'), findsOneWidget);
+    expect(find.text('Promos'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Editar perfil'));
+    await tester.pumpAndSettle();
+    expect(find.text('DATOS PERSONALES'), findsOneWidget);
+    expect(find.text('Aún no verificado'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -254,6 +276,29 @@ void main() {
 
     expect(find.textContaining('TOT-20261015-1234'), findsOneWidget);
     expect(find.textContaining('TOT-20261015-9999'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('el historial abre el detalle de un pedido', (tester) async {
+    usePhoneViewport(tester, height: 1800);
+    final app = TestApp(
+      orderRepository: FakeOrderRepository(orders: [sampleOrder()]),
+    );
+    await app.loadAll();
+    addTearDown(app.dispose);
+    await app.signIn();
+    app.orders.bind('uid-1');
+
+    await tester.pumpWidget(app.wrap(const OrdersView()));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    await tester.tap(find.textContaining('TOT-20261015-1234').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('DETALLE DEL PEDIDO'), findsOneWidget);
+    expect(find.text("PIZZA TOTO'S"), findsWidgets);
+    expect(find.text('TOTAL'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

@@ -372,7 +372,9 @@ void main() {
     await tester.pumpWidget(app.wrap(const ProfileView()));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('ELIMINAR'));
+    await tester.tap(find.byTooltip('Acciones de Casa'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eliminar'));
     await tester.pumpAndSettle();
     final dialog = find.byType(AlertDialog);
     expect(dialog, findsOneWidget);

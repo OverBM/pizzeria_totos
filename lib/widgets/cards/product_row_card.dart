@@ -15,6 +15,7 @@ class ProductRowCard extends StatelessWidget {
     required this.categoryId,
     required this.summary,
     required this.priceLabel,
+    this.originalPriceLabel,
     this.onTap,
     this.onAdd,
   });
@@ -25,6 +26,7 @@ class ProductRowCard extends StatelessWidget {
   final String? categoryId;
   final ProductSummary summary;
   final String priceLabel;
+  final String? originalPriceLabel;
   final VoidCallback? onTap;
   final VoidCallback? onAdd;
 
@@ -112,22 +114,40 @@ class ProductRowCard extends StatelessWidget {
                           ],
                           const SizedBox(height: Brand.s8),
                           SizedBox(
-                            height: onAdd == null ? null : 36,
+                            height: onAdd == null ? null : 42,
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child: Padding(
                                 padding: EdgeInsets.only(
                                   right: onAdd == null ? 0 : 44,
                                 ),
-                                child: Text(
-                                  priceLabel,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Brand.ui(
-                                    17,
-                                    weight: FontWeight.w700,
-                                    color: colors.textPrimary,
-                                  ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (originalPriceLabel != null)
+                                      Text(
+                                        originalPriceLabel!,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Brand.ui(
+                                          10,
+                                          color: colors.textSecondary,
+                                        ).copyWith(
+                                          decoration: TextDecoration.lineThrough,
+                                        ),
+                                      ),
+                                    Text(
+                                      priceLabel,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Brand.ui(
+                                        17,
+                                        weight: FontWeight.w700,
+                                        color: colors.textPrimary,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),

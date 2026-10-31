@@ -12,12 +12,20 @@ import '../../widgets/widgets.dart';
 import '../../core/theme/theme_context.dart';
 import '../../models/product.dart';
 import '../../models/promotion.dart';
+import '../carta/catalog_filter_controls.dart';
 
 /// Pantalla completa de promociones vigentes.
 class PromotionsView extends StatefulWidget {
-  const PromotionsView({super.key, required this.onOpenProduct});
+  const PromotionsView({
+    super.key,
+    required this.onOpenProduct,
+    this.embedded = false,
+  });
 
   final void Function(Product product, {String? variantLabel}) onOpenProduct;
+
+  /// Si es `true`, se muestra dentro de una pestaña del shell, sin Scaffold.
+  final bool embedded;
 
   @override
   State<PromotionsView> createState() => _PromotionsViewState();
@@ -31,6 +39,10 @@ class _PromotionsViewState extends State<PromotionsView> {
   Widget build(BuildContext context) {
     final promotions = context.watch<PromotionController>();
     final catalog = context.watch<CatalogController>();
+
+    if (widget.embedded) {
+      return _body(context, promotions, catalog);
+    }
 
     return Scaffold(
       appBar: TotoTopBar(
@@ -69,22 +81,42 @@ class _PromotionsViewState extends State<PromotionsView> {
     }
 
     final active = promotions.active
-        .where((promotion) => catalog.byId(promotion.productId)?.isSellable ?? false)
+        .where((promotion) {
+          final product = catalog.byId(promotion.productId);
+          if (product == null || !product.isSellable) return false;
+          return catalog.matchesFilters(
+            product,
+            price: promotion.priceFor(product),
+          );
+        })
         .toList();
     if (active.isEmpty) {
       return SingleChildScrollView(
         padding: const EdgeInsets.only(top: Brand.s24),
-        child: EmptyState(
-          title: 'Sin promociones por ahora',
-          message:
-              promotions.error ??
-              'Estamos preparando nuevas ofertas. Mientras tanto, '
-                  'revisa toda la carta.',
-          icon: Icons.local_offer_outlined,
-          actionLabel: 'VER LA CARTA',
-          onAction: () {
-            Navigator.of(context).maybePop();
-          },
+        child: Column(
+          children: [
+            const CatalogFilterControls(),
+            const SizedBox(height: Brand.s16),
+            EmptyState(
+              title: catalog.hasActiveFilters
+                  ? 'Sin promociones con esos filtros'
+                  : 'Sin promociones por ahora',
+              message: catalog.hasActiveFilters
+                  ? 'Prueba con otra búsqueda o quita algún filtro.'
+                  : promotions.error ??
+                        'Estamos preparando nuevas ofertas. Mientras tanto, '
+                            'revisa toda la carta.',
+              icon: Icons.local_offer_outlined,
+              actionLabel: catalog.hasActiveFilters
+                  ? 'LIMPIAR FILTROS'
+                  : 'VER LA CARTA',
+              onAction: catalog.hasActiveFilters
+                  ? catalog.clearFilters
+                  : () {
+                      Navigator.of(context).maybePop();
+                    },
+            ),
+          ],
         ),
       );
     }
@@ -129,6 +161,10 @@ class _PromotionsViewState extends State<PromotionsView> {
           style: context.text.bodySm.copyWith(
             color: context.colors.textSecondary,
           ),
+        ),
+        const CatalogFilterControls(
+          horizontalPadding: 0,
+          topPadding: Brand.s16,
         ),
         if (categories.length > 1) ...[
           const SizedBox(height: Brand.s16),
@@ -194,6 +230,7 @@ class _PromotionCard extends StatelessWidget {
     final variant = promotion.variantFor(product);
     final basePrice = promotion.basePriceFor(product);
     final promoPrice = promotion.priceFor(product);
+    final discountPercent = promotion.effectiveDiscountPercent(basePrice);
     final fromPrice =
         promotion.appliesToAnyVariant && product.variants.length > 1;
     final priceLabel =
@@ -230,8 +267,8 @@ class _PromotionCard extends StatelessWidget {
                   left: Brand.s12,
                   top: Brand.s12,
                   child: PromoBadge(
-                    label: promotion.discountPercent != null
-                        ? '-${promotion.discountPercent}%'
+                    label: discountPercent > 0
+                        ? '-$discountPercent%'
                         : 'PRECIO ESPECIAL',
                   ),
                 ),

@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +16,7 @@ import '../../widgets/widgets.dart';
 import '../../core/theme/theme_context.dart';
 import '../../models/product.dart';
 import '../../services/settings_service.dart';
+import 'catalog_filter_controls.dart';
 
 /// Carta editorial con filtros de categoría y tarjetas horizontales.
 class CartaView extends StatefulWidget {
@@ -37,9 +38,16 @@ class _CartaViewState extends State<CartaView>
   String? _lastCategoryId;
 
   @override
+  void dispose() {
+    _fade.dispose();
+    super.dispose();
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final id = context.read<CatalogController>().selectedCategoryId;
+    final catalog = context.read<CatalogController>();
+    final id = catalog.selectedCategoryId;
     if (_lastCategoryId == null) {
       _lastCategoryId = id;
       return;
@@ -48,12 +56,6 @@ class _CartaViewState extends State<CartaView>
       _lastCategoryId = id;
       _fade.forward(from: 0);
     }
-  }
-
-  @override
-  void dispose() {
-    _fade.dispose();
-    super.dispose();
   }
 
   @override
@@ -107,6 +109,9 @@ class _CartaViewState extends State<CartaView>
         SliverToBoxAdapter(
           child: ContentWidth(child: _intro(context, catalog)),
         ),
+        const SliverToBoxAdapter(
+          child: ContentWidth(child: CatalogFilterControls()),
+        ),
         SliverToBoxAdapter(
           child: ContentWidth(child: _filters(context, catalog)),
         ),
@@ -147,16 +152,24 @@ class _CartaViewState extends State<CartaView>
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: Brand.s24),
                 child: EmptyState(
-                  title: 'No hay productos en esta categoría',
-                  message:
-                      'Por ahora no tenemos productos disponibles en '
-                      '«${catalog.selectedCategoryName.toLowerCase()}». '
-                      'Prueba con otra categoría.',
+                  title: catalog.hasActiveFilters
+                      ? 'No encontramos productos'
+                      : 'No hay productos en esta categoría',
+                  message: catalog.hasActiveFilters
+                      ? 'Prueba con otra búsqueda o quita algún filtro para '
+                            'ver más opciones de la carta.'
+                      : 'Por ahora no tenemos productos disponibles en '
+                            '«${catalog.selectedCategoryName.toLowerCase()}». '
+                            'Prueba con otra categoría.',
                   icon: Icons.local_pizza_outlined,
-                  actionLabel: 'VER LAS MÁS PEDIDAS',
-                  onAction: () => catalog.selectCategory(
-                    CatalogController.featuredCategoryId,
-                  ),
+                  actionLabel: catalog.hasActiveFilters
+                      ? 'LIMPIAR FILTROS'
+                      : 'VER LAS MÁS PEDIDAS',
+                  onAction: catalog.hasActiveFilters
+                      ? catalog.clearFilters
+                      : () => catalog.selectCategory(
+                          CatalogController.featuredCategoryId,
+                        ),
                 ),
               ),
             ),
@@ -181,27 +194,35 @@ class _CartaViewState extends State<CartaView>
   Widget _intro(BuildContext context, CatalogController catalog) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(Brand.s16, Brand.s24, Brand.s16, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '‹ NUESTRA CARTA ›',
-            style: Brand.ui(
-              11,
-              weight: FontWeight.w700,
-              color: context.colors.action,
+      child: SizedBox(
+        width: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '‹ NUESTRA CARTA ›',
+              textAlign: TextAlign.left,
+              style: Brand.ui(
+                11,
+                weight: FontWeight.w700,
+                color: context.colors.action,
+              ),
             ),
-          ),
-          const SizedBox(height: Brand.s4),
-          const OutlinedDisplayTitle('LA CARTA', size: 40),
-          const SizedBox(height: Brand.s8),
-          Text(
-            'Elige tu favorita y la preparamos al momento.',
-            style: context.text.bodySm.copyWith(
-              color: context.colors.textSecondary,
+            const SizedBox(height: Brand.s4),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedDisplayTitle('LA CARTA', size: 40),
             ),
-          ),
-        ],
+            const SizedBox(height: Brand.s8),
+            Text(
+              'Elige tu favorita y la preparamos al momento.',
+              textAlign: TextAlign.left,
+              style: context.text.bodySm.copyWith(
+                color: context.colors.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -219,10 +240,20 @@ class _CartaViewState extends State<CartaView>
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: Brand.s16),
-          itemCount: categories.length + 1,
+          itemCount: categories.length + 2,
           separatorBuilder: (_, _) => const SizedBox(width: Brand.s8),
           itemBuilder: (context, index) {
             if (index == 0) {
+              return FilterPill(
+                label: 'Todos',
+                selected:
+                    catalog.selectedCategoryId == CatalogController.allCategoryId,
+                onTap: () => catalog.selectCategory(
+                  CatalogController.allCategoryId,
+                ),
+              );
+            }
+            if (index == 1) {
               return FilterPill(
                 label: 'Las más pedidas',
                 selected:
@@ -233,7 +264,7 @@ class _CartaViewState extends State<CartaView>
                 ),
               );
             }
-            final category = categories[index - 1];
+            final category = categories[index - 2];
             return FilterPill(
               label: category.name,
               selected: catalog.selectedCategoryId == category.id,
@@ -252,12 +283,13 @@ class _CartaViewState extends State<CartaView>
     CartController cart,
   ) {
     final variant = product.defaultVariantOrNull;
-    final promotion = variant == null
+    final priced = variant == null
         ? null
-        : promotions.forVariant(product.id, variant.label);
-    final price = variant == null
-        ? null
-        : promotion?.discountedPrice(variant.priceSoles) ?? variant.priceSoles;
+        : promotions.priceFor(product, variant);
+    final price = priced?.finalSoles;
+    final originalPrice = priced?.hasDiscount == true
+        ? priced!.baseSoles
+        : null;
     return ProductRowCard(
       image: Hero(
         tag: 'product-${product.id}',
@@ -272,6 +304,9 @@ class _CartaViewState extends State<CartaView>
       categoryId: product.categoryId,
       summary: ProductSummary.of(product),
       priceLabel: price == null ? 'No disponible' : Money.format(price),
+      originalPriceLabel: originalPrice == null
+          ? null
+          : Money.format(originalPrice),
       onTap: () => widget.onGoToProduct(product),
       onAdd: product.isSellable
           ? () {

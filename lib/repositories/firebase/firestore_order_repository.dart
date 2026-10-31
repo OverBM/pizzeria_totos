@@ -32,7 +32,7 @@ class FirestoreOrderRepository implements OrderRepository {
       return _build(snapshot);
     } catch (error) {
       throw RepositoryException(
-        'No se pudo cargar tu historial de pedidos.',
+        _readMessage(error),
         code: error.toString(),
       );
     }
@@ -51,7 +51,7 @@ class FirestoreOrderRepository implements OrderRepository {
       return reference.id;
     } catch (error) {
       throw RepositoryException(
-        'No se pudo registrar el pedido. Inténtalo de nuevo.',
+        _writeMessage(error),
         code: error.toString(),
       );
     }
@@ -61,6 +61,33 @@ class FirestoreOrderRepository implements OrderRepository {
       .docs
       .map((doc) => Order.fromMap(doc.data(), id: doc.id))
       .toList();
+
+  String _readMessage(Object error) {
+    if (error is FirebaseException) {
+      if (error.code == 'failed-precondition') {
+        return 'Falta un índice de Firestore para ordenar tus pedidos. '
+            'Pide al administrador que publique los índices.';
+      }
+      if (error.code == 'permission-denied') {
+        return 'No tienes permiso para leer tus pedidos. Revisa las reglas '
+            'de Firestore.';
+      }
+    }
+    return 'No se pudo cargar tu historial de pedidos.';
+  }
+
+  String _writeMessage(Object error) {
+    if (error is FirebaseException) {
+      if (error.code == 'permission-denied') {
+        return 'Firestore rechazó el pedido. Revisa las reglas publicadas.';
+      }
+      if (error.code == 'unavailable') {
+        return 'Sin conexión con Firestore. Tu carrito se conserva; '
+            'inténtalo de nuevo.';
+      }
+    }
+    return 'No se pudo registrar el pedido. Inténtalo de nuevo.';
+  }
 
   @override
   Future<void> markWhatsappSent(String orderId) async {

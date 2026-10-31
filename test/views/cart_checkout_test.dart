@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pizzeria_totos/models/account.dart';
 import 'package:pizzeria_totos/models/order.dart';
 import 'package:pizzeria_totos/views/cart/cart_view.dart';
+import 'package:pizzeria_totos/widgets/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/harness.dart';
@@ -153,6 +154,10 @@ void main() {
 
     await tester.pumpWidget(app.wrap(Scaffold(body: _cartView())));
     await tester.pumpAndSettle();
+
+    expect(find.byType(RemoveLineButton), findsOneWidget);
+    expect(find.text('Subtotal'), findsOneWidget);
+    expect(find.text('Descuento'), findsOneWidget);
 
     await tester.tap(find.text('CONFIRMAR PEDIDO'));
     await tester.pumpAndSettle();

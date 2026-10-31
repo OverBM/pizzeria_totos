@@ -5,14 +5,20 @@ part of '../widgets.dart';
 ///
 /// No se redibuja el wordmark: se usa el asset oficial.
 class BrandWordmark extends StatelessWidget {
-  const BrandWordmark({super.key, this.height = 30, this.showTagline = true});
+  const BrandWordmark({
+    super.key,
+    this.height = 30,
+    this.showTagline = true,
+    this.onTap,
+  });
 
   final double height;
   final bool showTagline;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final content = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         BrandLogo(surface: LogoSurface.transparent, height: height),
@@ -38,6 +44,16 @@ class BrandWordmark extends StatelessWidget {
           ),
         ],
       ],
+    );
+    if (onTap == null) return content;
+    return Semantics(
+      button: true,
+      label: 'Ir al inicio',
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: content,
+      ),
     );
   }
 }

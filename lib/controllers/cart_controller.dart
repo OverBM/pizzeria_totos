@@ -30,16 +30,20 @@ class CartController extends ChangeNotifier {
 
   int get count => _items.fold(0, (total, item) => total + item.quantity);
 
-  /// Subtotal en soles, redondeado una sola vez.
+  /// Subtotal en soles con precios de lista (antes de promociones).
   double get subtotalSoles =>
-      Money.sum(_items.map((item) => item.lineTotalSoles));
+      Money.sum(_items.map((item) => item.lineSubtotalSoles));
 
-  /// Ahorro total en soles.
-  double get savingsSoles => Money.sum(_items.map((item) => item.savingsSoles));
+  /// Descuento total por promociones.
+  double get discountSoles =>
+      Money.sum(_items.map((item) => item.lineDiscountSoles));
 
-  /// Total en soles con el envío indicado.
+  /// Ahorro total en soles. Alias de [discountSoles].
+  double get savingsSoles => discountSoles;
+
+  /// Total en soles: subtotal de lista − descuento + envío.
   double totalSoles({double shippingSoles = 0}) =>
-      Money.sum([subtotalSoles, shippingSoles]);
+      Money.sum([subtotalSoles, -discountSoles, shippingSoles]);
 
   Future<void> load() async {
     _items = await _storage.load();
@@ -49,9 +53,9 @@ class CartController extends ChangeNotifier {
 
   /// Agrega una variante, aplicando la promoción vigente si existe.
   void add(Product product, Variant variant, {int quantity = 1}) {
-    final promotion = _promotions.forVariant(product.id, variant.label);
-    final original = variant.priceSoles;
-    final price = promotion?.discountedPrice(original) ?? Money.round(original);
+    final priced = _promotions.priceFor(product, variant);
+    final original = priced.baseSoles;
+    final price = priced.finalSoles;
     final image =
         product.image?.url ??
         product.image?.driveId ??

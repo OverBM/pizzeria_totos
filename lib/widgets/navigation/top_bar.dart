@@ -8,6 +8,7 @@ class TotoTopBar extends StatelessWidget implements PreferredSizeWidget {
     this.actions = const [],
     this.leading,
     this.showWordmark = true,
+    this.onWordmarkTap,
     this.bottom,
     this.transparent = false,
   });
@@ -15,6 +16,7 @@ class TotoTopBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget> actions;
   final Widget? leading;
   final bool showWordmark;
+  final VoidCallback? onWordmarkTap;
   final PreferredSizeWidget? bottom;
   final bool transparent;
 
@@ -29,7 +31,9 @@ class TotoTopBar extends StatelessWidget implements PreferredSizeWidget {
       leading: leading,
       leadingWidth: leading == null ? null : 56,
       titleSpacing: leading == null ? Brand.s16 : 0,
-      title: showWordmark ? const BrandWordmark() : null,
+      title: showWordmark
+          ? BrandWordmark(onTap: onWordmarkTap)
+          : null,
       bottom: bottom,
       actions: [
         ...actions,

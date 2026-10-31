@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Quitar línea: tacho de basura, teñible desde Flutter -->
+  <path d="M4 7H20" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M9 7V4.8C9 4.358 9.358 4 9.8 4H14.2C14.642 4 15 4.358 15 4.8V7" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M6.5 7L7.3 19.2C7.33 19.65 7.7 20 8.15 20H15.85C16.3 20 16.67 19.65 16.7 19.2L17.5 7" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M10 11V16" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M14 11V16" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

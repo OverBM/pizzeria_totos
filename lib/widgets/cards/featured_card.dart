@@ -11,6 +11,7 @@ class FeaturedCard extends StatelessWidget {
     required this.image,
     required this.title,
     required this.priceLabel,
+    this.originalPriceLabel,
     this.eyebrow,
     this.description,
     this.categoryId,
@@ -24,6 +25,7 @@ class FeaturedCard extends StatelessWidget {
   final Widget image;
   final String title;
   final String priceLabel;
+  final String? originalPriceLabel;
   final String? eyebrow;
   final String? description;
   final String? categoryId;
@@ -143,7 +145,23 @@ class FeaturedCard extends StatelessWidget {
                       const Spacer(),
                       Row(
                         children: [
-                          PriceCircle(priceLabel: priceLabel, onTap: onTap),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (originalPriceLabel != null)
+                                Text(
+                                  originalPriceLabel!,
+                                  style: Brand.ui(
+                                    10,
+                                    color: colors.textSecondary,
+                                  ).copyWith(
+                                    decoration: TextDecoration.lineThrough,
+                                  ),
+                                ),
+                              PriceCircle(priceLabel: priceLabel, onTap: onTap),
+                            ],
+                          ),
                           const SizedBox(width: Brand.s8),
                           if (onAdd != null)
                             Expanded(

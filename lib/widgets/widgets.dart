@@ -31,6 +31,7 @@ part 'cards/product_row_card.dart';
 part 'controls/buttons.dart';
 part 'controls/filter_pill.dart';
 part 'controls/quantity_stepper.dart';
+part 'controls/remove_line_button.dart';
 part 'feedback/empty_state.dart';
 part 'feedback/notices.dart';
 part 'feedback/offline_banner.dart';

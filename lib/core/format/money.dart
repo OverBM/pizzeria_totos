@@ -22,7 +22,6 @@ class Money {
   /// Cantidad de decimales con la que se normaliza todo importe.
   static const int decimals = 2;
 
-  static final NumberFormat _whole = NumberFormat('#,##0', 'en_US');
   static final NumberFormat _decimals = NumberFormat('#,##0.00', 'en_US');
 
   /// Normaliza a 2 decimales (redondeo medio arriba, como espera el negocio).
@@ -56,15 +55,36 @@ class Money {
   /// ¿La diferencia entre dos importes es menor que medio céntimo?
   static bool closeTo(double a, double b) => (round(a) - round(b)).abs() < 0.005;
 
-  /// Formatea un importe en soles.
+  /// Formatea un importe en soles con exactamente dos decimales.
   ///
-  /// Omite los decimales cuando el importe es entero (`S/ 44`) y los conserva
-  /// cuando existen (`S/ 49.90`).
+  /// La carta publica precios terminados en `.90`; el formateo es siempre
+  /// explícito para que una tarjeta y un total no parezcan importes distintos.
   static String format(double soles) {
-    final value = round(soles);
-    final isWhole = value == value.truncateToDouble();
-    final text = isWhole ? _whole.format(value) : _decimals.format(value);
-    return 'S/ $text';
+    return 'S/ ${_decimals.format(round(soles))}';
+  }
+
+  /// Precio base comercial: conserva los `.90` y baja diez céntimos a los
+  /// importes enteros (`44.00` → `43.90`).
+  ///
+  /// Se usa solo al publicar/editar la carta; el runtime no transforma precios.
+  static double baseCommercial(double value) {
+    final current = round(value);
+    final cents = (current * 100).round() % 100;
+    if (cents == 90) return current;
+    return round(current.floorToDouble() - 0.10);
+  }
+
+  /// Precio promocional comercial: lleva el resultado de un descuento al `.90`
+  /// inmediatamente inferior. Así el cliente nunca recibe menos descuento del
+  /// anunciado y el precio final siempre es comercial.
+  static double promoCommercial(double value) {
+    final current = round(value);
+    final cents = (current * 100).round() % 100;
+    if (cents == 90) return current;
+    final floor = current.floorToDouble();
+    final candidate = round(floor + 0.90);
+    if (candidate <= current) return candidate;
+    return round(floor - 0.10).clamp(0.90, double.infinity).toDouble();
   }
 
   /// Convierte céntimos enteros a soles.

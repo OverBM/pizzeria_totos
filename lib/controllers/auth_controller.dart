@@ -189,6 +189,20 @@ class AuthController extends ChangeNotifier {
         phone: phone,
         addresses: addresses,
       );
+      final current = _profile;
+      final base = current ?? _authAccount;
+      if (base != null) {
+        _profile = Account(
+          uid: base.uid,
+          name: name ?? base.name,
+          email: base.email,
+          phone: phone ?? base.phone,
+          addresses: addresses ?? base.addresses,
+          createdAt: base.createdAt,
+          updatedAt: DateTime.now(),
+        );
+        notifyListeners();
+      }
       return true;
     } catch (error) {
       _error = _message(error, 'No se pudo guardar el perfil.');

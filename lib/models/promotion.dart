@@ -61,10 +61,22 @@ class Promotion {
     if (fixed != null) return Money.round(fixed);
     final percent = discountPercent;
     if (percent == null) return Money.round(basePriceSoles);
-    return Money.applyDiscountPercent(
+    final exact = Money.applyDiscountPercent(
       basePriceSoles,
       percent.clamp(0, 100),
     );
+    return Money.promoCommercial(exact);
+  }
+
+  /// Porcentaje efectivo que representa el precio final frente al de lista.
+  ///
+  /// Se calcula desde los importes reales para que el badge nunca contradiga
+  /// el precio mostrado.
+  int effectiveDiscountPercent(double basePriceSoles) {
+    if (basePriceSoles <= 0) return 0;
+    final finalPrice = discountedPrice(basePriceSoles);
+    final percent = ((basePriceSoles - finalPrice) / basePriceSoles) * 100;
+    return percent.round().clamp(0, 100);
   }
 
   /// ¿La promoción aplica a esta variante del producto?

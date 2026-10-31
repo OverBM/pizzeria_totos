@@ -65,6 +65,7 @@ class TestApp {
   );
   late final CatalogController catalog = CatalogController(
     repository: catalogRepository,
+    promotions: promotions,
   );
   late final BranchController branches = BranchController(
     repository: branchRepository,

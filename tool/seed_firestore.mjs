@@ -279,6 +279,7 @@ function productDoc(product, media) {
     destacado: product.featured === true,
     ...(product.ingredients?.length ? { ingredientes: product.ingredients } : {}),
     ...(product.allergens?.length ? { alergenos: product.allergens } : {}),
+    ...(product.nutricion ? { nutricion: product.nutricion } : {}),
     ...(product.calories != null ? { calorias: toInt(product.calories) } : {}),
     ...(product.portion ? { porcion: product.portion } : {}),
     ...(gallery.length ? { galeria: gallery } : {}),

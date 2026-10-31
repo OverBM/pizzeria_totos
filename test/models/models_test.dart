@@ -91,15 +91,15 @@ void main() {
         portion: '8 porciones',
         gallery: [MediaRef(assetName: 'pizza-2.webp')],
         variants: [
-          Variant(label: 'entera', priceSoles: 4400, slices: 8),
-          Variant(label: 'media', priceSoles: 2300, slices: 4),
+          Variant(label: 'entera', priceSoles: 43.90, slices: 8),
+          Variant(label: 'media', priceSoles: 22.90, slices: 4),
         ],
       );
 
       final restored = Product.fromMap(product.toMap());
       expect(restored.id, 'pizza-totos');
-      expect(restored.minPriceSoles, 2300);
-      expect(restored.variants.first.priceSoles, 4400);
+      expect(restored.minPriceSoles, 22.90);
+      expect(restored.variants.first.priceSoles, 43.90);
       expect(restored.hasVariants, isTrue);
       expect(restored.hasDetail, isTrue);
       expect(restored.images.length, 2);
@@ -346,13 +346,14 @@ void main() {
             productId: 'pizza-totos',
             name: "PIZZA TOTO'S",
             variantLabel: 'ENTERA',
-            unitPriceSoles: 3520,
+            unitPriceSoles: 34.90,
             quantity: 1,
           ),
         ],
-        subtotalSoles: 3520,
-        shippingSoles: 300,
-        totalSoles: 3820,
+        subtotalSoles: 43.90,
+        shippingSoles: 3.00,
+        discountSoles: 9.00,
+        totalSoles: 37.90,
         customerName: 'Ana Torres',
         phone: '999 111 222',
         paymentMethodId: 'efectivo',
@@ -360,7 +361,7 @@ void main() {
         address: 'Av. Giráldez 123',
         reference: 'Portón negro',
         note: 'Sin cebolla',
-        savingsSoles: 880,
+        savingsSoles: 9.00,
       );
 
       final restored = Order.fromMap(order.toMap(), id: 'order-1');
@@ -368,11 +369,11 @@ void main() {
       expect(restored.status, OrderStatus.pendienteConfirmacion);
       expect(restored.status.name, 'pendiente_confirmacion');
       expect(restored.type.label, 'DELIVERY');
-      expect(restored.items.single.unitPriceSoles, 3520);
+      expect(restored.items.single.unitPriceSoles, 34.90);
       expect(restored.address, 'Av. Giráldez 123');
       expect(restored.reference, 'Portón negro');
       expect(restored.note, 'Sin cebolla');
-      expect(restored.savingsSoles, 880);
+      expect(restored.savingsSoles, 9.00);
       expect(restored.toMap(), order.toMap());
     });
 
@@ -491,7 +492,7 @@ void main() {
         productId: 'pizza-totos',
         discountPercent: 20,
       );
-      expect(percent.discountedPrice(4400), 3520);
+      expect(percent.discountedPrice(43.90), 34.90);
       expect(percent.appliesToPrice, isTrue);
       expect(percent.matches('pizza-totos', 'entera'), isTrue);
       expect(percent.matches('otra', 'entera'), isFalse);
@@ -500,16 +501,16 @@ void main() {
         id: 'promo2',
         title: 'Combo',
         productId: 'pizza-totos',
-        priceSoles: 2990,
+        priceSoles: 29.90,
         variantLabel: 'familiar',
       );
-      expect(fixed.discountedPrice(4400), 2990);
+      expect(fixed.discountedPrice(43.90), 29.90);
       expect(fixed.matches('pizza-totos', 'familiar'), isTrue);
       expect(fixed.matches('pizza-totos', 'entera'), isFalse);
 
       const noPrice = Promotion(id: 'p', title: 'Solo banner', productId: 'x');
       expect(noPrice.appliesToPrice, isFalse);
-      expect(noPrice.discountedPrice(1000), 1000);
+      expect(noPrice.discountedPrice(10.00), 10.00);
     });
 
     test('el precio promocional se calcula sobre la variante correcta', () {
@@ -534,7 +535,7 @@ void main() {
       );
       expect(familiar.variantFor(product)?.label, 'familiar');
       expect(familiar.basePriceFor(product), 60);
-      expect(familiar.priceFor(product), 54);
+      expect(familiar.priceFor(product), 53.90);
       expect(familiar.appliesToAnyVariant, isFalse);
 
       // Promoción abierta: se usa la variante más barata y se marca «desde».
@@ -557,7 +558,7 @@ void main() {
         discountPercent: 50,
       );
       expect(huerfana.variantFor(product)?.label, 'entera');
-      expect(huerfana.priceFor(product), 22);
+      expect(huerfana.priceFor(product), 21.90);
     });
 
     test('vigencia y roundtrip', () {

@@ -140,15 +140,15 @@ class _HomeViewState extends State<HomeView> {
             ),
           )
         else ...[
+          SliverToBoxAdapter(
+            child: ContentWidth(child: _promotions(catalog, promotions)),
+          ),
           SliverToBoxAdapter(child: ContentWidth(child: _categories(catalog))),
           SliverToBoxAdapter(
             child: ContentWidth(child: _featured(catalog, promotions)),
           ),
           SliverToBoxAdapter(
             child: ContentWidth(child: _preview(catalog, promotions, orders)),
-          ),
-          SliverToBoxAdapter(
-            child: ContentWidth(child: _promotions(catalog, promotions)),
           ),
           SliverToBoxAdapter(
             child: ContentWidth(child: _branches(branches, settings)),
@@ -224,13 +224,13 @@ class _HomeViewState extends State<HomeView> {
                 itemBuilder: (context, index) {
                   final product = featured[index];
                   final variant = product.defaultVariantOrNull;
-                  final promotion = variant == null
+                  final priced = variant == null
                       ? null
-                      : promotions.forVariant(product.id, variant.label);
-                  final price = variant == null
-                      ? null
-                      : promotion?.discountedPrice(variant.priceSoles) ??
-                            variant.priceSoles;
+                      : promotions.priceFor(product, variant);
+                  final price = priced?.finalSoles;
+                  final originalPrice = priced?.hasDiscount == true
+                      ? priced!.baseSoles
+                      : null;
                   return Padding(
                     padding: EdgeInsets.only(
                       left: index == 0 ? Brand.s16 : Brand.s8,
@@ -253,6 +253,9 @@ class _HomeViewState extends State<HomeView> {
                       priceLabel: price == null
                           ? 'No disponible'
                           : Money.format(price),
+                      originalPriceLabel: originalPrice == null
+                          ? null
+                          : Money.format(originalPrice),
                       categoryId: product.categoryId,
                       summary: ProductSummary.of(product),
                       onTap: () => widget.onGoToProduct(product),
@@ -333,12 +336,13 @@ class _HomeViewState extends State<HomeView> {
     PromotionController promotions,
   ) {
     final variant = product.defaultVariantOrNull;
-    final promotion = variant == null
+    final priced = variant == null
         ? null
-        : promotions.forVariant(product.id, variant.label);
-    final price = variant == null
-        ? null
-        : promotion?.discountedPrice(variant.priceSoles) ?? variant.priceSoles;
+        : promotions.priceFor(product, variant);
+    final price = priced?.finalSoles;
+    final originalPrice = priced?.hasDiscount == true
+        ? priced!.baseSoles
+        : null;
     return ProductRowCard(
       image: Hero(
         tag: 'product-${product.id}',
@@ -353,6 +357,9 @@ class _HomeViewState extends State<HomeView> {
       categoryId: product.categoryId,
       summary: ProductSummary.of(product),
       priceLabel: price == null ? 'No disponible' : Money.format(price),
+      originalPriceLabel: originalPrice == null
+          ? null
+          : Money.format(originalPrice),
       onTap: () => widget.onGoToProduct(product),
       onAdd: product.isSellable ? () => _addToCart(context, product) : null,
     );

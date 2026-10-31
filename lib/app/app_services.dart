@@ -65,7 +65,10 @@ class AppServices {
     );
     final promotions = PromotionController(repository: promotionRepository);
     final branches = BranchController(repository: branchRepository);
-    final catalog = CatalogController(repository: catalogRepository);
+    final catalog = CatalogController(
+      repository: catalogRepository,
+      promotions: promotions,
+    );
     final cart = CartController(
       storage: const CartStorage(),
       promotions: promotions,

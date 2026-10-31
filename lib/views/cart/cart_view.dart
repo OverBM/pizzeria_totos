@@ -202,7 +202,9 @@ class _CartViewState extends State<CartView> {
             ],
           ),
         const SizedBox(height: Brand.s12),
-        Row(
+        Wrap(
+          spacing: Brand.s8,
+          runSpacing: Brand.s8,
           children: [
             FilterPill(
               label: 'DELIVERY',
@@ -211,7 +213,6 @@ class _CartViewState extends State<CartView> {
                   ? null
                   : () => checkout.setType(OrderType.delivery),
             ),
-            const SizedBox(width: Brand.s8),
             FilterPill(
               label: 'RECOJO EN TIENDA',
               selected: checkout.type == OrderType.pickup,
@@ -320,11 +321,11 @@ class _CartViewState extends State<CartView> {
       child: Column(
         children: [
           _row(context, 'Subtotal', Money.format(cart.subtotalSoles)),
-          if (cart.savingsSoles > 0)
+          if (cart.discountSoles > 0)
             _row(
               context,
-              'Ahorro por promociones',
-              '- ${Money.format(cart.savingsSoles)}',
+              'Descuento',
+              '- ${Money.format(cart.discountSoles)}',
               accent: true,
             ),
           _row(
@@ -545,18 +546,23 @@ class _CartLine extends StatelessWidget {
             ),
           ),
           Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              IconButton(
-                onPressed: () => cart.remove(item.key),
-                icon: const Icon(Icons.close_rounded, size: 16),
-                tooltip: 'Quitar ${item.name}',
-                visualDensity: VisualDensity.compact,
-              ),
-              QuantityStepper(
-                quantity: item.quantity,
-                compact: true,
-                onIncrement: () => cart.increment(item.key),
-                onDecrement: () => cart.decrement(item.key),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RemoveLineButton(
+                    onTap: () => cart.remove(item.key),
+                    productName: item.name,
+                  ),
+                  const SizedBox(width: Brand.s4),
+                  QuantityStepper(
+                    quantity: item.quantity,
+                    compact: true,
+                    onIncrement: () => cart.increment(item.key),
+                    onDecrement: () => cart.decrement(item.key),
+                  ),
+                ],
               ),
             ],
           ),
@@ -615,6 +621,53 @@ class _ConfirmationSheet extends StatelessWidget {
               style: context.text.bodySm.copyWith(color: colors.textSecondary),
             ),
             const SizedBox(height: Brand.s16),
+            Row(
+              children: [
+                Text(
+                  'Subtotal',
+                  style: context.text.bodySm.copyWith(
+                    color: colors.textSecondary,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  Money.format(order.subtotalSoles),
+                  style: Brand.ui(12),
+                ),
+              ],
+            ),
+            if (order.discountSoles > 0)
+              Row(
+                children: [
+                  Text(
+                    'Descuento',
+                    style: context.text.bodySm.copyWith(color: colors.action),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '- ${Money.format(order.discountSoles)}',
+                    style: Brand.ui(12, color: colors.action),
+                  ),
+                ],
+              ),
+            Row(
+              children: [
+                Text(
+                  'Envío',
+                  style: context.text.bodySm.copyWith(
+                    color: colors.textSecondary,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  order.shippingSoles == 0
+                      ? 'Sin costo'
+                      : Money.format(order.shippingSoles),
+                  style: Brand.ui(12),
+                ),
+              ],
+            ),
+            const Divider(height: Brand.s24),
             Row(
               children: [
                 Text(

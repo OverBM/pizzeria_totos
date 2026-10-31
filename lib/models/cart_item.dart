@@ -33,15 +33,21 @@ class CartItem {
   /// Total de la línea, derivado (no se guarda en Firestore).
   double get lineTotalSoles => Money.multiply(unitPriceSoles, quantity);
 
+  /// Subtotal de la línea con el precio de lista (sin promoción).
+  double get lineSubtotalSoles =>
+      Money.multiply(originalUnitPriceSoles ?? unitPriceSoles, quantity);
+
+  /// Descuento aplicado a la línea por promoción.
+  double get lineDiscountSoles =>
+      Money.round(lineSubtotalSoles - lineTotalSoles);
+
   /// ¿La línea tiene precio promocional?
   bool get isOnPromo =>
       originalUnitPriceSoles != null &&
       Money.round(originalUnitPriceSoles!) > Money.round(unitPriceSoles);
 
   /// Ahorro de la línea en soles (0 si no hay promoción).
-  double get savingsSoles => isOnPromo
-      ? Money.multiply(originalUnitPriceSoles! - unitPriceSoles, quantity)
-      : 0;
+  double get savingsSoles => lineDiscountSoles;
 
   CartItem copyWith({
     int? quantity,

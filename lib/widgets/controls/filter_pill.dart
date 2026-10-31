@@ -50,12 +50,16 @@ class FilterPill extends StatelessWidget {
               ),
               const SizedBox(width: Brand.s8),
             ],
-            Text(
-              label.toUpperCase(),
-              style: Brand.ui(
-                13,
-                weight: FontWeight.w500,
-                color: selected ? colors.onAction : colors.textSecondary,
+            Flexible(
+              child: Text(
+                label.toUpperCase(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Brand.ui(
+                  13,
+                  weight: FontWeight.w500,
+                  color: selected ? colors.onAction : colors.textSecondary,
+                ),
               ),
             ),
           ],

@@ -108,9 +108,8 @@ class _RegisterViewState extends State<RegisterView> {
                         decoration: InputDecoration(
                           labelText: 'Contraseña',
                           helperText:
-                              'Entre ${Validators.passwordMinLength} y '
-                              '${Validators.passwordMaxLength} caracteres. '
-                              'No necesitas mayúsculas ni símbolos.',
+                              'Mínimo ${Validators.passwordMinLength} caracteres, '
+                              'con mayúscula y minúscula.',
                           suffixIcon: IconButton(
                             onPressed: () =>
                                 setState(() => _obscure = !_obscure),
@@ -126,12 +125,16 @@ class _RegisterViewState extends State<RegisterView> {
                         ),
                         validator: Validators.passwordError,
                       ),
-                      _PasswordStrength(password: _password.text),
+                      _PasswordChecklist(
+                        password: _password.text,
+                        confirmation: _confirm.text,
+                      ),
                       const SizedBox(height: Brand.s12),
                       TextFormField(
                         controller: _confirm,
                         obscureText: _obscure,
                         textInputAction: TextInputAction.done,
+                        onChanged: (_) => setState(() {}),
                         onFieldSubmitted: (_) => _submit(),
                         decoration: const InputDecoration(
                           labelText: 'Repite tu contraseña',
@@ -193,58 +196,57 @@ class _RegisterViewState extends State<RegisterView> {
   }
 }
 
-/// Medidor informativo de fuerza: nunca bloquea el envío.
-///
-/// Se llena por tramos con el semáforo pedido por el negocio: rojo (débil),
-/// ámbar (aceptable) y verde (buena o fuerte).
-class _PasswordStrength extends StatelessWidget {
-  const _PasswordStrength({required this.password});
+/// Checklist de requisitos de contraseña: check verde o X roja.
+class _PasswordChecklist extends StatelessWidget {
+  const _PasswordChecklist({
+    required this.password,
+    required this.confirmation,
+  });
 
   final String password;
+  final String confirmation;
 
-  static const Color _weak = Color(0xFFE5484D); // rojo
-  static const Color _medium = Color(0xFFE0A100); // ámbar
-  static const Color _strong = Color(0xFF3FA66A); // verde
-
-  static Color _colorFor(int score) {
-    if (score <= 1) return _weak;
-    if (score == 2) return _medium;
-    return _strong;
-  }
+  static const Color _ok = Color(0xFF3FA66A);
+  static const Color _pending = Color(0xFFE5484D);
 
   @override
   Widget build(BuildContext context) {
-    if (password.isEmpty) return const SizedBox.shrink();
-    final colors = context.colors;
-    final score = Validators.passwordStrength(password);
-    final levelColor = _colorFor(score);
+    if (password.isEmpty && confirmation.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final requirements = Validators.passwordRequirements(
+      password,
+      confirmation: confirmation,
+    );
     return Padding(
       padding: const EdgeInsets.only(top: Brand.s8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              for (var i = 0; i < 4; i++) ...[
-                if (i > 0) const SizedBox(width: Brand.s4),
-                Expanded(
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: i < score ? levelColor : colors.border,
-                      borderRadius: BorderRadius.circular(2),
+          for (final requirement in requirements)
+            Padding(
+              padding: const EdgeInsets.only(top: Brand.s4),
+              child: Row(
+                children: [
+                  Icon(
+                    requirement.met
+                        ? Icons.check_circle_rounded
+                        : Icons.cancel_rounded,
+                    size: 16,
+                    color: requirement.met ? _ok : _pending,
+                  ),
+                  const SizedBox(width: Brand.s4),
+                  Expanded(
+                    child: Text(
+                      requirement.label,
+                      style: context.text.caption.copyWith(
+                        color: requirement.met ? _ok : _pending,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: Brand.s4),
-          Text(
-            'Seguridad: ${Validators.passwordStrengthLabel(score)}',
-            style: context.text.caption.copyWith(color: levelColor),
-          ),
+                ],
+              ),
+            ),
         ],
       ),
     );

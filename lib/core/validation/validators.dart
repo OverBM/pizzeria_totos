@@ -1,16 +1,24 @@
+/// Un requisito visible del checklist de contraseña.
+class PasswordRequirement {
+  const PasswordRequirement({required this.label, required this.met});
+
+  final String label;
+  final bool met;
+}
+
 /// Validadores de formularios, con mensajes en español.
 ///
-/// Son funciones puras para poder probarlas sin widgets. La contraseña del
-/// registro exige **10–64 caracteres** y no impone mayúsculas, dígitos ni
-/// símbolos; el medidor de fuerza es informativo y nunca bloquea el envío.
+/// La contraseña del registro exige **6–64 caracteres**, al menos una
+/// mayúscula y al menos una minúscula. El checklist de la vista muestra cada
+/// requisito con check verde o X roja.
 class Validators {
   const Validators._();
 
-  static const int passwordMinLength = 10;
+  static const int passwordMinLength = 6;
   static const int passwordMaxLength = 64;
   static const int nameMinLength = 3;
   static const int phoneMinDigits = 9;
-  static const int phoneMaxDigits = 15;
+  static const int phoneMaxDigits = 9;
   static const int addressLineMinLength = 6;
   static const int claimMinLength = 10;
   static const int claimMaxLength = 500;
@@ -37,8 +45,8 @@ class Validators {
     return null;
   }
 
-  /// Contraseña de registro: entre 10 y 64 caracteres, sin composición
-  /// obligatoria.
+  /// Contraseña de registro: entre 6 y 64 caracteres, con mayúscula y
+  /// minúscula.
   static String? passwordError(String? value) {
     final password = value ?? '';
     if (password.isEmpty) return 'Ingresa una contraseña.';
@@ -48,8 +56,46 @@ class Validators {
     if (password.length > passwordMaxLength) {
       return 'La contraseña no puede pasar de $passwordMaxLength caracteres.';
     }
+    if (!_uppercase.hasMatch(password)) {
+      return 'La contraseña necesita al menos una mayúscula.';
+    }
+    if (!_lowercase.hasMatch(password)) {
+      return 'La contraseña necesita al menos una minúscula.';
+    }
     return null;
   }
+
+  static final RegExp _uppercase = RegExp(r'[A-ZÁÉÍÓÚÜÑ]');
+  static final RegExp _lowercase = RegExp(r'[a-záéíóúüñ]');
+
+  /// Requisitos visibles del checklist. La confirmación solo se evalúa cuando
+  /// se pasa explícitamente.
+  static List<PasswordRequirement> passwordRequirements(
+    String password, {
+    String? confirmation,
+  }) => [
+    PasswordRequirement(
+      label: 'Mínimo $passwordMinLength caracteres',
+      met: password.length >= passwordMinLength,
+    ),
+    PasswordRequirement(
+      label: 'Máximo $passwordMaxLength caracteres',
+      met: password.isNotEmpty && password.length <= passwordMaxLength,
+    ),
+    PasswordRequirement(
+      label: 'Al menos una mayúscula',
+      met: _uppercase.hasMatch(password),
+    ),
+    PasswordRequirement(
+      label: 'Al menos una minúscula',
+      met: _lowercase.hasMatch(password),
+    ),
+    if (confirmation != null)
+      PasswordRequirement(
+        label: 'Las contraseñas coinciden',
+        met: password.isNotEmpty && confirmation == password,
+      ),
+  ];
 
   /// Confirmación de la contraseña.
   static String? confirmPasswordError(String? value, String password) {
@@ -99,18 +145,34 @@ class Validators {
     return null;
   }
 
-  /// Teléfono opcional de 9 a 15 dígitos.
+  /// Teléfono opcional de exactamente 9 dígitos, debe empezar por 9.
   static String? phoneError(String? value) {
     final text = value?.trim() ?? '';
     if (text.isEmpty) return null;
-    final digits = text.replaceAll(RegExp(r'\D'), '');
+    var digits = text.replaceAll(RegExp(r'\D'), '');
+    // Acepta el prefijo de país +51 y lo descarta para validar el número local.
+    if (digits.startsWith('51') && digits.length > 9) {
+      digits = digits.substring(2);
+    }
     if (digits.length < phoneMinDigits) {
-      return 'Escribe un teléfono de al menos $phoneMinDigits dígitos.';
+      return 'Escribe un teléfono de exactamente $phoneMinDigits dígitos.';
     }
     if (digits.length > phoneMaxDigits) {
-      return 'El teléfono no puede tener más de $phoneMaxDigits dígitos.';
+      return 'El teléfono debe tener exactamente $phoneMaxDigits dígitos.';
+    }
+    if (!digits.startsWith('9')) {
+      return 'El teléfono debe comenzar con 9.';
     }
     return null;
+  }
+
+  /// Deja solo los dígitos locales, sin el prefijo +51.
+  static String phoneDigits(String? value) {
+    var digits = (value ?? '').replaceAll(RegExp(r'\D'), '');
+    if (digits.startsWith('51') && digits.length > 9) {
+      digits = digits.substring(2);
+    }
+    return digits;
   }
 
   /// Etiqueta de dirección obligatoria (Casa, Trabajo…).

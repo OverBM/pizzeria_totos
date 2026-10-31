@@ -36,18 +36,13 @@ class HeroBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final shift = parallaxOffset(scrollOffset, max: 70);
     return SizedBox(
       height: height,
       width: double.infinity,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Transform.translate(
-            offset: Offset(0, -shift),
-            child: SizedBox(height: height + 80, child: image),
-          ),
-          const BrandOverlay(opacity: 0.72),
+          SizedBox(height: height, child: image),
           Positioned(
             left: Brand.s16,
             right: Brand.s16,

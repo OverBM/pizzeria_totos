@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../app/routes.dart';
 import '../../controllers/auth_controller.dart';
 import '../../core/app_info.dart';
 import '../../core/motion/motion_widgets.dart';
 import '../../core/theme/brand.dart';
-import '../../widgets/widgets.dart';
 import '../../core/theme/theme_context.dart';
 import '../../core/validation/validators.dart';
 import '../../models/account.dart';
 import '../../services/maps/maps_service.dart';
+import '../../widgets/widgets.dart';
 import '../auth/login_view.dart';
 import '../cart/orders_view.dart';
 import '../common/address_search_sheet.dart';
+import 'edit_profile_view.dart';
 
-/// Perfil del usuario: datos de contacto, direcciones e historial.
-///
-/// No existe rol, panel de administración ni conmutador de tema.
+/// Perfil del usuario: resumen, direcciones y accesos.
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
 
@@ -25,37 +25,6 @@ class ProfileView extends StatefulWidget {
 }
 
 class _ProfileViewState extends State<ProfileView> {
-  final _formKey = GlobalKey<FormState>();
-  final _name = TextEditingController();
-  final _phone = TextEditingController();
-
-  /// `uid` con el que se llenaron los campos por última vez.
-  String? _seededUid;
-  bool _saving = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final account = context.read<AuthController>().account;
-    if (account == null) {
-      // Al cerrar sesión se olvida el sembrado para volver a llenar los campos
-      // cuando entre otra cuenta.
-      _seededUid = null;
-      return;
-    }
-    if (_seededUid == account.uid) return;
-    _name.text = account.name;
-    _phone.text = account.phone;
-    _seededUid = account.uid;
-  }
-
-  @override
-  void dispose() {
-    _name.dispose();
-    _phone.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
@@ -106,9 +75,9 @@ class _ProfileViewState extends State<ProfileView> {
                 'y confirmar tus pedidos sin volver a escribirlos.',
             icon: Icons.person_outline_rounded,
             actionLabel: 'INICIAR SESIÓN',
-            onAction: () =>
-                Navigator.of(context)
-                    .push<bool>(MotionRoute(builder: (_) => const LoginView())),
+            onAction: () => Navigator.of(
+              context,
+            ).push<bool>(MotionRoute(builder: (_) => const LoginView())),
           ),
           _versionFooter(context),
         ],
@@ -118,10 +87,16 @@ class _ProfileViewState extends State<ProfileView> {
 
   Widget _profile(BuildContext context, AuthController auth, Account account) {
     final colors = context.colors;
+    final done = [
+      account.name.trim().isNotEmpty,
+      account.hasPhone,
+      account.hasAddress,
+    ].where((value) => value).length;
     final missing = <String>[
       if (!account.hasPhone) 'tu teléfono',
       if (!account.hasAddress) 'una dirección de entrega',
     ];
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         Brand.s16,
@@ -130,108 +105,178 @@ class _ProfileViewState extends State<ProfileView> {
         Brand.s24,
       ),
       children: [
-        Center(
-          child: ProfileChip(
-            name: account.name,
-            subtitle: account.email,
-            avatarSize: 56,
-          ),
-        ),
-        const SizedBox(height: Brand.s16),
-        SectionHeading(eyebrow: 'Tus datos', title: 'Contacto'),
-        const SizedBox(height: Brand.s8),
-        if (missing.isNotEmpty) ...[
-          Container(
-            padding: const EdgeInsets.all(Brand.s12),
-            decoration: BoxDecoration(
-              color: colors.surface,
-              borderRadius: Brand.cardRadius,
-              border: Border.all(color: colors.action, width: 2),
+        Container(
+          padding: const EdgeInsets.all(Brand.s16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [colors.surface, colors.bar],
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  size: 18,
-                  color: colors.action,
-                ),
-                const SizedBox(width: Brand.s8),
-                Expanded(
-                  child: Text(
-                    'Para confirmar pedidos con delivery completa '
-                    '${missing.join(' y ')}.',
-                    style: context.text.bodySm,
-                  ),
-                ),
-              ],
-            ),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: colors.border),
           ),
-          const SizedBox(height: Brand.s12),
-        ],
-        Form(
-          key: _formKey,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-          child: Column(
+          child: Row(
             children: [
-              TextFormField(
-                controller: _name,
-                textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(labelText: 'Nombre'),
-                validator: Validators.nameError,
-              ),
-              const SizedBox(height: Brand.s12),
-              TextFormField(
-                controller: _phone,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Teléfono / WhatsApp',
-                  hintText: '999 999 999',
-                ),
-                validator: Validators.phoneError,
-              ),
-              const SizedBox(height: Brand.s12),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: Brand.s16,
-                  vertical: Brand.s12,
-                ),
+                height: 64,
+                width: 64,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: colors.surface,
-                  borderRadius: Brand.buttonRadius,
-                  border: Border.all(color: colors.border),
+                  color: colors.action,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: colors.action.withValues(alpha: 0.35),
+                      blurRadius: 18,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
-                child: Row(
+                child: Text(
+                  account.name.trim().isEmpty
+                      ? 'T'
+                      : account.name.trim().substring(0, 1).toUpperCase(),
+                  style: Brand.display(26, h: 1, color: colors.onAction),
+                ),
+              ),
+              const SizedBox(width: Brand.s12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: Text(account.email)),
                     Text(
-                      'CUENTA',
+                      'MI PERFIL',
                       style: Brand.ui(
                         9,
                         weight: FontWeight.w700,
+                        color: colors.action,
+                      ),
+                    ),
+                    const SizedBox(height: Brand.s2),
+                    Text(
+                      account.name.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Brand.display(
+                        22,
+                        h: 1,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: Brand.s2),
+                    Text(
+                      account.email,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.caption.copyWith(
                         color: colors.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: Brand.s16),
-              PillButton(
-                label: _saving ? 'GUARDANDO…' : 'GUARDAR CAMBIOS',
-                expanded: true,
-                onPressed: _saving ? null : () => _save(auth),
+              IconButton(
+                onPressed: _openEdit,
+                tooltip: 'Editar perfil',
+                style: IconButton.styleFrom(
+                  backgroundColor: colors.action.withValues(alpha: 0.14),
+                  foregroundColor: colors.action,
+                ),
+                icon: const Icon(Icons.edit_outlined, size: 18),
               ),
             ],
           ),
         ),
-        const SizedBox(height: Brand.s24),
-        SectionHeading(
-          eyebrow: 'Entrega',
-          title: 'Tus direcciones',
-          actionLabel: 'Agregar',
-          onAction: () => _editAddress(auth, account, null),
+        const SizedBox(height: Brand.s16),
+        Container(
+          padding: const EdgeInsets.all(Brand.s12),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: Brand.cardRadius,
+            border: Border.all(color: colors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    'Perfil $done de 3',
+                    style: Brand.ui(11, weight: FontWeight.w700),
+                  ),
+                  const Spacer(),
+                  Text(
+                    missing.isEmpty ? 'Completo' : 'Falta completar',
+                    style: context.text.caption.copyWith(
+                      color: missing.isEmpty
+                          ? colors.action
+                          : colors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: Brand.s8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(99),
+                child: LinearProgressIndicator(
+                  value: done / 3,
+                  minHeight: 6,
+                  backgroundColor: colors.border,
+                  color: colors.action,
+                ),
+              ),
+              if (missing.isNotEmpty) ...[
+                const SizedBox(height: Brand.s8),
+                Text(
+                  'Falta ${missing.join(' y ')}.',
+                  style: context.text.caption.copyWith(
+                    color: colors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: Brand.s8),
+                OutlinedButton(
+                  onPressed: !account.hasAddress
+                      ? () => _editAddress(auth, account, null)
+                      : _openEdit,
+                  child: Text(
+                    !account.hasAddress
+                        ? 'AGREGAR DIRECCIÓN'
+                        : 'COMPLETAR TELÉFONO',
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
-        const SizedBox(height: Brand.s12),
+        const SizedBox(height: Brand.s24),
+        _sectionTitle(context, 'DATOS'),
+        const SizedBox(height: Brand.s8),
+        _dataRow(
+          context,
+          'Nombre',
+          account.name,
+          icon: Icons.person_outline_rounded,
+        ),
+        _dataRow(
+          context,
+          'Teléfono',
+          account.hasPhone ? _phoneLabel(account.phone) : 'Sin teléfono',
+          helper: account.hasPhone ? 'Aún no verificado' : null,
+          icon: Icons.phone_outlined,
+        ),
+        const SizedBox(height: Brand.s24),
+        Row(
+          children: [
+            Expanded(child: _sectionTitle(context, 'DIRECCIONES')),
+            TextButton.icon(
+              onPressed: () => _editAddress(auth, account, null),
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('AGREGAR'),
+            ),
+          ],
+        ),
+        const SizedBox(height: Brand.s8),
         if (account.addresses.isEmpty)
           Container(
             padding: const EdgeInsets.all(Brand.s16),
@@ -249,12 +294,6 @@ class _ProfileViewState extends State<ProfileView> {
                   textAlign: TextAlign.center,
                   style: context.text.bodySm,
                 ),
-                const SizedBox(height: Brand.s12),
-                OutlinedButton.icon(
-                  onPressed: () => _editAddress(auth, account, null),
-                  icon: const Icon(Icons.add_location_alt_outlined, size: 18),
-                  label: const Text('AGREGAR DIRECCIÓN'),
-                ),
               ],
             ),
           )
@@ -263,24 +302,51 @@ class _ProfileViewState extends State<ProfileView> {
             _addressTile(context, auth, account, account.addresses[i], i == 0),
             const SizedBox(height: Brand.s8),
           ],
-        const SizedBox(height: Brand.s16),
+        const SizedBox(height: Brand.s24),
+        _sectionTitle(context, 'ACTIVIDAD'),
+        const SizedBox(height: Brand.s8),
         _linkTile(
           context,
           icon: Icons.receipt_long_outlined,
           label: 'Mis pedidos',
+          subtitle: 'Historial y estado de tus compras',
           onTap: () =>
-              Navigator.of(context)
-                  .push(MotionRoute(builder: (_) => const OrdersView())),
+              Navigator.of(context).push(MotionRoute(builder: (_) => const OrdersView())),
+        ),
+        const SizedBox(height: Brand.s8),
+        _linkTile(
+          context,
+          icon: Icons.chat_bubble_outline_rounded,
+          label: 'Reclamos',
+          subtitle: 'Enviar y revisar tus casos',
+          onTap: () => Navigator.of(context).push(
+            AppRoutes.claims(
+              onOpenAuth: () => Navigator.of(
+                context,
+              ).push<bool>(MotionRoute(builder: (_) => const LoginView())),
+            ),
+          ),
+        ),
+        const SizedBox(height: Brand.s8),
+        _linkTile(
+          context,
+          icon: Icons.local_offer_outlined,
+          label: 'Promos',
+          subtitle: 'Ofertas vigentes de la casa',
+          onTap: () => Navigator.of(context).push(
+            AppRoutes.promotions(
+              onOpenProduct: (product, {variantLabel}) =>
+                  Navigator.of(context).push(
+                    AppRoutes.product(product, variantLabel: variantLabel),
+                  ),
+            ),
+          ),
         ),
         const SizedBox(height: Brand.s24),
         Center(
-          child: Text(
-            "TOTO'S PIZZA · HUANCAYO",
-            style: Brand.ui(
-              9,
-              weight: FontWeight.w700,
-              color: colors.textDisabled,
-            ),
+          child: OutlinedButton(
+            onPressed: _confirmSignOut,
+            child: const Text('CERRAR SESIÓN'),
           ),
         ),
         _versionFooter(context),
@@ -288,24 +354,83 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
-  /// Pie de versión: exactamente `AppInfo.label` (`V1.2.1`), sin número de build.
-  ///
-  /// Se pinta con y sin sesión para que cualquier beta tester pueda reportar
-  /// la versión instalada.
-  Widget _versionFooter(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: Brand.s8),
-      child: Center(
-        child: Text(
-          AppInfo.label,
-          style: Brand.ui(
-            10,
-            weight: FontWeight.w700,
-            color: context.colors.textDisabled,
+  Widget _sectionTitle(BuildContext context, String label) => Text(
+    label,
+    style: Brand.ui(
+      10,
+      weight: FontWeight.w700,
+      color: context.colors.textSecondary,
+    ),
+  );
+
+  Widget _dataRow(
+    BuildContext context,
+    String label,
+    String value, {
+    String? helper,
+    IconData? icon,
+  }) {
+    final colors = context.colors;
+    return Container(
+      margin: const EdgeInsets.only(bottom: Brand.s8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: Brand.s12,
+        vertical: Brand.s10,
+      ),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: Brand.cardRadius,
+        border: Border.all(color: colors.border),
+      ),
+      child: Row(
+        children: [
+          if (icon != null) ...[
+            Container(
+              height: 32,
+              width: 32,
+              decoration: BoxDecoration(
+                color: colors.action.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 16, color: colors.action),
+            ),
+            const SizedBox(width: Brand.s8),
+          ],
+          SizedBox(
+            width: 74,
+            child: Text(
+              label,
+              style: context.text.caption.copyWith(color: colors.textSecondary),
+            ),
           ),
-        ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(value, style: context.text.bodySm),
+                if (helper != null)
+                  Text(
+                    helper,
+                    style: context.text.caption.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  String _phoneLabel(String raw) {
+    final digits = raw.replaceAll(RegExp(r'\D'), '');
+    final local = digits.startsWith('51') ? digits.substring(2) : digits;
+    if (local.length == 9) {
+      return '+51 ${local.substring(0, 3)} ${local.substring(3, 6)} '
+          '${local.substring(6)}';
+    }
+    return '+51 $local';
   }
 
   Widget _addressTile(
@@ -323,56 +448,67 @@ class _ProfileViewState extends State<ProfileView> {
         borderRadius: Brand.cardRadius,
         border: Border.all(
           color: isDefault ? colors.action : colors.border,
-          width: isDefault ? 2 : 1,
+          width: isDefault ? 1.5 : 1,
         ),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  address.title.toUpperCase(),
-                  style: Brand.ui(
-                    12,
-                    weight: FontWeight.w700,
-                    color: colors.textPrimary,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        address.title.toUpperCase(),
+                        style: Brand.ui(12, weight: FontWeight.w700),
+                      ),
+                    ),
+                    if (isDefault) ...[
+                      const SizedBox(width: Brand.s8),
+                      StatusPill(
+                        label: 'PREDETERMINADA',
+                        filled: false,
+                        color: colors.action,
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: Brand.s4),
+                Text(address.line, style: context.text.bodySm),
+                if (address.reference != null &&
+                    address.reference!.isNotEmpty)
+                  Text(
+                    'Ref. ${address.reference}',
+                    style: context.text.caption.copyWith(
+                      color: colors.textSecondary,
+                    ),
                   ),
-                ),
-              ),
-              if (isDefault)
-                StatusPill(
-                  label: 'PREDETERMINADA',
-                  filled: false,
-                  color: colors.action,
-                ),
-            ],
-          ),
-          const SizedBox(height: Brand.s4),
-          Text(address.line, style: context.text.bodySm),
-          if (address.reference != null && address.reference!.isNotEmpty)
-            Text(
-              'Ref. ${address.reference}',
-              style: context.text.caption.copyWith(color: colors.textSecondary),
+              ],
             ),
-          const SizedBox(height: Brand.s4),
-          Wrap(
-            spacing: Brand.s4,
-            children: [
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'Acciones de ${address.title}',
+            onSelected: (value) {
+              switch (value) {
+                case 'default':
+                  _makeDefault(auth, account, address);
+                case 'edit':
+                  _editAddress(auth, account, address);
+                case 'delete':
+                  _deleteAddress(auth, account, address);
+              }
+            },
+            itemBuilder: (_) => [
               if (!isDefault)
-                TextButton(
-                  onPressed: () => _makeDefault(auth, account, address),
-                  child: const Text('PREDETERMINADA'),
+                const PopupMenuItem(
+                  value: 'default',
+                  child: Text('Hacer predeterminada'),
                 ),
-              TextButton(
-                onPressed: () => _editAddress(auth, account, address),
-                child: const Text('EDITAR'),
-              ),
-              TextButton(
-                onPressed: () => _deleteAddress(auth, account, address),
-                child: const Text('ELIMINAR'),
-              ),
+              const PopupMenuItem(value: 'edit', child: Text('Editar')),
+              const PopupMenuItem(value: 'delete', child: Text('Eliminar')),
             ],
           ),
         ],
@@ -384,6 +520,7 @@ class _ProfileViewState extends State<ProfileView> {
     BuildContext context, {
     required IconData icon,
     required String label,
+    required String subtitle,
     required VoidCallback onTap,
   }) {
     final colors = context.colors;
@@ -401,9 +538,33 @@ class _ProfileViewState extends State<ProfileView> {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: colors.textPrimary),
-            const SizedBox(width: Brand.s8),
-            Expanded(child: Text(label, style: context.text.bodySm)),
+            Container(
+              height: 38,
+              width: 38,
+              decoration: BoxDecoration(
+                color: colors.action.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 18, color: colors.action),
+            ),
+            const SizedBox(width: Brand.s12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: Brand.ui(12, weight: FontWeight.w700),
+                  ),
+                  Text(
+                    subtitle,
+                    style: context.text.caption.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Icon(
               Icons.chevron_right_rounded,
               size: 18,
@@ -415,24 +576,24 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
-  Future<void> _save(AuthController auth) async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() => _saving = true);
-    final ok = await auth.updateProfile(
-      name: _name.text.trim(),
-      phone: _phone.text.trim(),
-    );
-    if (!mounted) return;
-    setState(() => _saving = false);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(
-            ok ? 'Perfil actualizado.' : auth.error ?? 'No se pudo guardar.',
+  void _openEdit() {
+    Navigator.of(context).push(MotionRoute(builder: (_) => const EditProfileView()));
+  }
+
+  Widget _versionFooter(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: Brand.s16),
+      child: Center(
+        child: Text(
+          AppInfo.label,
+          style: Brand.ui(
+            10,
+            weight: FontWeight.w700,
+            color: context.colors.textDisabled,
           ),
         ),
-      );
+      ),
+    );
   }
 
   Future<void> _editAddress(

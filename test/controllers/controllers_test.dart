@@ -10,6 +10,7 @@ import 'package:pizzeria_totos/controllers/promotion_controller.dart';
 import 'package:pizzeria_totos/core/load_state.dart';
 import 'package:pizzeria_totos/core/storage/cart_storage.dart';
 import 'package:pizzeria_totos/models/account.dart';
+import 'package:pizzeria_totos/models/catalog_filters.dart';
 import 'package:pizzeria_totos/models/menu_data.dart';
 import 'package:pizzeria_totos/models/order.dart';
 import 'package:pizzeria_totos/models/promotion.dart';
@@ -75,7 +76,57 @@ void main() {
       expect(controller.visibleProducts.single.id, 'coca-600');
       expect(controller.visibleCount, 1);
 
+      controller.selectCategory(CatalogController.allCategoryId);
+      expect(controller.selectedCategoryName, 'TODOS');
+      expect(controller.visibleProducts.length, 2);
+
       controller.selectCategory('inexistente');
+      expect(controller.visibleProducts, isEmpty);
+      controller.dispose();
+    });
+
+    test('la búsqueda es global y los filtros se combinan', () async {
+      final controller = CatalogController(repository: FakeCatalogRepository());
+      await controller.load();
+
+      controller.selectCategory('pizzas');
+      controller.setQuery('coca');
+      expect(controller.visibleProducts.single.id, 'coca-600');
+
+      controller.clearFilters();
+      controller.setQuery('');
+      controller.selectCategory(CatalogController.featuredCategoryId);
+      controller.toggleAllergen('Gluten');
+      expect(controller.visibleProducts.single.id, 'coca-600');
+
+      controller.clearFilters();
+      controller.setCalorieBand(CalorieBand.upTo500);
+      expect(controller.visibleProducts.single.id, 'coca-600');
+
+      controller.clearFilters();
+      controller.setPriceRange(0, 10);
+      expect(controller.visibleProducts.single.id, 'coca-600');
+
+      controller.clearFilters();
+      controller.setPriceThreshold(10, PriceComparison.below);
+      expect(controller.visibleProducts.single.id, 'coca-600');
+
+      controller.setPriceThreshold(10, PriceComparison.above);
+      expect(controller.visibleProducts.single.id, 'pizza-totos');
+
+      controller.clearPriceThreshold();
+      expect(controller.visibleProducts.length, 1);
+      controller.dispose();
+    });
+
+    test('normaliza tildes y mayúsculas en la búsqueda', () async {
+      final controller = CatalogController(repository: FakeCatalogRepository());
+      await controller.load();
+      controller.setQuery('PIZZA');
+      expect(controller.visibleProducts.single.id, 'pizza-totos');
+      controller.setQuery('MOZZARELLA');
+      expect(controller.visibleProducts.single.id, 'pizza-totos');
+      controller.setQuery('sin-resultados');
       expect(controller.visibleProducts, isEmpty);
       controller.dispose();
     });
@@ -137,11 +188,11 @@ void main() {
       expect(controller.state, LoadState.ready);
       expect(controller.active.length, 1);
       expect(controller.banners.length, 1);
-      expect(controller.byId('promo-totos')?.discountPercent, 20);
+      expect(controller.byId('promo-totos')?.priceSoles, 34.90);
       expect(controller.byId('otra'), isNull);
 
       final promotion = controller.forVariant('pizza-totos', 'entera');
-      expect(promotion?.discountedPrice(4400), 3520);
+      expect(promotion?.discountedPrice(43.90), 34.90);
       expect(controller.forVariant('coca-600', 'única'), isNull);
       controller.dispose();
     });
@@ -308,11 +359,12 @@ void main() {
       cart.add(product, product.variants.first);
       expect(cart.isEmpty, isFalse);
       expect(cart.count, 1);
-      expect(cart.items.single.unitPriceSoles, 3520);
-      expect(cart.items.single.originalUnitPriceSoles, 4400);
-      expect(cart.subtotalSoles, 3520);
-      expect(cart.savingsSoles, 880);
-      expect(cart.totalSoles(shippingSoles: 300), 3820);
+      expect(cart.items.single.unitPriceSoles, 34.90);
+      expect(cart.items.single.originalUnitPriceSoles, 43.90);
+      expect(cart.subtotalSoles, 43.90);
+      expect(cart.discountSoles, 9.00);
+      expect(cart.savingsSoles, 9.00);
+      expect(cart.totalSoles(shippingSoles: 3.00), 37.90);
       cart.dispose();
     });
 
@@ -359,7 +411,7 @@ void main() {
       cart.add(product, product.variants.first);
 
       final item = cart.items.single;
-      expect(item.unitPriceSoles, 500);
+      expect(item.unitPriceSoles, 4.90);
       expect(item.isOnPromo, isFalse);
       expect(item.savingsSoles, 0);
       cart.dispose();
@@ -457,7 +509,7 @@ void main() {
       expect(order, isNotNull);
       expect(order!.uid, 'uid-1');
       expect(order.status, OrderStatus.pendienteConfirmacion);
-      expect(order.totalSoles, 3820);
+      expect(order.totalSoles, 37.90);
       expect(order.branchId, 'huancayo');
       expect(order.address, 'Av. Giráldez 123');
       expect(order.customerName, 'Ana Torres');
@@ -487,7 +539,7 @@ void main() {
       expect(env.checkout.shippingSoles, 0);
       expect(env.checkout.validate(), isEmpty);
       env.checkout.setType(OrderType.delivery);
-      expect(env.checkout.shippingSoles, 300);
+      expect(env.checkout.shippingSoles, 3.00);
       env.checkout.dispose();
     });
 

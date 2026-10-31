@@ -64,10 +64,10 @@ void main() {
   });
 
   group('formato', () {
-    test('omite decimales en importes enteros', () {
-      expect(Money.format(44), 'S/ 44');
-      expect(Money.format(44.0), 'S/ 44');
-      expect(Money.format(55), 'S/ 55');
+    test('muestra siempre dos decimales', () {
+      expect(Money.format(44), 'S/ 44.00');
+      expect(Money.format(44.0), 'S/ 44.00');
+      expect(Money.format(55), 'S/ 55.00');
     });
 
     test('conserva decimales cuando existen', () {
@@ -79,11 +79,30 @@ void main() {
 
     test('separa miles', () {
       expect(Money.format(1234.5), 'S/ 1,234.50');
-      expect(Money.format(1200), 'S/ 1,200');
+      expect(Money.format(1200), 'S/ 1,200.00');
     });
 
     test('formatea cero', () {
-      expect(Money.format(0), 'S/ 0');
+      expect(Money.format(0), 'S/ 0.00');
+    });
+  });
+
+  group('terminaciones comerciales', () {
+    test('base entera baja diez céntimos', () {
+      expect(Money.baseCommercial(44), 43.90);
+      expect(Money.baseCommercial(28), 27.90);
+      expect(Money.baseCommercial(3), 2.90);
+    });
+
+    test('base que ya termina en .90 se conserva', () {
+      expect(Money.baseCommercial(49.90), 49.90);
+      expect(Money.baseCommercial(0.90), 0.90);
+    });
+
+    test('precio promocional baja al .90 inmediatamente inferior', () {
+      expect(Money.promoCommercial(35.12), 34.90);
+      expect(Money.promoCommercial(10.71), 9.90);
+      expect(Money.promoCommercial(11.90), 11.90);
     });
   });
 

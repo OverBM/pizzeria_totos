@@ -3,11 +3,17 @@ part of '../widgets.dart';
 
 /// Destino de la barra inferior.
 class TotoNavItem {
-  const TotoNavItem({required this.icon, required this.label, this.iconWidget});
+  const TotoNavItem({
+    required this.icon,
+    required this.label,
+    this.iconWidget,
+    this.pageIndex = 0,
+  });
 
   final IconData icon;
   final String label;
   final Widget? iconWidget;
+  final int pageIndex;
 }
 
 /// Barra de navegación inferior negra de cinco destinos con subrayado.
@@ -42,9 +48,9 @@ class TotoBottomNav extends StatelessWidget {
                 Expanded(
                   child: _NavCell(
                     item: items[i],
-                    active: i == index,
+                    active: items[i].pageIndex == index,
                     badge: i == cartIndex ? cartCount : 0,
-                    onTap: () => onSelect(i),
+                    onTap: () => onSelect(items[i].pageIndex),
                   ),
                 ),
             ],

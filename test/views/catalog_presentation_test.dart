@@ -307,7 +307,7 @@ void main() {
     testWidgets('el carrito del Inicio agrega al pedido, no navega', (
       tester,
     ) async {
-      usePhoneViewport(tester);
+      usePhoneViewport(tester, height: 2400);
       final app = TestApp();
       await app.loadAll();
       addTearDown(app.dispose);
@@ -428,7 +428,7 @@ void main() {
       final label = tester.widget<Text>(find.text('INGREDIENTES'));
       expect(label.style?.color, ProductFamily.flameAccent);
       expect(find.text('CALORÍAS'), findsOneWidget);
-      expect(find.text('1120 kcal'), findsOneWidget);
+      expect(find.text('1120 kcal'), findsWidgets);
     });
 
     testWidgets('la ficha muestra «No declarado» sin calorías', (tester) async {
