@@ -9,7 +9,8 @@ import '../../widgets/widgets.dart';
 
 /// Mapa de entrega embebido en el Paso 2.
 ///
-/// Dibuja la ruta sede → punto y permite mover el pin tocando el mapa.
+/// Dibuja la ruta sede → punto y permite mover el pin tocando el mapa. Cuando
+/// la ruta llega, el encuadre se ajusta solo para que se vean los dos extremos.
 class DeliveryMapPicker extends StatelessWidget {
   const DeliveryMapPicker({
     super.key,
@@ -43,13 +44,18 @@ class DeliveryMapPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ClipRRect(
-          borderRadius: Brand.cardRadius,
-          child: SizedBox(
-            height: 240,
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: Brand.cardRadius,
+        border: Border.all(color: colors.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: 210,
             child: Stack(
               children: [
                 Positioned.fill(
@@ -70,17 +76,20 @@ class DeliveryMapPicker extends StatelessWidget {
                           kind: TotoMapMarkerKind.delivery,
                         ),
                     ],
+                    // Con ruta, el encuadre lo manda `autoFitRoute`; así el
+                    // mapa no salta dos veces (pin y luego ruta).
                     focus: point?.latLng,
                     userPoint: userPoint,
                     route: route,
                     onMapTap: onMapTap,
                     initialZoom: 14,
                     showFitButton: true,
+                    autoFitRoute: true,
+                    centerOnFocus: false,
+                    flush: true,
                   ),
                 ),
-                if (point != null &&
-                    quote != null &&
-                    quote!.etaMinutes > 0)
+                if (point != null && quote != null && quote!.etaMinutes > 0)
                   Positioned(
                     left: Brand.s8,
                     top: Brand.s8,
@@ -94,75 +103,125 @@ class DeliveryMapPicker extends StatelessWidget {
               ],
             ),
           ),
-        ),
-        const SizedBox(height: Brand.s8),
-        Row(
-          children: [
-            Expanded(
-              child: PillButton(
-                label: 'BUSCAR DIRECCIÓN',
-                filled: false,
-                onPressed: onSearch,
-              ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              Brand.s12,
+              Brand.s10,
+              Brand.s12,
+              Brand.s12,
             ),
-            const SizedBox(width: Brand.s8),
-            Expanded(
-              child: PillButton(
-                label: locating ? 'UBICANDO…' : 'MI UBICACIÓN',
-                filled: false,
-                onPressed: locating ? null : onUseLocation,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: Brand.s8),
-        if (quoting)
-          const LinearProgressIndicator()
-        else if (error != null)
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  error!,
-                  style: context.text.caption.copyWith(
-                    color: colors.action,
-                  ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.location_on_rounded,
+                      size: 16,
+                      color: colors.action,
+                    ),
+                    const SizedBox(width: Brand.s4),
+                    Expanded(
+                      child: Text(
+                        point?.label.trim().isNotEmpty ?? false
+                            ? point!.label
+                            : 'Sin punto de entrega',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Brand.ui(
+                          11,
+                          weight: FontWeight.w700,
+                          color: point == null
+                              ? colors.textSecondary
+                              : colors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              TextButton(
-                onPressed: onRetry,
-                child: const Text('REINTENTAR'),
-              ),
-            ],
-          )
-        else if (quote != null && !quote!.deliverable)
-          Text(
-            'Fuera de cobertura. Elige recojo u otra sede.',
-            style: context.text.caption.copyWith(color: colors.action),
-          )
-        else if (quote != null)
-          Row(
-            children: [
-              Icon(Icons.route_rounded, size: 16, color: colors.action),
-              const SizedBox(width: Brand.s4),
-              Expanded(
-                child: Text(
-                  '${quote!.bandLabel} · '
-                  'Envío ${Money.format(quote!.feeSoles)}',
-                  style: context.text.caption.copyWith(
-                    color: colors.textSecondary,
-                  ),
+                const SizedBox(height: Brand.s8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: PillButton(
+                        label: 'BUSCAR DIRECCIÓN',
+                        filled: false,
+                        onPressed: onSearch,
+                      ),
+                    ),
+                    const SizedBox(width: Brand.s8),
+                    Expanded(
+                      child: PillButton(
+                        label: locating ? 'UBICANDO…' : 'MI UBICACIÓN',
+                        filled: false,
+                        onPressed: locating ? null : onUseLocation,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          )
-        else
-          Text(
-            'Toca el mapa para elegir el punto de entrega.',
-            style: context.text.caption.copyWith(
-              color: colors.textSecondary,
+                const SizedBox(height: Brand.s8),
+                // Barra fija de 2 dp: evita que el bloque salte al cotizar.
+                SizedBox(
+                  height: 2,
+                  child: quoting
+                      ? LinearProgressIndicator(
+                          minHeight: 2,
+                          color: colors.action,
+                          backgroundColor: colors.border,
+                        )
+                      : null,
+                ),
+                const SizedBox(height: Brand.s8),
+                _status(context),
+              ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _status(BuildContext context) {
+    final colors = context.colors;
+    final caption = context.text.caption.copyWith(color: colors.textSecondary);
+    if (quoting) {
+      return Text('Calculando ruta y envío…', style: caption);
+    }
+    if (error != null) {
+      return Row(
+        children: [
+          Expanded(
+            child: Text(
+              error!,
+              style: context.text.caption.copyWith(color: colors.action),
+            ),
+          ),
+          TextButton(onPressed: onRetry, child: const Text('REINTENTAR')),
+        ],
+      );
+    }
+    if (quote == null) {
+      return Text(
+        'Toca el mapa para elegir el punto de entrega.',
+        style: caption,
+      );
+    }
+    if (!quote!.deliverable) {
+      return Text(
+        'Fuera del rango de delivery. Elige recojo u otra sede.',
+        style: context.text.caption.copyWith(color: colors.action),
+      );
+    }
+    return Row(
+      children: [
+        Icon(Icons.route_rounded, size: 16, color: colors.action),
+        const SizedBox(width: Brand.s4),
+        Expanded(
+          child: Text(
+            '${quote!.bandLabel} · Envío ${Money.format(quote!.feeSoles)}',
+            style: caption,
+          ),
+        ),
       ],
     );
   }

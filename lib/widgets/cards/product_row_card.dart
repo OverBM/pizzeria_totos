@@ -1,11 +1,10 @@
-﻿part of '../widgets.dart';
-
+part of '../widgets.dart';
 
 /// Tarjeta horizontal de carta: foto de 126 dp y datos a la derecha.
 ///
 /// La foto cubre todo el alto y la columna de texto dicta ese alto: la tarjeta
-/// no reserva espacio vacÃ­o. La acciÃ³n de agregar queda fuera del `Semantics`
-/// informativo para conservar su nodo. La nutriciÃ³n vive solo en el detalle.
+/// no reserva espacio vacío. La acción de agregar queda fuera del `Semantics`
+/// informativo para conservar su nodo. La nutrición vive solo en el detalle.
 class ProductRowCard extends StatelessWidget {
   const ProductRowCard({
     super.key,
@@ -130,12 +129,14 @@ class ProductRowCard extends StatelessWidget {
                                         originalPriceLabel!,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: Brand.ui(
-                                          10,
-                                          color: colors.textSecondary,
-                                        ).copyWith(
-                                          decoration: TextDecoration.lineThrough,
-                                        ),
+                                        style:
+                                            Brand.ui(
+                                              10,
+                                              color: colors.textSecondary,
+                                            ).copyWith(
+                                              decoration:
+                                                  TextDecoration.lineThrough,
+                                            ),
                                       ),
                                     Text(
                                       priceLabel,

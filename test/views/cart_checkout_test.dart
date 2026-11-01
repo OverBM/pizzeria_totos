@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pizzeria_totos/models/account.dart';
 import 'package:pizzeria_totos/models/category.dart';
@@ -257,6 +257,118 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('la dirección del perfil se puede quitar en el paso 2', (
+    tester,
+  ) async {
+    usePhoneViewport(tester, height: 3200);
+    final app = TestApp();
+    addTearDown(app.dispose);
+    await app.loadAll();
+    await app.signIn(
+      account: sampleAccount(
+        phone: '999 111 222',
+        addresses: const [
+          Address(
+            id: 'casa',
+            label: 'Casa',
+            line: 'Av. Giráldez 123, Huancayo',
+            lat: -12.0651,
+            lng: -75.2049,
+          ),
+        ],
+      ),
+    );
+
+    final product = app.catalog.menu.byId('pizza-totos')!;
+    app.cart.add(product, product.variants.first);
+    app.checkout.initDefaults();
+    await settleMicrotasks();
+    expect(app.checkout.selectedAddress?.id, 'casa');
+    expect(app.checkout.deliveryPoint, isNotNull);
+
+    await tester.pumpWidget(_cartScreen(app));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('CONTINUAR CON LA ENTREGA'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('OTRO PUNTO EN EL MAPA'), findsOneWidget);
+    expect(find.text('ABRIR MAPA'), findsOneWidget);
+    await tester.tap(find.text('OTRO PUNTO EN EL MAPA'));
+    await tester.pumpAndSettle();
+
+    expect(app.checkout.selectedAddress, isNull);
+    expect(app.checkout.deliveryPoint, isNull);
+    expect(find.text('Sin punto de entrega'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('abrir mapa permite elegir el punto de entrega', (tester) async {
+    usePhoneViewport(tester, height: 3200);
+    final app = TestApp();
+    addTearDown(app.dispose);
+    await app.loadAll();
+    await app.signIn(account: sampleAccount(phone: '999 111 222'));
+
+    final product = app.catalog.menu.byId('pizza-totos')!;
+    app.cart.add(product, product.variants.first);
+    app.checkout.initDefaults();
+    await settleMicrotasks();
+
+    await tester.pumpWidget(_cartScreen(app));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('CONTINUAR CON LA ENTREGA'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('ABRIR MAPA'));
+    await tester.pumpAndSettle();
+    expect(find.text('USAR ESTE PUNTO'), findsOneWidget);
+
+    await tester.tap(find.text('USAR ESTE PUNTO'));
+    await tester.pumpAndSettle();
+
+    expect(app.checkout.deliveryPoint, isNotNull);
+    expect(app.checkout.selectedAddress, isNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('los pasos visitados se pueden tocar para volver', (
+    tester,
+  ) async {
+    usePhoneViewport(tester, height: 3200);
+    final app = TestApp();
+    addTearDown(app.dispose);
+    await app.loadAll();
+    await app.signIn(account: sampleAccount(phone: '999 111 222'));
+
+    final product = app.catalog.menu.byId('pizza-totos')!;
+    app.cart.add(product, product.variants.first);
+    app.checkout.initDefaults();
+    app.checkout.setDeliveryPoint(
+      const DeliveryPoint(
+        lat: -12.0651,
+        lng: -75.2049,
+        label: 'Av. Giráldez 123, Huancayo',
+      ),
+    );
+    await settleMicrotasks();
+
+    await tester.pumpWidget(_cartScreen(app));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('CONTINUAR CON LA ENTREGA'));
+    await tester.pumpAndSettle();
+
+    // El paso 3 todavía no está habilitado.
+    await tester.tap(find.text('Confirmar'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    expect(find.text('CONTINUAR AL PAGO'), findsOneWidget);
+
+    // Volver al paso 1 desde el indicador de progreso.
+    await tester.tap(find.text('Pedido'));
+    await tester.pumpAndSettle();
+    expect(find.text('CONTINUAR CON LA ENTREGA'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('carrito muestra detalle, sugerencias y vaciar', (tester) async {
     usePhoneViewport(tester, height: 3200);
     final app = TestApp(
@@ -276,9 +388,7 @@ void main() {
           opcion: 'Americana',
         ),
       ],
-      extras: const [
-        ProductExtra(nombre: 'Extra queso', precioSoles: 4),
-      ],
+      extras: const [ProductExtra(nombre: 'Extra queso', precioSoles: 4)],
     );
 
     await tester.pumpWidget(app.wrap(Scaffold(body: _cartView())));

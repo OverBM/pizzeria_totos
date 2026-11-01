@@ -295,6 +295,13 @@ class _FiltersSheetState extends State<_FiltersSheet> {
 
   void _setBand(double? min, double? max) {
     _debounce?.cancel();
+    final filters = context.read<CatalogController>().filters;
+    if (_bandSelected(filters, min, max)) {
+      _minPrice.clear();
+      _maxPrice.clear();
+      _applyRange();
+      return;
+    }
     _minPrice.text = _input(min);
     _maxPrice.text = _input(max);
     _applyRange();
@@ -314,8 +321,12 @@ class _FiltersSheetState extends State<_FiltersSheet> {
     if (min == null && max == null) {
       return currentMin == null && currentMax == null;
     }
-    if (min == null) return currentMin == null && Money.equals(currentMax ?? 0, max!);
-    if (max == null) return currentMax == null && Money.equals(currentMin ?? 0, min);
+    if (min == null) {
+      return currentMin == null && Money.equals(currentMax ?? 0, max!);
+    }
+    if (max == null) {
+      return currentMax == null && Money.equals(currentMin ?? 0, min);
+    }
     return Money.equals(currentMin ?? 0, min) &&
         Money.equals(currentMax ?? 0, max);
   }
@@ -335,9 +346,7 @@ class _FiltersSheetState extends State<_FiltersSheet> {
     ].fold<int>(0, (sum, value) => sum + value);
 
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SafeArea(
         child: SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -375,9 +384,8 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                       FilterPill(
                         label: masa.label,
                         selected: filters.masa == masa,
-                        onTap: () => catalog.setMasa(
-                          filters.masa == masa ? null : masa,
-                        ),
+                        onTap: () =>
+                            catalog.setMasa(filters.masa == masa ? null : masa),
                       ),
                   ],
                 ),
@@ -442,8 +450,7 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                       ],
                       textInputAction: TextInputAction.next,
                       onChanged: _onPriceChanged,
-                      onTapOutside: (_) =>
-                          FocusScope.of(context).unfocus(),
+                      onTapOutside: (_) => FocusScope.of(context).unfocus(),
                       decoration: const InputDecoration(
                         labelText: 'Desde',
                         prefixText: 'S/ ',
@@ -464,8 +471,7 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                       textInputAction: TextInputAction.done,
                       onChanged: _onPriceChanged,
                       onSubmitted: (_) => _applyRange(),
-                      onTapOutside: (_) =>
-                          FocusScope.of(context).unfocus(),
+                      onTapOutside: (_) => FocusScope.of(context).unfocus(),
                       decoration: const InputDecoration(
                         labelText: 'Hasta',
                         prefixText: 'S/ ',
@@ -505,9 +511,8 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                       FilterPill(
                         label: tipo,
                         selected: filters.tipo == tipo,
-                        onTap: () => catalog.setTipo(
-                          filters.tipo == tipo ? null : tipo,
-                        ),
+                        onTap: () =>
+                            catalog.setTipo(filters.tipo == tipo ? null : tipo),
                       ),
                   ],
                 ),

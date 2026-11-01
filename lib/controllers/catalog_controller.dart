@@ -54,9 +54,8 @@ class CatalogController extends ChangeNotifier {
       _menu.products.where((p) => p.available).toList();
 
   /// Destacados disponibles (vacío si ninguno lo está).
-  List<Product> get featured => _menu.products
-      .where((p) => p.featured && p.available)
-      .toList();
+  List<Product> get featured =>
+      _menu.products.where((p) => p.featured && p.available).toList();
 
   /// Favoritas del Inicio: destacados o, si no hay, los primeros productos.
   ///
@@ -71,10 +70,7 @@ class CatalogController extends ChangeNotifier {
   /// Hasta 6 productos del catálogo que no repiten las favoritas.
   List<Product> get homePreview {
     final seen = homeHighlights.map((p) => p.id).toSet();
-    return listedProducts
-        .where((p) => !seen.contains(p.id))
-        .take(6)
-        .toList();
+    return listedProducts.where((p) => !seen.contains(p.id)).take(6).toList();
   }
 
   List<Product> get visibleProducts {
@@ -87,12 +83,14 @@ class CatalogController extends ChangeNotifier {
   bool matchesFilters(Product product, {double? price}) {
     final query = _normalize(_filters.query.trim());
     if (query.isNotEmpty) {
-      final haystack = _normalize([
-        product.name,
-        product.description,
-        ...product.ingredients,
-        ...product.tags,
-      ].join(' '));
+      final haystack = _normalize(
+        [
+          product.name,
+          product.description,
+          ...product.ingredients,
+          ...product.tags,
+        ].join(' '),
+      );
       if (!haystack.contains(query)) return false;
     }
 
@@ -195,8 +193,7 @@ class CatalogController extends ChangeNotifier {
     for (final product in _menu.products) {
       values.addAll(product.masas);
     }
-    final list = values.toList()
-      ..sort((a, b) => a.index.compareTo(b.index));
+    final list = values.toList()..sort((a, b) => a.index.compareTo(b.index));
     return list;
   }
 
@@ -263,11 +260,10 @@ class CatalogController extends ChangeNotifier {
   }
 
   void setPriceRange(double? minPrice, double? maxPrice) {
-    final bounds = priceBounds;
     final min = (minPrice == null || minPrice <= 0)
         ? null
         : Money.round(minPrice);
-    final max = (maxPrice == null || maxPrice >= bounds.max)
+    final max = (maxPrice == null || maxPrice <= 0)
         ? null
         : Money.round(maxPrice);
     _filters = _filters.copyWith(

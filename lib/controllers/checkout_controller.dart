@@ -56,7 +56,7 @@ enum CheckoutIssue {
     CheckoutIssue.noDeliveryPoint =>
       'Confirma el punto de entrega en el mapa para calcular el envío.',
     CheckoutIssue.outOfCoverage =>
-      'El punto está fuera del radio de delivery. Elige recojo u otra sede.',
+      'El punto está fuera del rango de delivery. Elige recojo u otra sede.',
     CheckoutIssue.routeUnavailable =>
       'No pudimos calcular la ruta. Revisa tu conexión e inténtalo de nuevo.',
   };
@@ -95,6 +95,7 @@ class CheckoutController extends ChangeNotifier {
   final DateTime Function() _now;
 
   CheckoutStep _step = CheckoutStep.pedido;
+  CheckoutStep _maxStep = CheckoutStep.pedido;
   OrderRecipientMode _recipientMode = OrderRecipientMode.self;
   String _recipientName = '';
   String _recipientPhone = '';
@@ -113,7 +114,27 @@ class CheckoutController extends ChangeNotifier {
   String? _error;
   Order? _lastOrder;
 
+  /// ¿El usuario ya eligió (o quitó) una dirección a mano?
+  ///
+  /// Mientras sea `false`, [initDefaults] puede autoseleccionar la primera
+  /// dirección del perfil sin pisar una decisión explícita.
+  bool _addressTouched = false;
+
+  /// Descarta respuestas viejas de ruta cuando el punto cambia rápido.
+  int _quoteToken = 0;
+
+  /// Mientras se geocodifica una dirección guardada sin coordenadas.
+  bool _resolvingAddress = false;
+  String? _addressError;
+
+  /// Última dirección para la que ya se pidió geocodificación automática.
+  String? _geocodeRequestedFor;
+
   CheckoutStep get step => _step;
+
+  /// Paso más lejano alcanzado: limita a qué pasos se puede volver.
+  CheckoutStep get maxStep => _maxStep;
+
   OrderRecipientMode get recipientMode => _recipientMode;
   String get recipientName => _recipientName;
   String get recipientPhone => _recipientPhone;
@@ -126,6 +147,13 @@ class CheckoutController extends ChangeNotifier {
   MapRoute? get deliveryRoute => _deliveryRoute;
   bool get isQuoting => _quoting;
   String? get routeError => _routeError;
+
+  /// ¿Se está ubicando en el mapa la dirección guardada?
+  bool get isResolvingAddress => _resolvingAddress;
+
+  /// Problema al ubicar una dirección sin coordenadas.
+  String? get addressError => _addressError;
+
   String get note => _note;
   bool get isSubmitting => _submitting;
   String? get error => _error;
@@ -149,11 +177,11 @@ class CheckoutController extends ChangeNotifier {
     final account = _auth.account;
     if (account == null || account.addresses.isEmpty) return null;
     final id = _addressId;
-    if (id == null) return account.defaultAddress;
+    if (id == null) return null;
     for (final address in account.addresses) {
       if (address.id == id) return address;
     }
-    return account.defaultAddress;
+    return null;
   }
 
   PaymentMethod get selectedPaymentMethod {
@@ -224,6 +252,15 @@ class CheckoutController extends ChangeNotifier {
   void setStep(CheckoutStep step) {
     if (_step == step) return;
     _step = step;
+    if (step.index > _maxStep.index) _maxStep = step;
+    notifyListeners();
+  }
+
+  /// Marca un paso como alcanzado para habilitar la navegación hacia atrás.
+  void reachStep(CheckoutStep step) {
+    if (_step == step && step.index <= _maxStep.index) return;
+    _step = step;
+    if (step.index > _maxStep.index) _maxStep = step;
     notifyListeners();
   }
 
@@ -242,32 +279,54 @@ class CheckoutController extends ChangeNotifier {
   }
 
   /// Selecciona valores iniciales cuando las sedes ya están cargadas.
+  ///
+  /// La dirección del perfil se autoselecciona solo si el usuario no eligió ni
+  /// quitó una dirección a mano; así puede deseleccionarla y usar el mapa.
   void initDefaults() {
     _branchId ??= _branches.defaultBranch?.id;
-    if (_addressId == null) {
+    var changed = false;
+    if (!_addressTouched) {
       final addresses = _auth.account?.addresses ?? const <Address>[];
-      if (addresses.isNotEmpty) _addressId = addresses.first.id;
+      if (addresses.isEmpty) {
+        if (_addressId != null) {
+          _addressId = null;
+          changed = true;
+        }
+      } else {
+        final current = _addressId;
+        final hasCurrent =
+            current != null && addresses.any((a) => a.id == current);
+        final address = hasCurrent
+            ? addresses.firstWhere((a) => a.id == current)
+            : addresses.first;
+        if (_addressId != address.id) {
+          _addressId = address.id;
+          changed = true;
+        }
+        if (_deliveryPoint == null && address.hasPoint) {
+          _deliveryPoint = DeliveryPoint(
+            lat: address.lat!,
+            lng: address.lng!,
+            label: address.line,
+          );
+          changed = true;
+        } else if (_deliveryPoint == null &&
+            _geocodeRequestedFor != address.id) {
+          _geocodeRequestedFor = address.id;
+          _locateAddress(address);
+        }
+      }
     }
     if (_paymentMethodId == null && paymentMethods.isNotEmpty) {
       _paymentMethodId = paymentMethods.first.id;
-    }
-    final address = selectedAddress;
-    if (_deliveryPoint == null &&
-        address != null &&
-        address.hasPoint &&
-        address.lat != null &&
-        address.lng != null) {
-      _deliveryPoint = DeliveryPoint(
-        lat: address.lat!,
-        lng: address.lng!,
-        label: address.line,
-      );
     }
     if (_type == OrderType.pickup) {
       _deliveryQuote = DeliveryQuote.pickup;
     }
     notifyListeners();
-    if (_type == OrderType.delivery) quoteDelivery();
+    if (_type == OrderType.delivery && (changed || _deliveryQuote == null)) {
+      quoteDelivery();
+    }
   }
 
   void setType(OrderType type) {
@@ -293,29 +352,88 @@ class CheckoutController extends ChangeNotifier {
     if (_type == OrderType.delivery) quoteDelivery();
   }
 
-  void selectAddress(String addressId) {
+  Future<void> selectAddress(String addressId) async {
     _addressId = addressId;
+    _addressTouched = true;
+    _addressError = null;
+    _resolvingAddress = false;
     final address = selectedAddress;
-    if (address != null && address.hasPoint) {
-      _deliveryPoint = DeliveryPoint(
-        lat: address.lat!,
-        lng: address.lng!,
-        label: address.line,
-      );
-    } else {
+    if (address == null) {
       _deliveryPoint = null;
       _deliveryRoute = null;
       _deliveryQuote = null;
+      _routeError = null;
+      notifyListeners();
+      return;
     }
+    if (address.hasPoint) {
+      _applyDeliveryPoint(
+        DeliveryPoint(
+          lat: address.lat!,
+          lng: address.lng!,
+          label: address.line,
+        ),
+      );
+      return;
+    }
+    await _locateAddress(address);
+  }
+
+  /// Busca en el mapa una dirección guardada que no tiene coordenadas.
+  ///
+  /// Las direcciones antiguas solo guardaban el texto; al elegirlas se
+  /// geocodifican para poder dibujar la ruta.
+  Future<void> _locateAddress(Address address) async {
+    final id = address.id;
+    _resolvingAddress = true;
+    _addressError = null;
+    _deliveryPoint = null;
+    _deliveryRoute = null;
+    _deliveryQuote = null;
     _routeError = null;
     notifyListeners();
-    if (_type == OrderType.delivery && _deliveryPoint != null) {
-      quoteDelivery();
+    final results = await _maps.search(address.line, limit: 1);
+    if (_addressId != id) return;
+    _resolvingAddress = false;
+    if (results.isEmpty) {
+      _addressError =
+          'No pudimos ubicar «${address.line}» en el mapa. '
+          'Elige el punto manualmente.';
+      notifyListeners();
+      return;
     }
+    final place = results.first;
+    _applyDeliveryPoint(
+      DeliveryPoint(
+        lat: place.point.latitude,
+        lng: place.point.longitude,
+        label: address.line,
+      ),
+    );
+  }
+
+  void _applyDeliveryPoint(DeliveryPoint point) {
+    _deliveryPoint = point;
+    _deliveryRoute = null;
+    _routeError = null;
+    notifyListeners();
+    if (_type == OrderType.delivery) quoteDelivery();
+  }
+
+  /// Quita la dirección guardada para elegir otro punto en el mapa.
+  void clearAddress() {
+    if (_addressId == null && _deliveryPoint == null) return;
+    _addressId = null;
+    _addressTouched = true;
+    setDeliveryPoint(null);
   }
 
   void setDeliveryPoint(DeliveryPoint? point) {
     _deliveryPoint = point;
+    _addressId = null;
+    _addressTouched = true;
+    _addressError = null;
+    _resolvingAddress = false;
     _deliveryRoute = null;
     _routeError = null;
     if (point == null) {
@@ -338,6 +456,7 @@ class CheckoutController extends ChangeNotifier {
 
   /// Calcula ruta, tramo, envío y ETA para el punto actual.
   Future<void> quoteDelivery() async {
+    final token = ++_quoteToken;
     if (_type == OrderType.pickup) {
       _deliveryQuote = DeliveryQuote.pickup;
       _deliveryRoute = null;
@@ -376,6 +495,7 @@ class CheckoutController extends ChangeNotifier {
       LatLng(branch.lat, branch.lng),
       point.latLng,
     );
+    if (token != _quoteToken) return;
     if (route.isEmpty) {
       _quoting = false;
       _deliveryRoute = null;
@@ -552,6 +672,7 @@ class CheckoutController extends ChangeNotifier {
 
   void _resetDraft({bool keepLastOrder = false}) {
     _step = CheckoutStep.pedido;
+    _maxStep = CheckoutStep.pedido;
     _recipientMode = OrderRecipientMode.self;
     _recipientName = '';
     _recipientPhone = '';
@@ -560,10 +681,15 @@ class CheckoutController extends ChangeNotifier {
     _deliveryRoute = null;
     _routeError = null;
     _quoting = false;
+    _quoteToken++;
     _note = '';
     _addressId = null;
+    _addressTouched = false;
+    _addressError = null;
+    _resolvingAddress = false;
+    _geocodeRequestedFor = null;
     if (!keepLastOrder) _lastOrder = null;
-    notifyListeners();
+    initDefaults();
   }
 
   Future<void> markWhatsappSent(Order order) =>

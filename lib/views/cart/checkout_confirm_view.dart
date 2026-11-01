@@ -12,6 +12,7 @@ import '../../models/checkout_step.dart';
 import '../../models/order.dart';
 import '../../models/payment_method.dart';
 import '../../widgets/widgets.dart';
+import 'checkout_navigation.dart';
 import 'order_confirmation_sheet.dart';
 
 /// Paso 3 del checkout: pago, nota, resumen y confirmación.
@@ -28,7 +29,9 @@ class _CheckoutConfirmViewState extends State<CheckoutConfirmView> {
   @override
   void initState() {
     super.initState();
-    _note = TextEditingController(text: context.read<CheckoutController>().note);
+    _note = TextEditingController(
+      text: context.read<CheckoutController>().note,
+    );
   }
 
   @override
@@ -85,7 +88,11 @@ class _CheckoutConfirmViewState extends State<CheckoutConfirmView> {
               Brand.s16,
               Brand.s12,
             ),
-            child: CheckoutProgress(step: CheckoutStep.confirmar),
+            child: CheckoutProgress(
+              step: CheckoutStep.confirmar,
+              maxStep: checkout.maxStep,
+              onSelect: (step) => goToCheckoutStep(context, step),
+            ),
           ),
         ),
       ),
@@ -94,8 +101,7 @@ class _CheckoutConfirmViewState extends State<CheckoutConfirmView> {
           const OfflineBanner(),
           Expanded(
             child: ListView(
-              keyboardDismissBehavior:
-                  ScrollViewKeyboardDismissBehavior.onDrag,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.fromLTRB(
                 Brand.s16,
                 Brand.s16,
@@ -197,8 +203,7 @@ class _CheckoutConfirmViewState extends State<CheckoutConfirmView> {
                   spacing: Brand.s8,
                   runSpacing: Brand.s8,
                   children: [
-                    for (final PaymentMethod method
-                        in checkout.paymentMethods)
+                    for (final PaymentMethod method in checkout.paymentMethods)
                       FilterPill(
                         label: method.label,
                         selected:
@@ -292,10 +297,7 @@ class _CheckoutConfirmViewState extends State<CheckoutConfirmView> {
                           const Spacer(),
                           Text(
                             Money.format(checkout.totalSoles),
-                            style: Brand.ui(
-                              22,
-                              weight: FontWeight.w700,
-                            ),
+                            style: Brand.ui(22, weight: FontWeight.w700),
                           ),
                         ],
                       ),
@@ -342,9 +344,8 @@ class _CheckoutConfirmViewState extends State<CheckoutConfirmView> {
                               issue == CheckoutIssue.noAddress,
                         ))
                           TextButton(
-                            onPressed: () => Navigator.of(context).push(
-                              AppRoutes.profile(),
-                            ),
+                            onPressed: () =>
+                                Navigator.of(context).push(AppRoutes.profile()),
                             child: const Text('COMPLETAR PERFIL'),
                           ),
                       ],
@@ -383,8 +384,8 @@ class _CheckoutConfirmViewState extends State<CheckoutConfirmView> {
                 : 'CONFIRMAR PEDIDO',
             expanded: true,
             showArrow: true,
-            onPressed: checkout.isSubmitting ||
-                    (auth.isSignedIn && issues.isNotEmpty)
+            onPressed:
+                checkout.isSubmitting || (auth.isSignedIn && issues.isNotEmpty)
                 ? null
                 : auth.isSignedIn
                 ? _submit

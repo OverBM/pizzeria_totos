@@ -8,6 +8,7 @@ import '../../core/theme/brand.dart';
 import '../../models/checkout_step.dart';
 import '../../widgets/widgets.dart';
 import 'cart_view.dart';
+import 'checkout_navigation.dart';
 
 /// Carrito como pantalla propia, abierto desde el icono de la barra superior.
 class CartScreen extends StatelessWidget {
@@ -33,12 +34,14 @@ class CartScreen extends StatelessWidget {
         ..showSnackBar(SnackBar(content: Text(issues.first.message)));
       return;
     }
+    checkout.reachStep(CheckoutStep.entrega);
     Navigator.of(context).push(AppRoutes.checkoutDelivery());
   }
 
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartController>();
+    final checkout = context.watch<CheckoutController>();
     return Scaffold(
       appBar: TotoTopBar(
         showWordmark: false,
@@ -51,7 +54,11 @@ class CartScreen extends StatelessWidget {
           preferredSize: const Size.fromHeight(58),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: CheckoutProgress(step: CheckoutStep.pedido),
+            child: CheckoutProgress(
+              step: CheckoutStep.pedido,
+              maxStep: checkout.maxStep,
+              onSelect: (step) => goToCheckoutStep(context, step),
+            ),
           ),
         ),
       ),

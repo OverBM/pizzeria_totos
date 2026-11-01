@@ -31,8 +31,8 @@ import 'package:pizzeria_totos/services/maps/maps_service.dart';
 /// Ubicación controlada para pruebas.
 class FakeLocationService implements LocationService {
   FakeLocationService({LocationResult? result})
-    : result = result ??
-          LocationResult.success(const LatLng(-12.0651, -75.2049));
+    : result =
+          result ?? LocationResult.success(const LatLng(-12.0651, -75.2049));
 
   LocationResult result;
   bool settingsOpened = false;
@@ -51,8 +51,9 @@ class FakeLocationService implements LocationService {
 
 /// Mapas controlados para pruebas: ruta fija y búsqueda vacía.
 class FakeMapsService implements MapsService {
-  FakeMapsService({MapRoute? route})
-    : routeResult = route ??
+  FakeMapsService({MapRoute? route, List<PlaceResult>? searchResults})
+    : routeResult =
+          route ??
           MapRoute(
             distanceMeters: 3200,
             durationSeconds: 720,
@@ -60,19 +61,22 @@ class FakeMapsService implements MapsService {
               LatLng(-12.0651, -75.2049),
               LatLng(-12.0600, -75.2000),
             ],
-          );
+          ),
+      searchResults = searchResults ?? const [];
 
   MapRoute routeResult;
+  final List<PlaceResult> searchResults;
 
   @override
   String get attribution => '© OpenStreetMap contributors';
 
   @override
-  String get tileUrlTemplate => 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+  String get tileUrlTemplate =>
+      'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
   @override
   Future<List<PlaceResult>> search(String query, {int limit = 5}) async =>
-      const [];
+      searchResults.take(limit).toList();
 
   @override
   Future<PlaceResult?> reverse(LatLng point) async =>

@@ -37,11 +37,20 @@ class AppRoutes {
   static Route<T> orders<T>() =>
       MotionRoute<T>(builder: (_) => const OrdersView());
 
-  static Route<T> checkoutDelivery<T>() =>
-      MotionRoute<T>(builder: (_) => const CheckoutDeliveryView());
+  static Route<T> checkoutDelivery<T>() => MotionRoute<T>(
+    settings: const RouteSettings(name: deliveryRouteName),
+    builder: (_) => const CheckoutDeliveryView(),
+  );
 
-  static Route<T> checkoutConfirm<T>() =>
-      MotionRoute<T>(builder: (_) => const CheckoutConfirmView());
+  static Route<T> checkoutConfirm<T>() => MotionRoute<T>(
+    settings: const RouteSettings(name: confirmRouteName),
+    builder: (_) => const CheckoutConfirmView(),
+  );
+
+  /// Nombres de las rutas del checkout, para volver a un paso anterior.
+  static const String cartRouteName = '/carrito';
+  static const String deliveryRouteName = '/checkout/entrega';
+  static const String confirmRouteName = '/checkout/confirmar';
 
   static Route<T> orderDetail<T>(Order order) =>
       MotionRoute<T>(builder: (_) => OrderDetailView(order: order));
@@ -61,6 +70,7 @@ class AppRoutes {
     required VoidCallback onOpenProfile,
     required VoidCallback onOpenOrders,
   }) => MotionRoute<T>(
+    settings: const RouteSettings(name: cartRouteName),
     builder: (_) => CartScreen(
       onGoToCarta: onGoToCarta,
       onOpenAuth: onOpenAuth,

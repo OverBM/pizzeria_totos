@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/routes.dart';
@@ -159,11 +160,7 @@ class _ProfileViewState extends State<ProfileView> {
                       account.name.toUpperCase(),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Brand.display(
-                        22,
-                        h: 1,
-                        color: colors.textPrimary,
-                      ),
+                      style: Brand.display(22, h: 1, color: colors.textPrimary),
                     ),
                     const SizedBox(height: Brand.s2),
                     Text(
@@ -312,7 +309,8 @@ class _ProfileViewState extends State<ProfileView> {
           label: 'Mis pedidos',
           subtitle: 'Historial y estado de tus compras',
           onTap: () =>
-              Navigator.of(context).push(MotionRoute(builder: (_) => const OrdersView())),
+              Navigator.of(context)
+                  .push(MotionRoute(builder: (_) => const OrdersView())),
         ),
         const SizedBox(height: Brand.s8),
         _linkTile(
@@ -322,9 +320,8 @@ class _ProfileViewState extends State<ProfileView> {
           subtitle: 'Enviar y revisar tus casos',
           onTap: () => Navigator.of(context).push(
             AppRoutes.claims(
-              onOpenAuth: () => Navigator.of(
-                context,
-              ).push<bool>(MotionRoute(builder: (_) => const LoginView())),
+              onOpenAuth: () => Navigator.of(context)
+                  .push<bool>(MotionRoute(builder: (_) => const LoginView())),
             ),
           ),
         ),
@@ -336,10 +333,8 @@ class _ProfileViewState extends State<ProfileView> {
           subtitle: 'Ofertas vigentes de la casa',
           onTap: () => Navigator.of(context).push(
             AppRoutes.promotions(
-              onOpenProduct: (product, {variantLabel}) =>
-                  Navigator.of(context).push(
-                    AppRoutes.product(product, variantLabel: variantLabel),
-                  ),
+              onOpenProduct: (product, {variantLabel}) => Navigator.of(context)
+                  .push(AppRoutes.product(product, variantLabel: variantLabel)),
             ),
           ),
         ),
@@ -479,8 +474,7 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
                 const SizedBox(height: Brand.s4),
                 Text(address.line, style: context.text.bodySm),
-                if (address.reference != null &&
-                    address.reference!.isNotEmpty)
+                if (address.reference != null && address.reference!.isNotEmpty)
                   Text(
                     'Ref. ${address.reference}',
                     style: context.text.caption.copyWith(
@@ -553,10 +547,7 @@ class _ProfileViewState extends State<ProfileView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    label,
-                    style: Brand.ui(12, weight: FontWeight.w700),
-                  ),
+                  Text(label, style: Brand.ui(12, weight: FontWeight.w700)),
                   Text(
                     subtitle,
                     style: context.text.caption.copyWith(
@@ -578,7 +569,8 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   void _openEdit() {
-    Navigator.of(context).push(MotionRoute(builder: (_) => const EditProfileView()));
+    Navigator.of(context)
+        .push(MotionRoute(builder: (_) => const EditProfileView()));
   }
 
   Widget _versionFooter(BuildContext context) {
@@ -727,6 +719,18 @@ class _AddressSheetState extends State<_AddressSheet> {
     text: widget.address?.reference ?? '',
   );
 
+  /// Coordenadas elegidas al buscar la dirección, para poder cotizar delivery.
+  LatLng? _point;
+
+  @override
+  void initState() {
+    super.initState();
+    final address = widget.address;
+    if (address != null && address.hasPoint) {
+      _point = LatLng(address.lat!, address.lng!);
+    }
+  }
+
   @override
   void dispose() {
     _label.dispose();
@@ -815,7 +819,10 @@ class _AddressSheetState extends State<_AddressSheet> {
       builder: (_) => AddressSearchSheet(initialQuery: _line.text),
     );
     if (place == null || !mounted) return;
-    setState(() => _line.text = place.label);
+    setState(() {
+      _line.text = place.label;
+      _point = place.point;
+    });
   }
 
   void _save() {
@@ -829,6 +836,8 @@ class _AddressSheetState extends State<_AddressSheet> {
         line: _line.text.trim(),
         reference: reference.isEmpty ? null : reference,
         createdAt: widget.address?.createdAt ?? DateTime.now(),
+        lat: _point?.latitude,
+        lng: _point?.longitude,
       ),
     );
   }

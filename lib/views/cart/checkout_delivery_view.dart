@@ -19,6 +19,8 @@ import '../../widgets/widgets.dart';
 import '../branches/branch_detail_sheet.dart';
 import '../branches/branch_route_view.dart';
 import '../common/address_search_sheet.dart';
+import '../common/location_picker_map.dart';
+import 'checkout_navigation.dart';
 import 'delivery_map_picker.dart';
 
 /// Paso 2 del checkout: tipo de entrega, sede, dirección y punto.
@@ -90,6 +92,21 @@ class _CheckoutDeliveryViewState extends State<CheckoutDeliveryView> {
     );
   }
 
+  Future<void> _openMapPicker() async {
+    final checkout = context.read<CheckoutController>();
+    final point = await Navigator.of(context).push<DeliveryPoint>(
+      MaterialPageRoute(
+        builder: (_) => LocationPickerMap(
+          initialPoint: checkout.deliveryPoint,
+          initialLabel: checkout.deliveryAddressLabel,
+          title: 'Punto de entrega',
+        ),
+      ),
+    );
+    if (point == null || !mounted) return;
+    checkout.setDeliveryPoint(point);
+  }
+
   Future<void> _openBranchDetail(Branch branch) async {
     final settings = context.read<SettingsService>();
     await showModalBottomSheet<bool>(
@@ -106,10 +123,8 @@ class _CheckoutDeliveryViewState extends State<CheckoutDeliveryView> {
           if (!mounted) return;
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => BranchRouteView(
-                branch: branch,
-                initialUserPoint: _userPoint,
-              ),
+              builder: (_) =>
+                  BranchRouteView(branch: branch, initialUserPoint: _userPoint),
             ),
           );
         },
@@ -126,6 +141,7 @@ class _CheckoutDeliveryViewState extends State<CheckoutDeliveryView> {
         ..showSnackBar(SnackBar(content: Text(issues.first.message)));
       return;
     }
+    checkout.reachStep(CheckoutStep.confirmar);
     Navigator.of(context).push(AppRoutes.checkoutConfirm());
   }
 
@@ -155,7 +171,11 @@ class _CheckoutDeliveryViewState extends State<CheckoutDeliveryView> {
               Brand.s16,
               Brand.s12,
             ),
-            child: CheckoutProgress(step: CheckoutStep.entrega),
+            child: CheckoutProgress(
+              step: CheckoutStep.entrega,
+              maxStep: checkout.maxStep,
+              onSelect: (step) => goToCheckoutStep(context, step),
+            ),
           ),
         ),
       ),
@@ -164,8 +184,7 @@ class _CheckoutDeliveryViewState extends State<CheckoutDeliveryView> {
           const OfflineBanner(),
           Expanded(
             child: ListView(
-              keyboardDismissBehavior:
-                  ScrollViewKeyboardDismissBehavior.onDrag,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.fromLTRB(
                 Brand.s16,
                 Brand.s16,
@@ -187,10 +206,7 @@ class _CheckoutDeliveryViewState extends State<CheckoutDeliveryView> {
                   style: Brand.display(28, h: 1, color: colors.textPrimary),
                 ),
                 const SizedBox(height: Brand.s20),
-                const SectionHeading(
-                  eyebrow: 'Tipo',
-                  title: 'Cómo lo recibes',
-                ),
+                const SectionHeading(eyebrow: 'Tipo', title: 'Cómo lo recibes'),
                 const SizedBox(height: Brand.s12),
                 Wrap(
                   spacing: Brand.s8,
@@ -211,10 +227,7 @@ class _CheckoutDeliveryViewState extends State<CheckoutDeliveryView> {
                   ],
                 ),
                 const SizedBox(height: Brand.s20),
-                const SectionHeading(
-                  eyebrow: 'Sede',
-                  title: 'De dónde sale',
-                ),
+                const SectionHeading(eyebrow: 'Sede', title: 'De dónde sale'),
                 const SizedBox(height: Brand.s12),
                 if (branches.branches.isEmpty)
                   Text(
@@ -268,33 +281,28 @@ class _CheckoutDeliveryViewState extends State<CheckoutDeliveryView> {
                       ),
                     )
                   else if (auth.account?.addresses.isNotEmpty ?? false)
-                    RadioGroup<String>(
-                      groupValue: checkout.selectedAddress?.id,
-                      onChanged: (value) {
-                        if (value != null) checkout.selectAddress(value);
-                      },
-                      child: Column(
-                        children: [
-                          for (final address in auth.account!.addresses)
-                            RadioListTile<String>(
-                              value: address.id,
-                              contentPadding: EdgeInsets.zero,
-                              dense: true,
-                              activeColor: colors.action,
-                              title: Text(
-                                address.title.toUpperCase(),
-                                style: Brand.ui(
-                                  11,
-                                  weight: FontWeight.w700,
-                                ),
-                              ),
-                              subtitle: Text(
-                                address.line,
-                                style: context.text.caption,
-                              ),
-                            ),
+                    Column(
+                      children: [
+                        for (final address in auth.account!.addresses) ...[
+                          _AddressOption(
+                            icon: Icons.home_rounded,
+                            title: address.title.toUpperCase(),
+                            subtitle: address.line,
+                            selected:
+                                checkout.selectedAddress?.id == address.id,
+                            onTap: () => checkout.selectAddress(address.id),
+                          ),
+                          const SizedBox(height: Brand.s8),
                         ],
-                      ),
+                        _AddressOption(
+                          icon: Icons.map_outlined,
+                          title: 'OTRO PUNTO EN EL MAPA',
+                          subtitle:
+                              'Quita la dirección y elige otra ubicación.',
+                          selected: checkout.selectedAddress == null,
+                          onTap: checkout.clearAddress,
+                        ),
+                      ],
                     )
                   else
                     Text(
@@ -304,7 +312,44 @@ class _CheckoutDeliveryViewState extends State<CheckoutDeliveryView> {
                         color: colors.textSecondary,
                       ),
                     ),
-                  const SizedBox(height: Brand.s8),
+                  if (checkout.isResolvingAddress) ...[
+                    const SizedBox(height: Brand.s8),
+                    Row(
+                      children: [
+                        const SizedBox(
+                          height: 14,
+                          width: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(width: Brand.s8),
+                        Expanded(
+                          child: Text(
+                            'Ubicando la dirección en el mapa…',
+                            style: context.text.caption.copyWith(
+                              color: colors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ] else if (checkout.addressError != null) ...[
+                    const SizedBox(height: Brand.s8),
+                    Text(
+                      checkout.addressError!,
+                      style: context.text.caption.copyWith(
+                        color: colors.action,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: Brand.s12),
+                  PillButton(
+                    label: 'ABRIR MAPA',
+                    icon: Icons.map_outlined,
+                    filled: false,
+                    expanded: true,
+                    onPressed: _openMapPicker,
+                  ),
+                  const SizedBox(height: Brand.s12),
                   DeliveryMapPicker(
                     point: checkout.deliveryPoint,
                     branchPoint: branch == null
@@ -351,6 +396,91 @@ class _CheckoutDeliveryViewState extends State<CheckoutDeliveryView> {
             expanded: true,
             showArrow: true,
             onPressed: _continue,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Tarjeta seleccionable de dirección, con el mismo lenguaje que el perfil.
+class _AddressOption extends StatelessWidget {
+  const _AddressOption({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: title,
+      child: Material(
+        color: selected
+            ? colors.action.withValues(alpha: 0.06)
+            : colors.surface,
+        borderRadius: Brand.cardRadius,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: Brand.cardRadius,
+          child: Container(
+            padding: const EdgeInsets.all(Brand.s12),
+            decoration: BoxDecoration(
+              borderRadius: Brand.cardRadius,
+              border: Border.all(
+                color: selected ? colors.action : colors.border,
+                width: selected ? 1.5 : 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 18,
+                  color: selected ? colors.action : colors.textSecondary,
+                ),
+                const SizedBox(width: Brand.s10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Brand.ui(11, weight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: Brand.s2),
+                      Text(
+                        subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.text.caption.copyWith(
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: Brand.s8),
+                Icon(
+                  selected ? Icons.check_circle_rounded : Icons.circle_outlined,
+                  size: 18,
+                  color: selected ? colors.action : colors.border,
+                ),
+              ],
+            ),
           ),
         ),
       ),

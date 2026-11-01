@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pizzeria_totos/models/product.dart';
 import 'package:pizzeria_totos/views/branches/branches_view.dart';
 import 'package:pizzeria_totos/views/carta/carta_view.dart';
 import 'package:pizzeria_totos/views/carta/product_detail_view.dart';
@@ -56,6 +57,42 @@ void main() {
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
       await tester.pumpAndSettle();
     }
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('la promo del inicio abre el detalle desde toda la tarjeta', (
+    tester,
+  ) async {
+    usePhoneViewport(tester, height: 2400);
+    final app = await ready();
+    addTearDown(app.dispose);
+
+    Product? opened;
+    await tester.pumpWidget(
+      app.wrap(
+        Scaffold(
+          body: HomeView(
+            onGoToCarta: (_) {},
+            onGoToSedes: () {},
+            onGoToPromotions: () {},
+            onGoToProduct: (product) => opened = product,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final banner = find.byType(PromoBanner);
+    expect(banner, findsOneWidget);
+    await tester.ensureVisible(banner);
+    await tester.pumpAndSettle();
+
+    // Toca la foto, lejos del precio y del botón «VER».
+    final rect = tester.getRect(banner);
+    await tester.tapAt(Offset(rect.center.dx, rect.top + 40));
+    await tester.pumpAndSettle();
+
+    expect(opened, isNotNull);
     expect(tester.takeException(), isNull);
   });
 

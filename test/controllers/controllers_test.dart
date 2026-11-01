@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:pizzeria_totos/controllers/auth_controller.dart';
 import 'package:pizzeria_totos/controllers/branch_controller.dart';
 import 'package:pizzeria_totos/controllers/cart_controller.dart';
@@ -12,6 +13,7 @@ import 'package:pizzeria_totos/core/storage/cart_storage.dart';
 import 'package:pizzeria_totos/models/account.dart';
 import 'package:pizzeria_totos/models/catalog_filters.dart';
 import 'package:pizzeria_totos/models/category.dart';
+import 'package:pizzeria_totos/models/checkout_step.dart';
 import 'package:pizzeria_totos/models/delivery_quote.dart';
 import 'package:pizzeria_totos/models/masa.dart';
 import 'package:pizzeria_totos/models/menu_data.dart';
@@ -21,6 +23,7 @@ import 'package:pizzeria_totos/models/product_option.dart';
 import 'package:pizzeria_totos/models/promotion.dart';
 import 'package:pizzeria_totos/models/variant.dart';
 import 'package:pizzeria_totos/repositories/repository_exception.dart';
+import 'package:pizzeria_totos/services/maps/maps_service.dart';
 import 'package:pizzeria_totos/services/settings_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -71,10 +74,7 @@ void main() {
     test('cambia de categoría y filtra productos', () async {
       final controller = CatalogController(repository: FakeCatalogRepository());
       await controller.load();
-      expect(
-        controller.selectedCategoryId,
-        CatalogController.allCategoryId,
-      );
+      expect(controller.selectedCategoryId, CatalogController.allCategoryId);
       expect(controller.selectedCategoryName, 'TODOS');
 
       controller.selectCategory('bebidas');
@@ -178,7 +178,10 @@ void main() {
         controller.visibleProducts.map((p) => p.id),
         containsAll(['pizza-americana', 'pizza-dulce']),
       );
-      expect(controller.visibleProducts.any((p) => p.id == 'coca-600'), isFalse);
+      expect(
+        controller.visibleProducts.any((p) => p.id == 'coca-600'),
+        isFalse,
+      );
 
       controller.clearFilters();
       controller.setMasa(MasaType.masaMadre);
@@ -195,6 +198,17 @@ void main() {
       controller.clearFilters();
       controller.setTipo('Clásica');
       expect(controller.visibleProducts.single.id, 'pizza-americana');
+      controller.dispose();
+    });
+
+    test('la banda 45–70 conserva el máximo aunque cubra la carta', () async {
+      final controller = CatalogController(repository: FakeCatalogRepository());
+      await controller.load();
+      controller.setPriceRange(45, 70);
+      expect(controller.filters.minPrice, 45);
+      expect(controller.filters.maxPrice, 70);
+      expect(controller.filters.hasPriceFilter, isTrue);
+      expect(controller.visibleProducts, isEmpty);
       controller.dispose();
     });
 
@@ -557,7 +571,7 @@ void main() {
         FakeOrderRepository orders,
       })
     >
-    build() async {
+    build({FakeMapsService? maps}) async {
       final orders = FakeOrderRepository();
       final branches = BranchController(repository: FakeBranchRepository());
       final auth = AuthController(
@@ -591,7 +605,7 @@ void main() {
         auth: auth,
         branches: branches,
         settings: settings,
-        maps: FakeMapsService(),
+        maps: maps ?? FakeMapsService(),
         // Dentro del horario de las sedes de ejemplo, para que el test no
         // dependa de la hora real a la que se ejecute.
         now: () => DateTime(2026, 10, 15, 13),
@@ -617,6 +631,107 @@ void main() {
       expect(env.checkout.canSubmit, isFalse);
       expect(await env.checkout.submit(), isNull);
       expect(env.checkout.error, CheckoutIssue.emptyCart.message);
+      env.checkout.dispose();
+    });
+
+    test(
+      'la dirección del perfil se puede quitar para elegir el mapa',
+      () async {
+        final env = await build();
+        await env.auth.addAddress(
+          const Address(
+            id: 'a1',
+            label: 'Casa',
+            line: 'Av. Giráldez 123',
+            lat: -12.0651,
+            lng: -75.2049,
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+        env.checkout.initDefaults();
+        await Future<void>.delayed(Duration.zero);
+
+        expect(env.checkout.selectedAddress?.id, 'a1');
+        expect(env.checkout.deliveryPoint, isNotNull);
+        expect(
+          env.checkout.deliveryRoute,
+          isNotNull,
+          reason: 'la dirección autoseleccionada ya cotiza su ruta',
+        );
+
+        env.checkout.clearAddress();
+        expect(env.checkout.selectedAddress, isNull);
+        expect(env.checkout.deliveryPoint, isNull);
+        expect(env.checkout.deliveryAddressLabel, isEmpty);
+
+        env.checkout.initDefaults();
+        expect(
+          env.checkout.selectedAddress,
+          isNull,
+          reason: 'no vuelve a autoseleccionar tras quitarla a mano',
+        );
+
+        env.checkout.setDeliveryPoint(
+          const DeliveryPoint(
+            lat: -12.07,
+            lng: -75.21,
+            label: 'Punto en el mapa',
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
+        expect(env.checkout.selectedAddress, isNull);
+        expect(env.checkout.deliveryAddressLabel, 'Punto en el mapa');
+        env.checkout.dispose();
+      },
+    );
+
+    test('una dirección sin coordenadas se ubica en el mapa', () async {
+      final env = await build(
+        maps: FakeMapsService(
+          searchResults: const [
+            PlaceResult(
+              label: 'Av. Real 456, Huancayo',
+              point: LatLng(-12.06, -75.21),
+            ),
+          ],
+        ),
+      );
+      await env.auth.addAddress(
+        const Address(id: 'a2', label: 'Trabajo', line: 'Av. Real 456'),
+      );
+      await Future<void>.delayed(Duration.zero);
+      env.checkout.initDefaults();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(env.checkout.selectedAddress?.id, 'a2');
+      expect(env.checkout.isResolvingAddress, isFalse);
+      expect(env.checkout.addressError, isNull);
+      expect(env.checkout.deliveryPoint?.lat, -12.06);
+      expect(
+        env.checkout.deliveryRoute,
+        isNotNull,
+        reason: 'la dirección geocodificada ya dibuja su ruta',
+      );
+      env.checkout.dispose();
+    });
+
+    test('los pasos alcanzados habilitan volver atrás', () async {
+      final env = await build();
+      expect(env.checkout.maxStep, CheckoutStep.pedido);
+
+      env.checkout.reachStep(CheckoutStep.entrega);
+      expect(env.checkout.maxStep, CheckoutStep.entrega);
+
+      env.checkout.reachStep(CheckoutStep.confirmar);
+      expect(env.checkout.maxStep, CheckoutStep.confirmar);
+
+      env.checkout.reachStep(CheckoutStep.entrega);
+      expect(env.checkout.step, CheckoutStep.entrega);
+      expect(
+        env.checkout.maxStep,
+        CheckoutStep.confirmar,
+        reason: 'volver atrás no borra el progreso',
+      );
       env.checkout.dispose();
     });
 
@@ -677,10 +792,7 @@ void main() {
 
       env.checkout.setType(OrderType.pickup);
       expect(env.checkout.shippingSoles, 0);
-      expect(
-        env.checkout.validate(),
-        contains(CheckoutIssue.noPhone),
-      );
+      expect(env.checkout.validate(), contains(CheckoutIssue.noPhone));
       env.checkout.setType(OrderType.delivery);
       expect(env.checkout.shippingSoles, 3.00);
       env.checkout.dispose();

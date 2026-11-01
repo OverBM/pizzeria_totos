@@ -1,9 +1,9 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
-/// Motivo por el que no se pudo obtener la ubicaciÃ³n.
+/// Motivo por el que no se pudo obtener la ubicación.
 enum LocationFailure {
   serviceDisabled,
   permissionDenied,
@@ -13,19 +13,19 @@ enum LocationFailure {
 
   String get message => switch (this) {
     LocationFailure.serviceDisabled =>
-      'Activa la ubicaciÃ³n del dispositivo para usar el mapa.',
+      'Activa la ubicación del dispositivo para usar el mapa.',
     LocationFailure.permissionDenied =>
-      'No diste permiso de ubicaciÃ³n. Puedes buscar tu direcciÃ³n manualmente.',
+      'No diste permiso de ubicación. Puedes buscar tu dirección manualmente.',
     LocationFailure.permissionDeniedForever =>
-      'El permiso de ubicaciÃ³n estÃ¡ bloqueado. Ãbrelo en los ajustes.',
+      'El permiso de ubicación está bloqueado. Ábrelo en los ajustes.',
     LocationFailure.timeout =>
-      'No pudimos obtener tu ubicaciÃ³n. IntÃ©ntalo de nuevo.',
+      'No pudimos obtener tu ubicación. Inténtalo de nuevo.',
     LocationFailure.unavailable =>
-      'La ubicaciÃ³n no estÃ¡ disponible en este momento.',
+      'La ubicación no está disponible en este momento.',
   };
 }
 
-/// Resultado de pedir la ubicaciÃ³n actual.
+/// Resultado de pedir la ubicación actual.
 class LocationResult {
   const LocationResult({this.point, this.failure});
 
@@ -39,7 +39,7 @@ class LocationResult {
   LocationResult.error(LocationFailure this.failure) : point = null;
 }
 
-/// Contrato de ubicaciÃ³n nativa. Se inyecta para poder probar sin GPS.
+/// Contrato de ubicación nativa. Se inyecta para poder probar sin GPS.
 abstract class LocationService {
   const LocationService();
 
@@ -50,7 +50,7 @@ abstract class LocationService {
   Future<bool> openSettings();
 }
 
-/// ImplementaciÃ³n con `geolocator`.
+/// Implementación con `geolocator`.
 class GeolocatorLocationService implements LocationService {
   const GeolocatorLocationService();
 
@@ -70,9 +70,7 @@ class GeolocatorLocationService implements LocationService {
         return LocationResult.error(LocationFailure.permissionDenied);
       }
       if (permission == LocationPermission.deniedForever) {
-        return LocationResult.error(
-          LocationFailure.permissionDeniedForever,
-        );
+        return LocationResult.error(LocationFailure.permissionDeniedForever);
       }
       final position = await Geolocator.getCurrentPosition(
         locationSettings: LocationSettings(
@@ -97,4 +95,3 @@ class GeolocatorLocationService implements LocationService {
   @override
   Future<bool> openSettings() => Geolocator.openAppSettings();
 }
-

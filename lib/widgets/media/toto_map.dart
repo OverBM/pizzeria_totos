@@ -42,6 +42,7 @@ class TotoMap extends StatefulWidget {
     this.route,
     this.autoFitRoute = false,
     this.expand = false,
+    this.centerOnFocus = true,
   });
 
   final List<TotoMapMarker> markers;
@@ -60,6 +61,12 @@ class TotoMap extends StatefulWidget {
 
   /// Ajusta el encuadre a la ruta cuando cambia.
   final bool autoFitRoute;
+
+  /// Centra el mapa cuando cambian [focus] o [userPoint].
+  ///
+  /// Se desactiva cuando el encuadre lo controla la ruta, para que el mapa no
+  /// salte dos veces (al pin y luego al llegar la ruta).
+  final bool centerOnFocus;
 
   /// Ocupa todo el alto disponible (para pantallas con `Expanded`).
   final bool expand;
@@ -90,6 +97,20 @@ class _TotoMapState extends State<TotoMap> {
   final MapController _controller = MapController();
 
   @override
+  void initState() {
+    super.initState();
+    // La ruta puede venir ya calculada (dirección del perfil autoseleccionada):
+    // encuadra al abrir en lugar de esperar a que cambie.
+    if (widget.autoFitRoute &&
+        widget.route != null &&
+        widget.route!.points.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _fitAll();
+      });
+    }
+  }
+
+  @override
   void didUpdateWidget(covariant TotoMap oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.autoFitRoute &&
@@ -110,14 +131,16 @@ class _TotoMapState extends State<TotoMap> {
         }
       }
     }
-    final focus = widget.focus;
-    if (focus != null && focus != oldWidget.focus) {
-      _move(focus, _detailZoom);
-      return;
-    }
-    final user = widget.userPoint;
-    if (user != null && user != oldWidget.userPoint) {
-      _move(user, _detailZoom);
+    if (widget.centerOnFocus) {
+      final focus = widget.focus;
+      if (focus != null && focus != oldWidget.focus) {
+        _move(focus, _detailZoom);
+        return;
+      }
+      final user = widget.userPoint;
+      if (user != null && user != oldWidget.userPoint) {
+        _move(user, _detailZoom);
+      }
     }
   }
 
@@ -136,11 +159,10 @@ class _TotoMapState extends State<TotoMap> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final initialCenter = widget.focus ??
+    final initialCenter =
+        widget.focus ??
         widget.userPoint ??
-        (widget.markers.isEmpty
-            ? huancayoCenter
-            : widget.markers.first.point);
+        (widget.markers.isEmpty ? huancayoCenter : widget.markers.first.point);
 
     final map = SizedBox(
       height: widget.expand ? double.infinity : widget.height,
@@ -191,10 +213,7 @@ class _TotoMapState extends State<TotoMap> {
                         decoration: BoxDecoration(
                           color: Colors.lightBlueAccent,
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Brand.boneWhite,
-                            width: 2,
-                          ),
+                          border: Border.all(color: Brand.boneWhite, width: 2),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.35),
@@ -214,10 +233,7 @@ class _TotoMapState extends State<TotoMap> {
             bottom: 4,
             child: IgnorePointer(
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: colors.bar.withValues(alpha: 0.72),
                   borderRadius: BorderRadius.circular(4),
@@ -242,10 +258,14 @@ class _TotoMapState extends State<TotoMap> {
                 clipBehavior: Clip.antiAlias,
                 child: IconButton(
                   onPressed: _fitAll,
-                  icon: Icon(
-                    Icons.zoom_out_map_rounded,
-                    size: 18,
-                    color: colors.onBar,
+                  icon: SvgPicture.asset(
+                    'assets/icons/center_map.svg',
+                    width: 20,
+                    height: 20,
+                    colorFilter: ColorFilter.mode(
+                      colors.onBar,
+                      BlendMode.srcIn,
+                    ),
                   ),
                   tooltip: 'Centrar mapa',
                   padding: EdgeInsets.zero,
@@ -370,11 +390,7 @@ class MapInfoChip extends StatelessWidget {
           const SizedBox(width: Brand.s4),
           Text(
             label,
-            style: Brand.ui(
-              11,
-              weight: FontWeight.w700,
-              color: colors.onBar,
-            ),
+            style: Brand.ui(11, weight: FontWeight.w700, color: colors.onBar),
           ),
         ],
       ),
