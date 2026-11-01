@@ -51,8 +51,14 @@ class _AppShellState extends State<AppShell> {
     Navigator.of(context).push(AppRoutes.login());
   }
 
-  void _openProfile() {
-    Navigator.of(context).push(AppRoutes.profile());
+  Future<void> _openProfile() async {
+    final auth = context.read<AuthController>();
+    if (!auth.isSignedIn) {
+      final logged = await Navigator.of(context).push<bool>(AppRoutes.login());
+      if (!mounted || logged != true) return;
+    }
+    if (!mounted) return;
+    await Navigator.of(context).push(AppRoutes.profile());
   }
 
   void _openOrders() {
@@ -89,6 +95,12 @@ class _AppShellState extends State<AppShell> {
       appBar: TotoTopBar(
         onWordmarkTap: () => _goTo(0),
         actions: [
+          if (auth.isSignedIn)
+            IconButton(
+              onPressed: _openOrders,
+              tooltip: 'Mis pedidos',
+              icon: const OrdersIcon(size: 22),
+            ),
           CartBadge(count: cart.count, onPressed: _openCart),
           IconButton(
             onPressed: _openProfile,

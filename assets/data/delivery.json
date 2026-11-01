@@ -1,7 +1,30 @@
 {
-  "_note": "Fórmula de costo de delivery (estimación por distancia en línea recta desde la sede). Valores en SOLES: base + por km; gratis desde gratisDesdeKm. El cliente ajusta.",
+  "_note": "Fórmula de costo de delivery por tramos de distancia de ruta. Valores en SOLES. Si no hay tramos, se usa base + por km.",
   "base": 3,
   "porKm": 1,
-  "gratisDesdeKm": 6,
-  "maxKm": 12
+  "maxKm": 8,
+  "preparacionMin": 20,
+  "margenMin": 5,
+  "tramos": [
+    {
+      "desdeKm": 0,
+      "hastaKm": 2,
+      "costo": 4
+    },
+    {
+      "desdeKm": 2,
+      "hastaKm": 4,
+      "costo": 6
+    },
+    {
+      "desdeKm": 4,
+      "hastaKm": 6,
+      "costo": 8
+    },
+    {
+      "desdeKm": 6,
+      "hastaKm": 8,
+      "costo": 10
+    }
+  ]
 }

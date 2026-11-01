@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../core/format/money.dart';
 import '../core/load_state.dart';
 import '../models/catalog_filters.dart';
+import '../models/masa.dart';
 import '../models/menu_data.dart';
 import '../models/product.dart';
 import '../repositories/catalog_repository.dart';
@@ -29,7 +30,7 @@ class CatalogController extends ChangeNotifier {
   static const String featuredCategoryId = 'mas-pedidas';
   static const String allCategoryId = 'todos';
 
-  String _selectedCategoryId = featuredCategoryId;
+  String _selectedCategoryId = allCategoryId;
   CatalogFilters _filters = const CatalogFilters();
 
   LoadState get state => _state;
@@ -109,22 +110,22 @@ class CatalogController extends ChangeNotifier {
       }
     }
 
-    final effectivePrice = price ?? _effectiveMinPrice(product);
-    if (effectivePrice < _filters.minPrice ||
-        effectivePrice > _filters.maxPrice) {
+    final selectedMasa = _filters.masa;
+    if (selectedMasa != null && !product.masas.contains(selectedMasa)) {
       return false;
     }
-    if (_filters.hasPriceThreshold) {
-      final threshold = _filters.priceThreshold!;
-      if (_filters.priceComparison == PriceComparison.below &&
-          effectivePrice >= threshold) {
-        return false;
-      }
-      if (_filters.priceComparison == PriceComparison.above &&
-          effectivePrice <= threshold) {
-        return false;
-      }
+    if (_filters.formato != null && !_hasTag(product, _filters.formato!)) {
+      return false;
     }
+    if (_filters.tipo != null && !_hasTag(product, _filters.tipo!)) {
+      return false;
+    }
+
+    final effectivePrice = price ?? _displayedPrice(product);
+    final minPrice = _filters.minPrice;
+    final maxPrice = _filters.maxPrice;
+    if (minPrice != null && effectivePrice < minPrice) return false;
+    if (maxPrice != null && effectivePrice > maxPrice) return false;
     return true;
   }
 
@@ -144,14 +145,34 @@ class CatalogController extends ChangeNotifier {
         .toList();
   }
 
-  double _effectiveMinPrice(Product product) {
+  /// Precio que se muestra en la tarjeta: la variante por defecto con la
+  /// promoción vigente. El filtro usa este mismo precio.
+  double _displayedPrice(Product product) {
+    final variant = product.defaultVariantOrNull;
+    if (variant == null) return product.minPriceSoles;
     final promotions = _promotions;
-    if (promotions == null || product.variants.isEmpty) {
-      return product.minPriceSoles;
+    if (promotions == null) return variant.priceSoles;
+    return promotions.priceFor(product, variant).finalSoles;
+  }
+
+  /// Límites del rango de precio a partir de los productos visibles.
+  ({double min, double max}) get priceBounds {
+    final prices = listedProducts
+        .map(_displayedPrice)
+        .where((price) => price > 0)
+        .toList();
+    if (prices.isEmpty) return (min: 0, max: 100);
+    var maximum = 0.0;
+    for (final price in prices) {
+      if (price > maximum) maximum = price;
     }
-    return product.variants
-        .map((variant) => promotions.priceFor(product, variant).finalSoles)
-        .reduce((a, b) => a < b ? a : b);
+    final rounded = (maximum / 10).ceil() * 10;
+    return (min: 0, max: rounded < 20 ? 20 : rounded.toDouble());
+  }
+
+  bool _hasTag(Product product, String label) {
+    final target = _normalize(label);
+    return product.tags.any((tag) => _normalize(tag) == target);
   }
 
   /// Alérgenos declarados por el catálogo, para construir los filtros.
@@ -166,6 +187,44 @@ class CatalogController extends ChangeNotifier {
     final list = values.toList()
       ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     return list;
+  }
+
+  /// Masas realmente disponibles en el catálogo.
+  List<MasaType> get masaOptions {
+    final values = <MasaType>{};
+    for (final product in _menu.products) {
+      values.addAll(product.masas);
+    }
+    final list = values.toList()
+      ..sort((a, b) => a.index.compareTo(b.index));
+    return list;
+  }
+
+  /// Formatos derivados de las etiquetas reales.
+  List<String> get formatoOptions {
+    const known = ['Individual', 'Para compartir', 'Familiar'];
+    return known
+        .where((label) => _menu.products.any((p) => _hasTag(p, label)))
+        .toList();
+  }
+
+  /// Tipos derivados de las etiquetas reales.
+  List<String> get tipoOptions {
+    const known = [
+      'Clásica',
+      'Vegetariana',
+      'Picante',
+      'Dulce',
+      'Casa',
+      'Crujiente',
+      'Fresca',
+      'Helada',
+      'Postre',
+      'Con alcohol',
+    ];
+    return known
+        .where((label) => _menu.products.any((p) => _hasTag(p, label)))
+        .toList();
   }
 
   String get selectedCategoryName {
@@ -203,25 +262,44 @@ class CatalogController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setPriceRange(double minPrice, double maxPrice) {
+  void setPriceRange(double? minPrice, double? maxPrice) {
+    final bounds = priceBounds;
+    final min = (minPrice == null || minPrice <= 0)
+        ? null
+        : Money.round(minPrice);
+    final max = (maxPrice == null || maxPrice >= bounds.max)
+        ? null
+        : Money.round(maxPrice);
     _filters = _filters.copyWith(
-      minPrice: Money.round(minPrice),
-      maxPrice: Money.round(maxPrice),
+      minPrice: min,
+      maxPrice: max,
+      clearMinPrice: min == null,
+      clearMaxPrice: max == null,
     );
     notifyListeners();
   }
 
-  void setPriceThreshold(double threshold, PriceComparison comparison) {
+  void clearPriceRange() {
+    if (!_filters.hasPriceFilter) return;
+    _filters = _filters.copyWith(clearMinPrice: true, clearMaxPrice: true);
+    notifyListeners();
+  }
+
+  void setMasa(MasaType? masa) {
+    _filters = _filters.copyWith(masa: masa, clearMasa: masa == null);
+    notifyListeners();
+  }
+
+  void setFormato(String? formato) {
     _filters = _filters.copyWith(
-      priceThreshold: Money.round(threshold),
-      priceComparison: comparison,
+      formato: formato,
+      clearFormato: formato == null,
     );
     notifyListeners();
   }
 
-  void clearPriceThreshold() {
-    if (!_filters.hasPriceThreshold) return;
-    _filters = _filters.copyWith(clearPriceThreshold: true);
+  void setTipo(String? tipo) {
+    _filters = _filters.copyWith(tipo: tipo, clearTipo: tipo == null);
     notifyListeners();
   }
 
@@ -291,7 +369,7 @@ class CatalogController extends ChangeNotifier {
         _selectedCategoryId == featuredCategoryId ||
         _selectedCategoryId == allCategoryId ||
         _menu.activeCategories.any((c) => c.id == _selectedCategoryId);
-    if (!exists) _selectedCategoryId = featuredCategoryId;
+    if (!exists) _selectedCategoryId = allCategoryId;
   }
 
   @override

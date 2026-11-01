@@ -159,7 +159,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('NO HAY PRODUCTOS EN ESTA CATEGORÍA'), findsOneWidget);
-    expect(find.text('VER LAS MÁS PEDIDAS'), findsOneWidget);
+    expect(find.text('VER TODOS'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -230,7 +230,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('el perfil muestra ${AppInfo.label} sin sesión', (tester) async {
+  testWidgets('el perfil sin sesión redirige al login', (tester) async {
     usePhoneViewport(tester, height: 1400);
     final app = await ready();
     addTearDown(app.dispose);
@@ -238,7 +238,7 @@ void main() {
     await tester.pumpWidget(app.wrap(const ProfileView()));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppInfo.label), findsOneWidget);
+    expect(find.text('INICIAR SESIÓN'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 

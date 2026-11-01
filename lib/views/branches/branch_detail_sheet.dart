@@ -20,12 +20,20 @@ class BranchDetailSheet extends StatelessWidget {
     required this.phoneFallback,
     required this.whatsappFallback,
     this.distanceLabel,
+    this.onDirections,
+    this.showMapButton = true,
   });
 
   final Branch branch;
   final String phoneFallback;
   final String whatsappFallback;
   final String? distanceLabel;
+
+  /// Si se pasa, «Cómo llegar» abre la ruta dentro de la app.
+  final VoidCallback? onDirections;
+
+  /// «Ver en el mapa» no aporta cuando el mapa ya está en pantalla.
+  final bool showMapButton;
 
   @override
   Widget build(BuildContext context) {
@@ -176,17 +184,20 @@ class BranchDetailSheet extends StatelessWidget {
                       filled: false,
                       expanded: true,
                       showArrow: true,
-                      onPressed: () => ContactLauncher.openMap(
-                        branch.lat,
-                        branch.lng,
-                        label: "TOTO'S ${branch.name}",
+                      onPressed: onDirections ??
+                          () => ContactLauncher.openMap(
+                            branch.lat,
+                            branch.lng,
+                            label: "TOTO'S ${branch.name}",
+                          ),
+                    ),
+                    if (showMapButton) ...[
+                      const SizedBox(height: Brand.s8),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('VER EN EL MAPA'),
                       ),
-                    ),
-                    const SizedBox(height: Brand.s8),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(true),
-                      child: const Text('VER EN EL MAPA'),
-                    ),
+                    ],
                   ],
                 ),
               ),

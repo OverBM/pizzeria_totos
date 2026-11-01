@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -49,17 +51,20 @@ class _CatalogFilterControlsState extends State<CatalogFilterControls> {
     );
   }
 
+  int _activeCount(CatalogFilters filters) => [
+    filters.excludedAllergens.length,
+    if (filters.calorieBand != CalorieBand.all) 1,
+    if (filters.hasPriceFilter) 1,
+    if (filters.masa != null) 1,
+    if (filters.formato != null) 1,
+    if (filters.tipo != null) 1,
+  ].fold<int>(0, (sum, value) => sum + value);
+
   @override
   Widget build(BuildContext context) {
     final catalog = context.watch<CatalogController>();
     _syncQuery(catalog.searchQuery);
-    final active = [
-      if (catalog.filters.excludedAllergens.isNotEmpty)
-        catalog.filters.excludedAllergens.length,
-      if (catalog.filters.calorieBand != CalorieBand.all) 1,
-      if (catalog.filters.hasPriceFilter) 1,
-      if (catalog.filters.hasPriceThreshold) 1,
-    ].fold<int>(0, (sum, value) => sum + value);
+    final active = _activeCount(catalog.filters);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,8 +120,9 @@ class _CatalogFilterControlsState extends State<CatalogFilterControls> {
   }
 
   Widget _activeFilters(BuildContext context, CatalogController catalog) {
+    final filters = catalog.filters;
     final chips = <Widget>[];
-    for (final allergen in catalog.filters.excludedAllergens) {
+    for (final allergen in filters.excludedAllergens) {
       chips.add(
         FilterPill(
           label: 'Sin $allergen',
@@ -125,34 +131,48 @@ class _CatalogFilterControlsState extends State<CatalogFilterControls> {
         ),
       );
     }
-    if (catalog.filters.calorieBand != CalorieBand.all) {
+    if (filters.masa != null) {
       chips.add(
         FilterPill(
-          label: catalog.filters.calorieBand.label,
+          label: filters.masa!.label,
+          selected: true,
+          onTap: () => catalog.setMasa(null),
+        ),
+      );
+    }
+    if (filters.formato != null) {
+      chips.add(
+        FilterPill(
+          label: filters.formato!,
+          selected: true,
+          onTap: () => catalog.setFormato(null),
+        ),
+      );
+    }
+    if (filters.tipo != null) {
+      chips.add(
+        FilterPill(
+          label: filters.tipo!,
+          selected: true,
+          onTap: () => catalog.setTipo(null),
+        ),
+      );
+    }
+    if (filters.calorieBand != CalorieBand.all) {
+      chips.add(
+        FilterPill(
+          label: filters.calorieBand.label,
           selected: true,
           onTap: () => catalog.setCalorieBand(CalorieBand.all),
         ),
       );
     }
-    if (catalog.filters.hasPriceFilter) {
+    if (filters.hasPriceFilter) {
       chips.add(
         FilterPill(
-          label:
-              '${Money.format(catalog.filters.minPrice)} – '
-              '${Money.format(catalog.filters.maxPrice)}',
+          label: _priceLabel(filters),
           selected: true,
-          onTap: () => catalog.setPriceRange(0, 100),
-        ),
-      );
-    }
-    if (catalog.filters.hasPriceThreshold) {
-      chips.add(
-        FilterPill(
-          label:
-              '${catalog.filters.priceComparison.label} '
-              '${Money.format(catalog.filters.priceThreshold!)}',
-          selected: true,
-          onTap: catalog.clearPriceThreshold,
+          onTap: catalog.clearPriceRange,
         ),
       );
     }
@@ -178,11 +198,30 @@ class _CatalogFilterControlsState extends State<CatalogFilterControls> {
     );
   }
 
+  static String _priceLabel(CatalogFilters filters) {
+    final min = filters.minPrice;
+    final max = filters.maxPrice;
+    if (min != null && max != null) {
+      return '${Money.format(min)} – ${Money.format(max)}';
+    }
+    if (min != null) return 'Desde ${Money.format(min)}';
+    return 'Hasta ${Money.format(max!)}';
+  }
+
   Future<void> _openFilters(BuildContext context) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: context.colors.surface,
+      showDragHandle: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+      ),
       builder: (_) => const _FiltersSheet(),
     );
   }
@@ -197,59 +236,111 @@ class _FiltersSheet extends StatefulWidget {
 }
 
 class _FiltersSheetState extends State<_FiltersSheet> {
-  late RangeValues _range;
-  late final TextEditingController _specificPrice;
-  PriceComparison _comparison = PriceComparison.none;
+  late final TextEditingController _minPrice;
+  late final TextEditingController _maxPrice;
+  Timer? _debounce;
+  String? _rangeError;
 
   @override
   void initState() {
     super.initState();
     final filters = context.read<CatalogController>().filters;
-    _range = RangeValues(filters.minPrice, filters.maxPrice);
-    _comparison = filters.priceComparison;
-    _specificPrice = TextEditingController(
-      text: filters.priceThreshold == null
-          ? ''
-          : filters.priceThreshold!.toStringAsFixed(2),
-    );
+    _minPrice = TextEditingController(text: _input(filters.minPrice));
+    _maxPrice = TextEditingController(text: _input(filters.maxPrice));
   }
 
   @override
   void dispose() {
-    _specificPrice.dispose();
+    _debounce?.cancel();
+    _minPrice.dispose();
+    _maxPrice.dispose();
     super.dispose();
   }
 
-  void _applyThreshold() {
+  static String _input(double? value) =>
+      value == null ? '' : value.toStringAsFixed(2);
+
+  double? _parse(String raw) {
+    final text = raw.trim().replaceAll(',', '.');
+    if (text.isEmpty) return null;
+    return double.tryParse(text);
+  }
+
+  void _applyRange() {
     final catalog = context.read<CatalogController>();
-    final raw = _specificPrice.text.trim().replaceAll(',', '.');
-    final value = double.tryParse(raw);
-    if (value == null || value <= 0) {
-      catalog.clearPriceThreshold();
+    final rawMin = _minPrice.text.trim();
+    final rawMax = _maxPrice.text.trim();
+    final min = _parse(rawMin);
+    final max = _parse(rawMax);
+    String? error;
+    if (rawMin.isNotEmpty && (min == null || min <= 0)) {
+      error = 'Ingresa un monto mayor a S/ 0.00';
+    } else if (rawMax.isNotEmpty && (max == null || max <= 0)) {
+      error = 'Ingresa un monto mayor a S/ 0.00';
+    } else if (min != null && max != null && min > max) {
+      error = 'El mínimo no puede ser mayor que el máximo';
+    }
+    if (error != null) {
+      setState(() => _rangeError = error);
       return;
     }
-    catalog.setPriceThreshold(
-      value,
-      _comparison == PriceComparison.none
-          ? PriceComparison.below
-          : _comparison,
-    );
-    if (_comparison == PriceComparison.none) {
-      setState(() => _comparison = PriceComparison.below);
+    setState(() => _rangeError = null);
+    catalog.setPriceRange(min, max);
+  }
+
+  void _onPriceChanged(String _) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), _applyRange);
+  }
+
+  void _setBand(double? min, double? max) {
+    _debounce?.cancel();
+    _minPrice.text = _input(min);
+    _maxPrice.text = _input(max);
+    _applyRange();
+  }
+
+  void _clearAll() {
+    _debounce?.cancel();
+    _minPrice.clear();
+    _maxPrice.clear();
+    context.read<CatalogController>().clearFilters();
+    setState(() => _rangeError = null);
+  }
+
+  bool _bandSelected(CatalogFilters filters, double? min, double? max) {
+    final currentMin = filters.minPrice;
+    final currentMax = filters.maxPrice;
+    if (min == null && max == null) {
+      return currentMin == null && currentMax == null;
     }
+    if (min == null) return currentMin == null && Money.equals(currentMax ?? 0, max!);
+    if (max == null) return currentMax == null && Money.equals(currentMin ?? 0, min);
+    return Money.equals(currentMin ?? 0, min) &&
+        Money.equals(currentMax ?? 0, max);
   }
 
   @override
   Widget build(BuildContext context) {
     final catalog = context.watch<CatalogController>();
     final colors = context.colors;
-    final allergens = catalog.allergenOptions;
+    final filters = catalog.filters;
+    final active = [
+      filters.excludedAllergens.length,
+      if (filters.calorieBand != CalorieBand.all) 1,
+      if (filters.hasPriceFilter) 1,
+      if (filters.masa != null) 1,
+      if (filters.formato != null) 1,
+      if (filters.tipo != null) 1,
+    ].fold<int>(0, (sum, value) => sum + value);
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.viewInsetsOf(context).bottom,
       ),
       child: SafeArea(
         child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.fromLTRB(
             Brand.s16,
             Brand.s16,
@@ -263,59 +354,182 @@ class _FiltersSheetState extends State<_FiltersSheet> {
               Row(
                 children: [
                   Text(
-                    'FILTROS',
+                    'FILTROS ($active)',
                     style: Brand.display(22, h: 1, color: colors.textPrimary),
                   ),
                   const Spacer(),
                   TextButton(
-                    onPressed: () {
-                      catalog.clearFilters();
-                      _specificPrice.clear();
-                      setState(() {
-                        _range = const RangeValues(0, 100);
-                        _comparison = PriceComparison.none;
-                      });
-                    },
-                    child: const Text('LIMPIAR TODO'),
+                    onPressed: _clearAll,
+                    child: const Text('LIMPIAR'),
                   ),
                 ],
               ),
               const SizedBox(height: Brand.s16),
-              if (allergens.isNotEmpty) ...[
-                Text(
-                  'SIN ALÉRGENOS',
-                  style: Brand.ui(
-                    10,
-                    weight: FontWeight.w700,
-                    color: colors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: Brand.s8),
+              if (catalog.masaOptions.isNotEmpty) ...[
+                const _FilterSection(title: 'MASA'),
                 Wrap(
                   spacing: Brand.s8,
                   runSpacing: Brand.s8,
                   children: [
-                    for (final allergen in allergens)
+                    for (final masa in catalog.masaOptions)
+                      FilterPill(
+                        label: masa.label,
+                        selected: filters.masa == masa,
+                        onTap: () => catalog.setMasa(
+                          filters.masa == masa ? null : masa,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: Brand.s16),
+              ],
+              if (catalog.formatoOptions.isNotEmpty) ...[
+                const _FilterSection(title: 'FORMATO'),
+                Wrap(
+                  spacing: Brand.s8,
+                  runSpacing: Brand.s8,
+                  children: [
+                    for (final formato in catalog.formatoOptions)
+                      FilterPill(
+                        label: formato,
+                        selected: filters.formato == formato,
+                        onTap: () => catalog.setFormato(
+                          filters.formato == formato ? null : formato,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: Brand.s16),
+              ],
+              const _FilterSection(title: 'PRECIO'),
+              Wrap(
+                spacing: Brand.s8,
+                runSpacing: Brand.s8,
+                children: [
+                  FilterPill(
+                    label: 'Hasta 25',
+                    selected: _bandSelected(filters, null, 25),
+                    onTap: () => _setBand(null, 25),
+                  ),
+                  FilterPill(
+                    label: '25–45',
+                    selected: _bandSelected(filters, 25, 45),
+                    onTap: () => _setBand(25, 45),
+                  ),
+                  FilterPill(
+                    label: '45–70',
+                    selected: _bandSelected(filters, 45, 70),
+                    onTap: () => _setBand(45, 70),
+                  ),
+                  FilterPill(
+                    label: '70+',
+                    selected: _bandSelected(filters, 70, null),
+                    onTap: () => _setBand(70, null),
+                  ),
+                ],
+              ),
+              const SizedBox(height: Brand.s8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _minPrice,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                      ],
+                      textInputAction: TextInputAction.next,
+                      onChanged: _onPriceChanged,
+                      onTapOutside: (_) =>
+                          FocusScope.of(context).unfocus(),
+                      decoration: const InputDecoration(
+                        labelText: 'Desde',
+                        prefixText: 'S/ ',
+                        hintText: 'Sin mínimo',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: Brand.s8),
+                  Expanded(
+                    child: TextField(
+                      controller: _maxPrice,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                      ],
+                      textInputAction: TextInputAction.done,
+                      onChanged: _onPriceChanged,
+                      onSubmitted: (_) => _applyRange(),
+                      onTapOutside: (_) =>
+                          FocusScope.of(context).unfocus(),
+                      decoration: const InputDecoration(
+                        labelText: 'Hasta',
+                        prefixText: 'S/ ',
+                        hintText: 'Sin límite',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (_rangeError != null) ...[
+                const SizedBox(height: Brand.s4),
+                Text(
+                  _rangeError!,
+                  style: context.text.caption.copyWith(color: colors.action),
+                ),
+              ],
+              if (filters.hasPriceFilter)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () {
+                      _minPrice.clear();
+                      _maxPrice.clear();
+                      _applyRange();
+                    },
+                    child: const Text('QUITAR PRECIO'),
+                  ),
+                ),
+              const SizedBox(height: Brand.s16),
+              if (catalog.tipoOptions.isNotEmpty) ...[
+                const _FilterSection(title: 'TIPO'),
+                Wrap(
+                  spacing: Brand.s8,
+                  runSpacing: Brand.s8,
+                  children: [
+                    for (final tipo in catalog.tipoOptions)
+                      FilterPill(
+                        label: tipo,
+                        selected: filters.tipo == tipo,
+                        onTap: () => catalog.setTipo(
+                          filters.tipo == tipo ? null : tipo,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: Brand.s16),
+              ],
+              if (catalog.allergenOptions.isNotEmpty) ...[
+                const _FilterSection(title: 'SIN ALÉRGENOS'),
+                Wrap(
+                  spacing: Brand.s8,
+                  runSpacing: Brand.s8,
+                  children: [
+                    for (final allergen in catalog.allergenOptions)
                       FilterPill(
                         label: 'Sin $allergen',
-                        selected: catalog.filters.excludedAllergens.contains(
-                          allergen,
-                        ),
+                        selected: filters.excludedAllergens.contains(allergen),
                         onTap: () => catalog.toggleAllergen(allergen),
                       ),
                   ],
                 ),
                 const SizedBox(height: Brand.s16),
               ],
-              Text(
-                'CALORÍAS',
-                style: Brand.ui(
-                  10,
-                  weight: FontWeight.w700,
-                  color: colors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: Brand.s8),
+              const _FilterSection(title: 'CALORÍAS POR PORCIÓN'),
               Wrap(
                 spacing: Brand.s8,
                 runSpacing: Brand.s8,
@@ -323,109 +537,9 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                   for (final band in CalorieBand.values)
                     FilterPill(
                       label: band.label,
-                      selected: catalog.filters.calorieBand == band,
+                      selected: filters.calorieBand == band,
                       onTap: () => catalog.setCalorieBand(band),
                     ),
-                ],
-              ),
-              const SizedBox(height: Brand.s16),
-              Text(
-                'PRECIO',
-                style: Brand.ui(
-                  10,
-                  weight: FontWeight.w700,
-                  color: colors.textSecondary,
-                ),
-              ),
-              RangeSlider(
-                values: _range,
-                min: 0,
-                max: 100,
-                divisions: 100,
-                labels: RangeLabels(
-                  Money.format(_range.start),
-                  Money.format(_range.end),
-                ),
-                onChanged: (values) => setState(() => _range = values),
-                onChangeEnd: (values) =>
-                    catalog.setPriceRange(values.start, values.end),
-              ),
-              Row(
-                children: [
-                  Text(Money.format(_range.start), style: context.text.caption),
-                  const Spacer(),
-                  Text(Money.format(_range.end), style: context.text.caption),
-                ],
-              ),
-              const SizedBox(height: Brand.s16),
-              Text(
-                'PRECIO ESPECÍFICO',
-                style: Brand.ui(
-                  10,
-                  weight: FontWeight.w700,
-                  color: colors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: Brand.s8),
-              TextField(
-                controller: _specificPrice,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                ],
-                decoration: const InputDecoration(
-                  labelText: 'Precio específico',
-                  prefixText: 'S/ ',
-                  hintText: '35.00',
-                ),
-                onSubmitted: (_) => _applyThreshold(),
-              ),
-              const SizedBox(height: Brand.s8),
-              Row(
-                children: [
-                  Expanded(
-                    child: FilterPill(
-                      label: 'MENOR A',
-                      selected: _comparison == PriceComparison.below,
-                      onTap: () => setState(
-                        () => _comparison = PriceComparison.below,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: Brand.s8),
-                  Expanded(
-                    child: FilterPill(
-                      label: 'MAYOR A',
-                      selected: _comparison == PriceComparison.above,
-                      onTap: () => setState(
-                        () => _comparison = PriceComparison.above,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: Brand.s8),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _applyThreshold,
-                      child: const Text('APLICAR PRECIO'),
-                    ),
-                  ),
-                  if (catalog.filters.hasPriceThreshold) ...[
-                    const SizedBox(width: Brand.s8),
-                    TextButton(
-                      onPressed: () {
-                        catalog.clearPriceThreshold();
-                        _specificPrice.clear();
-                        setState(() => _comparison = PriceComparison.none);
-                      },
-                      child: const Text('QUITAR'),
-                    ),
-                  ],
                 ],
               ),
               const SizedBox(height: Brand.s24),
@@ -433,10 +547,35 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                 label: 'VER ${catalog.visibleCount} PRODUCTOS',
                 expanded: true,
                 showArrow: true,
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () {
+                  _debounce?.cancel();
+                  _applyRange();
+                  Navigator.of(context).pop();
+                },
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterSection extends StatelessWidget {
+  const _FilterSection({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Brand.s8),
+      child: Text(
+        title,
+        style: Brand.ui(
+          10,
+          weight: FontWeight.w700,
+          color: context.colors.textSecondary,
         ),
       ),
     );

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pizzeria_totos/app/app_services.dart';
@@ -23,7 +23,7 @@ export 'fakes.dart';
 
 /// App de prueba: arma `AppServices` con repositorios fake en memoria.
 ///
-/// La app de producción solo conoce implementaciones Firestore; este harness
+/// La app de producciÃ³n solo conoce implementaciones Firestore; este harness
 /// vive exclusivamente en `test/support/` y nunca se empaqueta en el APK.
 class TestApp {
   TestApp({
@@ -36,7 +36,11 @@ class TestApp {
     FakeClaimRepository? claimRepository,
     FakeProfileRepository? profileRepository,
     FakeAuthRepository? authRepository,
+    FakeLocationService? locationService,
+    FakeMapsService? mapsService,
   }) : authRepository = authRepository ?? FakeAuthRepository(),
+       locationService = locationService ?? FakeLocationService(),
+       mapsService = mapsService ?? FakeMapsService(),
        profileRepository = profileRepository ?? FakeProfileRepository(),
        catalogRepository = catalogRepository ?? FakeCatalogRepository(),
        branchRepository = branchRepository ?? FakeBranchRepository(),
@@ -54,6 +58,8 @@ class TestApp {
   final FakeSettingsRepository settingsRepository;
   final FakeOrderRepository orderRepository;
   final FakeClaimRepository claimRepository;
+  final FakeLocationService locationService;
+  final FakeMapsService mapsService;
   final ConnectivityService connectivity;
 
   late final SettingsService settings = SettingsService(
@@ -90,7 +96,8 @@ class TestApp {
     auth: auth,
     branches: branches,
     settings: settings,
-    // Instante fijo dentro del horario de las sedes de ejemplo (12:45–21:30).
+    maps: mapsService,
+    // Instante fijo dentro del horario de las sedes de ejemplo (12:45â€“21:30).
     now: () => DateTime(2026, 10, 15, 13),
   );
 
@@ -111,11 +118,12 @@ class TestApp {
     orders: orders,
     claims: claims,
     checkout: checkout,
+    locationService: locationService,
   );
 
   bool _started = false;
 
-  /// Carga configuración, carrito, carta, sedes y promociones.
+  /// Carga configuraciÃ³n, carrito, carta, sedes y promociones.
   Future<void> loadAll() async {
     if (_started) return;
     _started = true;
@@ -123,7 +131,7 @@ class TestApp {
     await settleMicrotasks();
   }
 
-  /// Inicia sesión con [account] y espera a que el perfil llegue al controlador.
+  /// Inicia sesiÃ³n con [account] y espera a que el perfil llegue al controlador.
   Future<void> signIn({Account? account}) async {
     final target = account ?? sampleAccount();
     profileRepository.profiles[target.uid] = target;
@@ -151,14 +159,14 @@ class TestApp {
   void dispose() => services.dispose();
 }
 
-/// Fija el viewport en 360 dp de ancho, la medida móvil de referencia.
+/// Fija el viewport en 360 dp de ancho, la medida mÃ³vil de referencia.
 void usePhoneViewport(WidgetTester tester, {double height = 900}) {
   tester.view.devicePixelRatio = 1.0;
   tester.view.physicalSize = Size(360, height);
   addTearDown(tester.view.reset);
 }
 
-/// Ancho lógico actual del viewport de prueba.
+/// Ancho lÃ³gico actual del viewport de prueba.
 double logicalWidth(WidgetTester tester) =>
     tester.view.physicalSize.width / tester.view.devicePixelRatio;
 
@@ -178,7 +186,7 @@ Future<void> settleMicrotasks([int turns = 4]) async {
   }
 }
 
-/// Carga las fuentes de marca para que el texto mida como en producción.
+/// Carga las fuentes de marca para que el texto mida como en producciÃ³n.
 Future<void> loadBrandFonts() async {
   Future<void> load(String family, List<String> assets) async {
     final loader = FontLoader(family);
@@ -195,3 +203,4 @@ Future<void> loadBrandFonts() async {
     'assets/fonts/Inter-Bold.ttf',
   ]);
 }
+

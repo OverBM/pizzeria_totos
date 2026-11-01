@@ -1,3 +1,5 @@
+import 'masa.dart';
+
 /// Bandas de calorías para la carta.
 enum CalorieBand {
   all,
@@ -24,29 +26,17 @@ enum CalorieBand {
   }
 }
 
-/// Comparación opcional contra un precio específico.
-enum PriceComparison {
-  none,
-  below,
-  above;
-
-  String get label => switch (this) {
-    PriceComparison.none => 'Sin comparación',
-    PriceComparison.below => 'Menor a',
-    PriceComparison.above => 'Mayor a',
-  };
-}
-
 /// Estado inmutable de búsqueda y filtros de la carta.
 class CatalogFilters {
   const CatalogFilters({
     this.query = '',
     this.excludedAllergens = const {},
     this.calorieBand = CalorieBand.all,
-    this.minPrice = 0,
-    this.maxPrice = 100,
-    this.priceThreshold,
-    this.priceComparison = PriceComparison.none,
+    this.minPrice,
+    this.maxPrice,
+    this.masa,
+    this.formato,
+    this.tipo,
   });
 
   final String query;
@@ -54,22 +44,25 @@ class CatalogFilters {
   /// Alérgenos que el usuario quiere excluir.
   final Set<String> excludedAllergens;
   final CalorieBand calorieBand;
-  final double minPrice;
-  final double maxPrice;
 
-  /// Precio exacto introducido por el usuario para comparar.
-  final double? priceThreshold;
-  final PriceComparison priceComparison;
+  /// Rango de precio. `null` significa sin límite.
+  final double? minPrice;
+  final double? maxPrice;
 
-  bool get hasPriceFilter => minPrice > 0 || maxPrice < 100;
-  bool get hasPriceThreshold =>
-      priceThreshold != null && priceComparison != PriceComparison.none;
+  final MasaType? masa;
+  final String? formato;
+  final String? tipo;
+
+  bool get hasPriceFilter => minPrice != null || maxPrice != null;
+
   bool get isActive =>
       query.trim().isNotEmpty ||
       excludedAllergens.isNotEmpty ||
       calorieBand != CalorieBand.all ||
       hasPriceFilter ||
-      hasPriceThreshold;
+      masa != null ||
+      formato != null ||
+      tipo != null;
 
   CatalogFilters copyWith({
     String? query,
@@ -77,20 +70,22 @@ class CatalogFilters {
     CalorieBand? calorieBand,
     double? minPrice,
     double? maxPrice,
-    double? priceThreshold,
-    PriceComparison? priceComparison,
-    bool clearPriceThreshold = false,
+    MasaType? masa,
+    String? formato,
+    String? tipo,
+    bool clearMinPrice = false,
+    bool clearMaxPrice = false,
+    bool clearMasa = false,
+    bool clearFormato = false,
+    bool clearTipo = false,
   }) => CatalogFilters(
     query: query ?? this.query,
     excludedAllergens: excludedAllergens ?? this.excludedAllergens,
     calorieBand: calorieBand ?? this.calorieBand,
-    minPrice: minPrice ?? this.minPrice,
-    maxPrice: maxPrice ?? this.maxPrice,
-    priceThreshold: clearPriceThreshold
-        ? null
-        : priceThreshold ?? this.priceThreshold,
-    priceComparison: clearPriceThreshold
-        ? PriceComparison.none
-        : priceComparison ?? this.priceComparison,
+    minPrice: clearMinPrice ? null : minPrice ?? this.minPrice,
+    maxPrice: clearMaxPrice ? null : maxPrice ?? this.maxPrice,
+    masa: clearMasa ? null : masa ?? this.masa,
+    formato: clearFormato ? null : formato ?? this.formato,
+    tipo: clearTipo ? null : tipo ?? this.tipo,
   );
 }

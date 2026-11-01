@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/motion/motion_widgets.dart';
+import '../models/cart_item.dart';
 import '../models/claim.dart';
 import '../models/order.dart';
 import '../models/product.dart';
@@ -8,6 +9,8 @@ import '../views/auth/login_view.dart';
 import '../views/auth/register_view.dart';
 import '../views/carta/product_detail_view.dart';
 import '../views/cart/cart_screen.dart';
+import '../views/cart/checkout_confirm_view.dart';
+import '../views/cart/checkout_delivery_view.dart';
 import '../views/cart/order_detail_view.dart';
 import '../views/cart/orders_view.dart';
 import '../views/claims/claims_screen.dart';
@@ -33,6 +36,12 @@ class AppRoutes {
 
   static Route<T> orders<T>() =>
       MotionRoute<T>(builder: (_) => const OrdersView());
+
+  static Route<T> checkoutDelivery<T>() =>
+      MotionRoute<T>(builder: (_) => const CheckoutDeliveryView());
+
+  static Route<T> checkoutConfirm<T>() =>
+      MotionRoute<T>(builder: (_) => const CheckoutConfirmView());
 
   static Route<T> orderDetail<T>(Order order) =>
       MotionRoute<T>(builder: (_) => OrderDetailView(order: order));
@@ -60,13 +69,17 @@ class AppRoutes {
     ),
   );
 
-  static Route<T> product<T>(Product product, {String? variantLabel}) =>
-      MotionRoute<T>(
-        builder: (_) => ProductDetailView(
-          product: product,
-          initialVariantLabel: variantLabel,
-        ),
-      );
+  static Route<T> product<T>(
+    Product product, {
+    String? variantLabel,
+    CartItem? initialItem,
+  }) => MotionRoute<T>(
+    builder: (_) => ProductDetailView(
+      product: product,
+      initialVariantLabel: variantLabel,
+      initialItem: initialItem,
+    ),
+  );
 
   static Route<T> claim<T>(Claim claim) =>
       MotionRoute<T>(builder: (_) => ClaimDetailView(claim: claim));

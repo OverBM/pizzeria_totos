@@ -1,16 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:pizzeria_totos/models/account.dart';
 import 'package:pizzeria_totos/models/branch.dart';
 import 'package:pizzeria_totos/models/cart_item.dart';
 import 'package:pizzeria_totos/models/category.dart';
 import 'package:pizzeria_totos/models/claim.dart';
 import 'package:pizzeria_totos/models/delivery_config.dart';
+import 'package:pizzeria_totos/models/delivery_quote.dart';
+import 'package:pizzeria_totos/models/masa.dart';
 import 'package:pizzeria_totos/models/media_ref.dart';
 import 'package:pizzeria_totos/models/menu_data.dart';
 import 'package:pizzeria_totos/models/model_utils.dart';
 import 'package:pizzeria_totos/models/order.dart';
 import 'package:pizzeria_totos/models/payment_method.dart';
 import 'package:pizzeria_totos/models/product.dart';
+import 'package:pizzeria_totos/models/product_option.dart';
 import 'package:pizzeria_totos/models/promotion.dart';
 import 'package:pizzeria_totos/models/settings.dart';
 import 'package:pizzeria_totos/models/variant.dart';
@@ -628,6 +632,122 @@ void main() {
     });
   });
 
+  group('Masa, extras y combos', () {
+    test('producto conserva masas, extras y componentes', () {
+      const product = Product(
+        id: 'pizza-americana',
+        categoryId: 'pizzas',
+        name: 'PIZZA AMERICANA',
+        description: 'Jamón y queso.',
+        masas: [MasaType.normal, MasaType.masaMadre],
+        extras: [
+          ProductExtra(nombre: 'Extra queso', precioSoles: 4),
+        ],
+        componentes: [
+          ProductComponent(
+            nombre: 'Pizza mediana',
+            cantidad: 1,
+            opciones: ['Americana', 'Peperoni'],
+          ),
+        ],
+        variants: [Variant(label: 'entera', priceSoles: 27.9)],
+      );
+
+      final restored = Product.fromMap(product.toMap());
+      expect(restored.masas, [MasaType.normal, MasaType.masaMadre]);
+      expect(restored.extras.single.nombre, 'Extra queso');
+      expect(restored.extras.single.precioSoles, 4);
+      expect(restored.componentes.single.cantidad, 1);
+      expect(restored.componentes.single.opciones, ['Americana', 'Peperoni']);
+    });
+
+    test('carrito guarda masa, extras y componentes en la clave', () {
+      const item = CartItem(
+        productId: 'pizza-americana',
+        name: 'PIZZA AMERICANA',
+        variantLabel: 'ENTERA',
+        unitPriceSoles: 31.9,
+        quantity: 1,
+        masa: MasaType.masaMadre,
+        extras: [
+          ProductExtra(nombre: 'Extra queso', precioSoles: 4),
+        ],
+        componentes: [
+          SelectedComponent(
+            nombre: 'Pizza mediana',
+            cantidad: 1,
+            opcion: 'Americana',
+          ),
+        ],
+      );
+
+      expect(item.extrasSoles, 4);
+      expect(item.key, contains('masa=masaMadre'));
+      expect(item.key, contains('Extra queso'));
+      final restored = CartItem.fromMap(item.toMap());
+      expect(restored.masa, MasaType.masaMadre);
+      expect(restored.extras.single.nombre, 'Extra queso');
+      expect(restored.componentes.single.opcion, 'Americana');
+      expect(restored.lineTotalSoles, 31.9);
+    });
+
+    test('dirección conserva coordenadas', () {
+      const address = Address(
+        id: 'a1',
+        label: 'Casa',
+        line: 'Av. Giráldez 123',
+        lat: -12.0651,
+        lng: -75.2049,
+      );
+      final restored = Address.fromMap(address.toMap());
+      expect(restored.hasPoint, isTrue);
+      expect(restored.lat, closeTo(-12.0651, 0.0001));
+      expect(restored.lng, closeTo(-75.2049, 0.0001));
+    });
+
+    test('pedido conserva destinatario y datos de entrega', () {
+      final order = Order(
+        id: 'o1',
+        code: 'TOT-1',
+        uid: 'uid-1',
+        createdAt: DateTime(2026, 10, 15, 13),
+        type: OrderType.delivery,
+        branchId: 'huancayo',
+        branchName: 'HUANCAYO',
+        items: const [],
+        subtotalSoles: 20,
+        shippingSoles: 6,
+        totalSoles: 26,
+        customerName: 'Ana',
+        phone: '999999999',
+        paymentMethodId: 'efectivo',
+        paymentMethodLabel: 'Efectivo',
+        paraOtraPersona: true,
+        receptorNombre: 'Luis',
+        receptorTelefono: '988888888',
+        contactoPrincipalNombre: 'Luis',
+        contactoPrincipalTelefono: '988888888',
+        lat: -12.0651,
+        lng: -75.2049,
+        distanciaKm: 3.2,
+        tramo: 'Tramo 2 · 2–4 km',
+        etaMinutos: 35,
+        envioEstimado: true,
+      );
+
+      final restored = Order.fromMap(order.toMap(), id: 'o1');
+      expect(restored.paraOtraPersona, isTrue);
+      expect(restored.receptorNombre, 'Luis');
+      expect(restored.receptorTelefono, '988888888');
+      expect(restored.contactoPrincipalNombre, 'Luis');
+      expect(restored.lat!, closeTo(-12.0651, 0.0001));
+      expect(restored.distanciaKm, 3.2);
+      expect(restored.tramo, 'Tramo 2 · 2–4 km');
+      expect(restored.etaMinutos, 35);
+      expect(restored.envioEstimado, isTrue);
+    });
+  });
+
   group('Configuración', () {
     test('WhatsApp efectivo cae en el placeholder de la beta', () {
       expect(AppSettings.fallback.effectiveWhatsapp, '51900000000');
@@ -675,13 +795,39 @@ void main() {
       expect(restored.toMap(), settings.toMap());
     });
 
-    test('delivery calcula tarifa por distancia con redondeo hacia arriba', () {
+    test('parsea la respuesta de OSRM y calcula la ruta', () {
+      final route = MapRoute.fromOsrmJson({
+        'routes': [
+          {
+            'distance': 1200.0,
+            'duration': 300.0,
+            'geometry': {
+              'coordinates': [
+                [-75.2049, -12.0651],
+                [-75.2000, -12.0600],
+              ],
+            },
+          },
+        ],
+      });
+      expect(route, isNotNull);
+      expect(route!.distanceKm, 1.2);
+      expect(route.durationMinutes, 5);
+      expect(route.points.first, const LatLng(-12.0651, -75.2049));
+      expect(route.points.length, 2);
+      expect(MapRoute.fromOsrmJson({'routes': []}), isNull);
+    });
+
+    test('delivery calcula tramos y cobertura', () {
       const config = DeliveryConfig.fallback;
       expect(config.feeForKm(0), 3);
       expect(config.feeForKm(1.2), 6);
-      expect(config.feeForKm(8), 0);
-      expect(config.isDeliverable(14), isTrue);
-      expect(config.isDeliverable(16), isFalse);
+      expect(config.quoteForKm(1.2).feeSoles, 4);
+      expect(config.quoteForKm(3).feeSoles, 6);
+      expect(config.quoteForKm(7).feeSoles, 10);
+      expect(config.quoteForKm(9).deliverable, isFalse);
+      expect(config.isDeliverable(8), isTrue);
+      expect(config.isDeliverable(9), isFalse);
       expect(
         DeliveryConfig.fromMap({'baseSoles': 0, 'perKmSoles': 0}).feeForKm(1),
         0,

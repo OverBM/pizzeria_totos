@@ -32,9 +32,34 @@ class OrderMessageBuilder {
     buffer.writeln('Tipo: ${order.type.label}');
     buffer.writeln('Sede: ${order.branchName}');
     buffer.writeln('Nombre: ${order.customerName}');
+    if (order.paraOtraPersona && order.receptorNombre != null) {
+      final phone = order.receptorTelefono == null
+          ? 'sin teléfono'
+          : order.receptorTelefono!;
+      buffer.writeln('Recibe: ${order.receptorNombre} · $phone');
+    }
+    if (order.contactoPrincipalNombre != null &&
+        order.contactoPrincipalTelefono != null) {
+      buffer.writeln(
+        'Contacto: ${order.contactoPrincipalNombre} · '
+        '${order.contactoPrincipalTelefono}',
+      );
+    }
     if (order.address != null) buffer.writeln('Dirección: ${order.address}');
     if (order.reference != null) {
       buffer.writeln('Referencia: ${order.reference}');
+    }
+    if (order.distanciaKm != null) {
+      buffer.writeln(
+        'Distancia: ${order.distanciaKm!.toStringAsFixed(1)} km',
+      );
+    }
+    if (order.tramo != null) buffer.writeln('Tramo: ${order.tramo}');
+    if (order.etaMinutos != null) {
+      buffer.writeln('Tiempo estimado: ~${order.etaMinutos} min');
+    }
+    if (order.envioEstimado) {
+      buffer.writeln('Envío estimado, se confirma por WhatsApp.');
     }
     buffer.writeln('Teléfono: ${order.phone}');
     buffer.writeln('Pago: ${order.paymentMethodLabel}');

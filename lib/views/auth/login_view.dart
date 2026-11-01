@@ -48,6 +48,7 @@ class _LoginViewState extends State<LoginView> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.all(Brand.s16),
           child: MotionReveal(
             child: Column(

@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:latlong2/latlong.dart';
 import 'package:pizzeria_totos/models/account.dart';
 import 'package:pizzeria_totos/models/branch.dart';
 import 'package:pizzeria_totos/models/cart_item.dart';
 import 'package:pizzeria_totos/models/category.dart';
 import 'package:pizzeria_totos/models/claim.dart';
 import 'package:pizzeria_totos/models/delivery_config.dart';
+import 'package:pizzeria_totos/models/delivery_quote.dart';
 import 'package:pizzeria_totos/models/menu_data.dart';
 import 'package:pizzeria_totos/models/nutrition.dart';
 import 'package:pizzeria_totos/models/order.dart';
@@ -23,6 +25,62 @@ import 'package:pizzeria_totos/repositories/profile_repository.dart';
 import 'package:pizzeria_totos/repositories/promotion_repository.dart';
 import 'package:pizzeria_totos/repositories/repository_exception.dart';
 import 'package:pizzeria_totos/repositories/settings_repository.dart';
+import 'package:pizzeria_totos/services/location/location_service.dart';
+import 'package:pizzeria_totos/services/maps/maps_service.dart';
+
+/// Ubicación controlada para pruebas.
+class FakeLocationService implements LocationService {
+  FakeLocationService({LocationResult? result})
+    : result = result ??
+          LocationResult.success(const LatLng(-12.0651, -75.2049));
+
+  LocationResult result;
+  bool settingsOpened = false;
+
+  @override
+  Future<LocationResult> current({
+    Duration timeout = const Duration(seconds: 10),
+  }) async => result;
+
+  @override
+  Future<bool> openSettings() async {
+    settingsOpened = true;
+    return true;
+  }
+}
+
+/// Mapas controlados para pruebas: ruta fija y búsqueda vacía.
+class FakeMapsService implements MapsService {
+  FakeMapsService({MapRoute? route})
+    : routeResult = route ??
+          MapRoute(
+            distanceMeters: 3200,
+            durationSeconds: 720,
+            points: const [
+              LatLng(-12.0651, -75.2049),
+              LatLng(-12.0600, -75.2000),
+            ],
+          );
+
+  MapRoute routeResult;
+
+  @override
+  String get attribution => '© OpenStreetMap contributors';
+
+  @override
+  String get tileUrlTemplate => 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+  @override
+  Future<List<PlaceResult>> search(String query, {int limit = 5}) async =>
+      const [];
+
+  @override
+  Future<PlaceResult?> reverse(LatLng point) async =>
+      PlaceResult(label: 'Punto de prueba', point: point);
+
+  @override
+  Future<MapRoute> route(LatLng from, LatLng to) async => routeResult;
+}
 
 /// Implementaciones en memoria de todos los contratos.
 ///

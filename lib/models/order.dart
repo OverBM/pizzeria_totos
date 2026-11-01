@@ -56,6 +56,17 @@ class Order {
     this.discountSoles = 0,
     this.savingsSoles = 0,
     this.whatsappSent = false,
+    this.paraOtraPersona = false,
+    this.receptorNombre,
+    this.receptorTelefono,
+    this.contactoPrincipalNombre,
+    this.contactoPrincipalTelefono,
+    this.lat,
+    this.lng,
+    this.distanciaKm,
+    this.tramo,
+    this.etaMinutos,
+    this.envioEstimado = false,
   });
 
   /// Id del documento en `pedidos`.
@@ -85,6 +96,23 @@ class Order {
   /// Ahorro por promociones (soles). Alias legacy de [discountSoles].
   final double savingsSoles;
   final bool whatsappSent;
+
+  /// Destinatario del pedido.
+  final bool paraOtraPersona;
+  final String? receptorNombre;
+  final String? receptorTelefono;
+
+  /// Contacto que debe usar el repartidor.
+  final String? contactoPrincipalNombre;
+  final String? contactoPrincipalTelefono;
+
+  /// Punto de entrega y cotización.
+  final double? lat;
+  final double? lng;
+  final double? distanciaKm;
+  final String? tramo;
+  final int? etaMinutos;
+  final bool envioEstimado;
 
   factory Order.fromMap(Map<String, dynamic> json, {String? id}) => Order(
     id: id ?? ModelUtils.asString(json['id']),
@@ -139,6 +167,21 @@ class Order {
     whatsappSent: ModelUtils.asBool(
       json['enviadoWhatsapp'] ?? json['whatsappSent'],
     ),
+    paraOtraPersona: ModelUtils.asBool(json['paraOtraPersona']),
+    receptorNombre: ModelUtils.asStringOrNull(json['receptorNombre']),
+    receptorTelefono: ModelUtils.asStringOrNull(json['receptorTelefono']),
+    contactoPrincipalNombre: ModelUtils.asStringOrNull(
+      json['contactoPrincipalNombre'],
+    ),
+    contactoPrincipalTelefono: ModelUtils.asStringOrNull(
+      json['contactoPrincipalTelefono'],
+    ),
+    lat: ModelUtils.asDoubleOrNull(json['lat']),
+    lng: ModelUtils.asDoubleOrNull(json['lng']),
+    distanciaKm: ModelUtils.asDoubleOrNull(json['distanciaKm']),
+    tramo: ModelUtils.asStringOrNull(json['tramo']),
+    etaMinutos: ModelUtils.asIntOrNull(json['etaMinutos']),
+    envioEstimado: ModelUtils.asBool(json['envioEstimado']),
   );
 
   Map<String, dynamic> toMap() => {
@@ -163,5 +206,18 @@ class Order {
     if (note != null) 'nota': note,
     'ahorro': Money.round(discountSoles),
     'enviadoWhatsapp': whatsappSent,
+    if (paraOtraPersona) 'paraOtraPersona': true,
+    if (receptorNombre != null) 'receptorNombre': receptorNombre,
+    if (receptorTelefono != null) 'receptorTelefono': receptorTelefono,
+    if (contactoPrincipalNombre != null)
+      'contactoPrincipalNombre': contactoPrincipalNombre,
+    if (contactoPrincipalTelefono != null)
+      'contactoPrincipalTelefono': contactoPrincipalTelefono,
+    if (lat != null) 'lat': lat,
+    if (lng != null) 'lng': lng,
+    if (distanciaKm != null) 'distanciaKm': distanciaKm,
+    if (tramo != null) 'tramo': tramo,
+    if (etaMinutos != null) 'etaMinutos': etaMinutos,
+    if (envioEstimado) 'envioEstimado': true,
   };
 }

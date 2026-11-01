@@ -48,6 +48,7 @@ class _RegisterViewState extends State<RegisterView> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.all(Brand.s16),
           child: MotionReveal(
             child: Column(

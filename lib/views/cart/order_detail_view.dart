@@ -108,6 +108,45 @@ class OrderDetailView extends StatelessWidget {
                     ),
                   ),
                 ],
+                if (order.paraOtraPersona &&
+                    order.receptorNombre != null) ...[
+                  const SizedBox(height: Brand.s4),
+                  Text(
+                    'Recibe: ${order.receptorNombre}'
+                    '${order.receptorTelefono == null ? '' : ' · ${order.receptorTelefono}'}',
+                    style: context.text.bodySm,
+                  ),
+                ],
+                if (order.contactoPrincipalNombre != null) ...[
+                  const SizedBox(height: Brand.s2),
+                  Text(
+                    'Contacto: ${order.contactoPrincipalNombre}'
+                    '${order.contactoPrincipalTelefono == null ? '' : ' · ${order.contactoPrincipalTelefono}'}',
+                    style: context.text.caption.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ],
+                if (order.distanciaKm != null) ...[
+                  const SizedBox(height: Brand.s4),
+                  Text(
+                    'Distancia: ${order.distanciaKm!.toStringAsFixed(1)} km'
+                    '${order.tramo == null ? '' : ' · ${order.tramo}'}'
+                    '${order.etaMinutos == null ? '' : ' · ~${order.etaMinutos} min'}',
+                    style: context.text.caption.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ],
+                if (order.envioEstimado) ...[
+                  const SizedBox(height: Brand.s2),
+                  Text(
+                    'Envío estimado, se confirma por WhatsApp.',
+                    style: context.text.caption.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

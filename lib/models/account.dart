@@ -8,6 +8,8 @@ class Address {
     this.label = '',
     this.reference,
     this.createdAt,
+    this.lat,
+    this.lng,
   });
 
   final String id;
@@ -20,6 +22,12 @@ class Address {
   final String? reference;
   final DateTime? createdAt;
 
+  /// Coordenadas opcionales para cotizar el delivery.
+  final double? lat;
+  final double? lng;
+
+  bool get hasPoint => lat != null && lng != null;
+
   factory Address.fromMap(Map<String, dynamic> json) => Address(
     id: ModelUtils.asString(json['id']),
     label: ModelUtils.asString(json['etiqueta'] ?? json['label']),
@@ -28,6 +36,8 @@ class Address {
       json['referencia'] ?? json['reference'],
     ),
     createdAt: ModelUtils.asDateTime(json['createdAt']),
+    lat: ModelUtils.asDoubleOrNull(json['lat']),
+    lng: ModelUtils.asDoubleOrNull(json['lng']),
   );
 
   Map<String, dynamic> toMap() => {
@@ -36,16 +46,26 @@ class Address {
     'linea': line,
     if (reference != null) 'referencia': reference,
     if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
+    if (lat != null) 'lat': lat,
+    if (lng != null) 'lng': lng,
   };
 
   String get title => label.isEmpty ? 'Dirección' : label;
 
-  Address copyWith({String? label, String? line, String? reference}) => Address(
+  Address copyWith({
+    String? label,
+    String? line,
+    String? reference,
+    double? lat,
+    double? lng,
+  }) => Address(
     id: id,
     label: label ?? this.label,
     line: line ?? this.line,
     reference: reference ?? this.reference,
     createdAt: createdAt,
+    lat: lat ?? this.lat,
+    lng: lng ?? this.lng,
   );
 }
 

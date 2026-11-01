@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../controllers/cart_controller.dart';
 import '../../controllers/catalog_controller.dart';
 import '../../controllers/promotion_controller.dart';
 import '../../core/data/product_summary.dart';
@@ -17,6 +16,7 @@ import '../../core/theme/theme_context.dart';
 import '../../models/product.dart';
 import '../../services/settings_service.dart';
 import 'catalog_filter_controls.dart';
+import 'combo_configurator_sheet.dart';
 
 /// Carta editorial con filtros de categoría y tarjetas horizontales.
 class CartaView extends StatefulWidget {
@@ -62,7 +62,6 @@ class _CartaViewState extends State<CartaView>
   Widget build(BuildContext context) {
     final catalog = context.watch<CatalogController>();
     final promotions = context.watch<PromotionController>();
-    final cart = context.watch<CartController>();
 
     if (catalog.state == LoadState.loading && !catalog.hasProducts) {
       return const SingleChildScrollView(child: SkeletonList(count: 5));
@@ -105,6 +104,7 @@ class _CartaViewState extends State<CartaView>
     final horizontal = math.max(Brand.s16, (width - 520) / 2 + Brand.s16);
 
     return CustomScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       slivers: [
         SliverToBoxAdapter(
           child: ContentWidth(child: _intro(context, catalog)),
@@ -164,11 +164,11 @@ class _CartaViewState extends State<CartaView>
                   icon: Icons.local_pizza_outlined,
                   actionLabel: catalog.hasActiveFilters
                       ? 'LIMPIAR FILTROS'
-                      : 'VER LAS MÁS PEDIDAS',
+                      : 'VER TODOS',
                   onAction: catalog.hasActiveFilters
                       ? catalog.clearFilters
                       : () => catalog.selectCategory(
-                          CatalogController.featuredCategoryId,
+                          CatalogController.allCategoryId,
                         ),
                 ),
               ),
@@ -182,7 +182,7 @@ class _CartaViewState extends State<CartaView>
               separatorBuilder: (_, _) => const SizedBox(height: Brand.s12),
               itemBuilder: (context, index) => _FadeSlide(
                 animation: _fade,
-                child: _card(context, products[index], promotions, cart),
+                child: _card(context, products[index], promotions),
               ),
             ),
           ),
@@ -280,7 +280,6 @@ class _CartaViewState extends State<CartaView>
     BuildContext context,
     Product product,
     PromotionController promotions,
-    CartController cart,
   ) {
     final variant = product.defaultVariantOrNull;
     final priced = variant == null
@@ -309,16 +308,8 @@ class _CartaViewState extends State<CartaView>
           : Money.format(originalPrice),
       onTap: () => widget.onGoToProduct(product),
       onAdd: product.isSellable
-          ? () {
-              cart.add(product, variant!);
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text('${product.name} agregado al pedido'),
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
+          ? () async {
+              await addProductToCart(context, product, variant!);
               HapticFeedback.lightImpact();
             }
           : null,

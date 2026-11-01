@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
+import '../../models/delivery_quote.dart';
+
 /// Centro de Huancayo, usado como encuadre inicial del mapa.
 const LatLng huancayoCenter = LatLng(-12.0651, -75.2049);
 
@@ -41,6 +43,11 @@ abstract class MapsService {
 
   /// Convierte coordenadas en una dirección legible.
   Future<PlaceResult?> reverse(LatLng point);
+
+  /// Calcula la ruta por calles entre dos puntos.
+  ///
+  /// Devuelve [MapRoute.empty] si el servicio falla o no hay red.
+  Future<MapRoute> route(LatLng from, LatLng to);
 }
 
 /// OpenStreetMap: teselas estándar + Nominatim para búsquedas.
@@ -58,6 +65,8 @@ class OsmMapsService implements MapsService {
   static const String _viewbox = '-75.45,-11.95,-75.05,-12.20';
 
   static final Map<String, List<PlaceResult>> _cache = {};
+  static final Map<String, MapRoute> _routeCache = {};
+  static const String _osrmHost = 'router.project-osrm.org';
 
   @override
   String get attribution => '© OpenStreetMap contributors';
@@ -135,6 +144,46 @@ class OsmMapsService implements MapsService {
       return _fromJson(decoded);
     } catch (_) {
       return null;
+    }
+  }
+
+  @override
+  Future<MapRoute> route(LatLng from, LatLng to) async {
+    final key =
+        '${from.latitude},${from.longitude};${to.latitude},${to.longitude}';
+    final cached = _routeCache[key];
+    if (cached != null) return cached;
+    try {
+      final uri = Uri.https(
+        _osrmHost,
+        '/route/v1/driving/'
+            '${from.longitude},${from.latitude};'
+            '${to.longitude},${to.latitude}',
+        {'overview': 'full', 'geometries': 'geojson'},
+      );
+      final response = await http
+          .get(
+            uri,
+            headers: const {
+              'User-Agent': _userAgent,
+              'Accept-Language': 'es',
+            },
+          )
+          .timeout(const Duration(seconds: 8));
+      if (response.statusCode != 200) return MapRoute.empty;
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map) return MapRoute.empty;
+      final route = MapRoute.fromOsrmJson(
+        Map<String, dynamic>.from(decoded),
+      );
+      if (route == null) return MapRoute.empty;
+      if (_routeCache.length > 50) {
+        _routeCache.remove(_routeCache.keys.first);
+      }
+      _routeCache[key] = route;
+      return route;
+    } catch (_) {
+      return MapRoute.empty;
     }
   }
 

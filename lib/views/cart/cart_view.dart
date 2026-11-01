@@ -1,23 +1,24 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../app/routes.dart';
 import '../../controllers/auth_controller.dart';
-import '../../controllers/branch_controller.dart';
 import '../../controllers/cart_controller.dart';
+import '../../controllers/catalog_controller.dart';
 import '../../controllers/checkout_controller.dart';
+import '../../core/data/product_summary.dart';
 import '../../core/format/money.dart';
 import '../../core/theme/brand.dart';
-import '../../widgets/widgets.dart';
+import '../../core/theme/product_family.dart';
 import '../../core/theme/theme_context.dart';
 import '../../models/cart_item.dart';
 import '../../models/media_ref.dart';
 import '../../models/order.dart';
-import '../../models/payment_method.dart';
-import '../../services/contact_launcher.dart';
-import '../../services/order_message_builder.dart';
-import '../../services/settings_service.dart';
+import '../../models/product.dart';
+import '../../widgets/widgets.dart';
+import '../carta/combo_configurator_sheet.dart';
 
-/// Carrito y checkout derivado del perfil autenticado.
+/// Carrito y Paso 1 del checkout.
 class CartView extends StatefulWidget {
   const CartView({
     super.key,
@@ -37,11 +38,13 @@ class CartView extends StatefulWidget {
 }
 
 class _CartViewState extends State<CartView> {
-  final TextEditingController _note = TextEditingController();
+  final TextEditingController _recipientName = TextEditingController();
+  final TextEditingController _recipientPhone = TextEditingController();
 
   @override
   void dispose() {
-    _note.dispose();
+    _recipientName.dispose();
+    _recipientPhone.dispose();
     super.dispose();
   }
 
@@ -50,7 +53,8 @@ class _CartViewState extends State<CartView> {
     final cart = context.watch<CartController>();
     final checkout = context.watch<CheckoutController>();
     final auth = context.watch<AuthController>();
-    final branches = context.watch<BranchController>();
+    final catalog = context.watch<CatalogController>();
+    final suggestions = _suggestions(catalog, cart);
 
     if (cart.isEmpty) {
       return SingleChildScrollView(
@@ -70,58 +74,37 @@ class _CartViewState extends State<CartView> {
     }
 
     return ListView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.fromLTRB(
         Brand.s16,
-        Brand.s24,
         Brand.s16,
-        Brand.s24,
+        Brand.s16,
+        Brand.s80,
       ),
       children: [
-        SectionHeading(
-          eyebrow: 'Tu pedido',
-          title: 'Lo que elegiste',
-          actionLabel: 'Mis pedidos',
-          onAction: widget.onOpenOrders,
-        ),
-        const SizedBox(height: Brand.s12),
+        _header(context, cart),
+        const SizedBox(height: Brand.s8),
         for (final item in cart.items) ...[
-          _CartLine(item: item, cart: cart),
+          _CartLine(
+            item: item,
+            cart: cart,
+            onEdit: () => _editLine(context, item),
+          ),
           const SizedBox(height: Brand.s8),
         ],
         const SizedBox(height: Brand.s8),
+        _CartDetails(items: cart.items),
+        if (suggestions.isNotEmpty) ...[
+          const SizedBox(height: Brand.s16),
+          _suggestionsSection(context, cart, suggestions),
+        ],
+        const SizedBox(height: Brand.s16),
+        _summary(context, cart, checkout),
+        const SizedBox(height: Brand.s16),
         _sessionCard(context, auth),
         const SizedBox(height: Brand.s16),
-        _deliverySection(context, checkout, branches, auth),
+        _recipientSection(context, checkout, auth),
         const SizedBox(height: Brand.s16),
-        _paymentSection(context, checkout),
-        const SizedBox(height: Brand.s16),
-        TextField(
-          controller: _note,
-          maxLines: 2,
-          onChanged: checkout.setNote,
-          decoration: const InputDecoration(
-            labelText: 'Nota para la cocina (opcional)',
-            hintText: 'Sin cebolla, tocar el timbre…',
-          ),
-        ),
-        const SizedBox(height: Brand.s16),
-        _totals(context, cart, checkout),
-        const SizedBox(height: Brand.s16),
-        _issues(context, checkout),
-        const SizedBox(height: Brand.s8),
-        PillButton(
-          label: auth.isSignedIn
-              ? (checkout.isSubmitting ? 'CONFIRMANDO…' : 'CONFIRMAR PEDIDO')
-              : 'INICIA SESIÓN PARA PEDIR',
-          expanded: true,
-          showArrow: true,
-          onPressed: checkout.isSubmitting
-              ? null
-              : auth.isSignedIn
-              ? () => _submit(context, checkout)
-              : widget.onOpenAuth,
-        ),
-        const SizedBox(height: Brand.s8),
         Text(
           'No se cobra en la app. Coordinamos el pago y la entrega por WhatsApp.',
           textAlign: TextAlign.center,
@@ -130,6 +113,313 @@ class _CartViewState extends State<CartView> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _header(BuildContext context, CartController cart) {
+    final colors = context.colors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'PASO 1 DE 3 · TU PEDIDO',
+                style: Brand.ui(
+                  10,
+                  weight: FontWeight.w700,
+                  color: colors.action,
+                ),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () => _confirmClear(context, cart),
+              icon: const Icon(Icons.delete_outline_rounded, size: 16),
+              label: const Text('VACIAR'),
+            ),
+          ],
+        ),
+        Text(
+          'LO QUE ELEGISTE',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Brand.display(22, h: 1, color: colors.textPrimary),
+        ),
+        const SizedBox(height: Brand.s12),
+      ],
+    );
+  }
+
+  Future<void> _confirmClear(
+    BuildContext context,
+    CartController cart,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('VACIAR CARRITO'),
+        content: const Text('¿Quitar todos los productos de tu pedido?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('CANCELAR'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('VACIAR'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await cart.clear();
+  }
+
+  Future<void> _editLine(BuildContext context, CartItem item) async {
+    final catalog = context.read<CatalogController>();
+    final product = catalog.byId(item.productId);
+    if (product == null) return;
+    final variant =
+        product.variantForLabel(item.variantLabel) ??
+        product.defaultVariantOrNull;
+    if (variant == null) return;
+
+    if (product.hasComponentes) {
+      final selection = await showModalBottomSheet<ComboSelection>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: context.colors.surface,
+        builder: (_) => ComboConfiguratorSheet(
+          product: product,
+          variant: variant,
+          initialExtras: item.extras,
+          initialComponents: item.componentes,
+        ),
+      );
+      if (selection == null || !context.mounted) return;
+      context.read<CartController>().replaceLine(
+        item.key,
+        product,
+        variant,
+        quantity: item.quantity,
+        masa: item.masa,
+        extras: selection.extras,
+        componentes: selection.componentes,
+      );
+      return;
+    }
+
+    await Navigator.of(context).push(
+      AppRoutes.product(
+        product,
+        variantLabel: item.variantLabel,
+        initialItem: item,
+      ),
+    );
+  }
+
+  List<Product> _suggestions(
+    CatalogController catalog,
+    CartController cart,
+  ) {
+    final inCart = cart.items.map((item) => item.productId).toSet();
+    const complements = {
+      'pizzas': {'bebidas', 'guarniciones', 'dulces'},
+      'medias': {'bebidas', 'guarniciones', 'dulces'},
+      'familiares': {'bebidas', 'guarniciones', 'dulces'},
+      'pastas': {'bebidas', 'guarniciones', 'dulces'},
+      'lasanas': {'bebidas', 'guarniciones', 'dulces'},
+      'combos': {'bebidas', 'dulces'},
+      'guarniciones': {'bebidas', 'dulces'},
+      'bebidas': {'guarniciones', 'dulces'},
+      'dulces': {'bebidas'},
+    };
+    final cartCategories = cart.items
+        .map((item) => catalog.byId(item.productId)?.categoryId)
+        .whereType<String>()
+        .toSet();
+    final preferred = <String>{};
+    for (final category in cartCategories) {
+      preferred.addAll(complements[category] ?? const {});
+    }
+    if (preferred.isEmpty) {
+      preferred.addAll(const {'bebidas', 'guarniciones', 'dulces'});
+    }
+    final available = catalog.listedProducts
+        .where((product) => product.isSellable && !inCart.contains(product.id))
+        .toList();
+    final first = available
+        .where((product) => preferred.contains(product.categoryId))
+        .toList();
+    final rest = available
+        .where((product) => !preferred.contains(product.categoryId))
+        .toList();
+    return [...first, ...rest].take(4).toList();
+  }
+
+  Widget _suggestionsSection(
+    BuildContext context,
+    CartController cart,
+    List<Product> products,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeading(
+          eyebrow: 'Suma algo más',
+          title: 'Complementa tu pedido',
+        ),
+        const SizedBox(height: Brand.s12),
+        SizedBox(
+          height: 210,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: products.length,
+            separatorBuilder: (_, _) => const SizedBox(width: Brand.s8),
+            itemBuilder: (context, index) {
+              final product = products[index];
+              return _SuggestionCard(
+                product: product,
+                onTap: () => Navigator.of(context).push(
+                  AppRoutes.product(product),
+                ),
+                onAdd: product.isSellable
+                    ? () {
+                        final variant = product.defaultVariantOrNull;
+                        if (variant == null) return;
+                        addProductToCart(context, product, variant);
+                      }
+                    : null,
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _summary(
+    BuildContext context,
+    CartController cart,
+    CheckoutController checkout,
+  ) {
+    final colors = context.colors;
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: Brand.cardRadius,
+        border: Border.all(color: colors.border),
+      ),
+      child: Material(
+        color: colors.surface,
+        borderRadius: Brand.cardRadius,
+        clipBehavior: Clip.antiAlias,
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            initiallyExpanded: true,
+            tilePadding: const EdgeInsets.symmetric(horizontal: Brand.s12),
+            childrenPadding: const EdgeInsets.fromLTRB(
+              Brand.s12,
+              0,
+              Brand.s12,
+              Brand.s12,
+            ),
+            iconColor: colors.textSecondary,
+            collapsedIconColor: colors.textSecondary,
+            title: Row(
+              children: [
+                Text(
+                  'RESUMEN DE PEDIDO',
+                  style: Brand.ui(
+                    10,
+                    weight: FontWeight.w700,
+                    color: colors.textSecondary,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  Money.format(checkout.totalSoles),
+                  style: Brand.ui(14, weight: FontWeight.w700),
+                ),
+              ],
+            ),
+            children: [
+              _row(context, 'Subtotal', Money.format(cart.subtotalSoles)),
+              if (cart.discountSoles > 0)
+                _row(
+                  context,
+                  'Descuento',
+                  '- ${Money.format(cart.discountSoles)}',
+                  accent: true,
+                ),
+              _row(
+                context,
+                checkout.type == OrderType.pickup
+                    ? 'Recojo en tienda'
+                    : checkout.deliveryEstimated
+                    ? 'Envío estimado'
+                    : 'Envío',
+                checkout.shippingSoles == 0
+                    ? 'Sin costo'
+                    : Money.format(checkout.shippingSoles),
+              ),
+              const Divider(height: Brand.s24),
+              Row(
+                children: [
+                  Text(
+                    'TOTAL',
+                    style: Brand.ui(
+                      12,
+                      weight: FontWeight.w700,
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    Money.format(checkout.totalSoles),
+                    style: Brand.ui(
+                      22,
+                      weight: FontWeight.w700,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _row(
+    BuildContext context,
+    String label,
+    String value, {
+    bool accent = false,
+  }) {
+    final colors = context.colors;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: context.text.bodySm.copyWith(color: colors.textSecondary),
+            ),
+          ),
+          Text(
+            value,
+            style: Brand.ui(
+              13,
+              weight: FontWeight.w700,
+              color: accent ? colors.action : colors.textPrimary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -170,310 +460,99 @@ class _CartViewState extends State<CartView> {
     );
   }
 
-  Widget _deliverySection(
+  Widget _recipientSection(
     BuildContext context,
     CheckoutController checkout,
-    BranchController branches,
     AuthController auth,
   ) {
     final colors = context.colors;
-    final selected = checkout.selectedBranch;
+    final other = checkout.recipientMode == OrderRecipientMode.other;
+    if (!other) {
+      _recipientName.clear();
+      _recipientPhone.clear();
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeading(eyebrow: 'Entrega', title: 'Dónde y cómo'),
-        const SizedBox(height: Brand.s12),
-        if (branches.branches.isEmpty)
-          Text(
-            'No hay sedes disponibles para elegir.',
-            style: context.text.bodySm,
-          )
-        else
-          Wrap(
-            spacing: Brand.s8,
-            runSpacing: Brand.s8,
-            children: [
-              for (final branch in branches.branches)
-                FilterPill(
-                  label: branch.name,
-                  selected: selected?.id == branch.id,
-                  onTap: () => checkout.selectBranch(branch.id),
-                ),
-            ],
-          ),
+        const SectionHeading(
+          eyebrow: 'Destinatario',
+          title: '¿Para quién es?',
+        ),
         const SizedBox(height: Brand.s12),
         Wrap(
           spacing: Brand.s8,
           runSpacing: Brand.s8,
           children: [
             FilterPill(
-              label: 'DELIVERY',
-              selected: checkout.type == OrderType.delivery,
-              onTap: selected != null && !selected.delivers
-                  ? null
-                  : () => checkout.setType(OrderType.delivery),
+              label: 'PARA MÍ',
+              selected: !other,
+              onTap: () => checkout.setRecipientMode(
+                OrderRecipientMode.self,
+              ),
             ),
             FilterPill(
-              label: 'RECOJO EN TIENDA',
-              selected: checkout.type == OrderType.pickup,
-              onTap: () => checkout.setType(OrderType.pickup),
+              label: 'PARA OTRA PERSONA',
+              selected: other,
+              onTap: () => checkout.setRecipientMode(
+                OrderRecipientMode.other,
+              ),
             ),
           ],
         ),
-        if (checkout.type == OrderType.delivery) ...[
-          const SizedBox(height: Brand.s12),
-          if (!auth.isSignedIn)
-            Text(
-              'Inicia sesión para usar tus direcciones guardadas.',
-              style: context.text.bodySm,
-            )
-          else if (auth.account?.addresses.isEmpty ?? true)
-            OutlinedButton.icon(
-              onPressed: widget.onOpenProfile,
-              icon: const Icon(Icons.add_location_alt_outlined, size: 18),
-              label: const Text('AGREGAR DIRECCIÓN'),
-            )
-          else
-            RadioGroup<String>(
-              groupValue: checkout.selectedAddress?.id,
-              onChanged: (value) {
-                if (value != null) checkout.selectAddress(value);
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (final address in auth.account!.addresses)
-                    RadioListTile<String>(
-                      value: address.id,
-                      contentPadding: EdgeInsets.zero,
-                      dense: true,
-                      activeColor: colors.action,
-                      title: Text(
-                        address.title.toUpperCase(),
-                        style: Brand.ui(12, weight: FontWeight.w700),
-                      ),
-                      subtitle: Text(address.line, style: context.text.caption),
-                    ),
-                  TextButton.icon(
-                    onPressed: widget.onOpenProfile,
-                    icon: const Icon(Icons.edit_outlined, size: 16),
-                    label: const Text('EDITAR DIRECCIONES'),
-                  ),
-                ],
-              ),
+        const SizedBox(height: Brand.s12),
+        if (other) ...[
+          TextField(
+            controller: _recipientName,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.next,
+            onChanged: checkout.setRecipientName,
+            decoration: const InputDecoration(
+              labelText: 'Nombre de quien recibe',
+              hintText: 'Luis, mamá, oficina…',
             ),
-          if (selected != null && !selected.delivers)
-            Padding(
-              padding: const EdgeInsets.only(top: Brand.s8),
-              child: Text(
-                'Esta sede no tiene delivery: elige recojo en tienda.',
-                style: Brand.ui(11, color: colors.action),
-              ),
-            ),
-        ],
-        if (selected != null) ...[
+          ),
           const SizedBox(height: Brand.s8),
+          TextField(
+            controller: _recipientPhone,
+            keyboardType: TextInputType.phone,
+            textInputAction: TextInputAction.done,
+            onChanged: checkout.setRecipientPhone,
+            decoration: const InputDecoration(
+              labelText: 'Teléfono de quien recibe (opcional)',
+              hintText: '999 111 222',
+            ),
+          ),
+          const SizedBox(height: Brand.s4),
           Text(
-            '${selected.name} · ${selected.address}',
-            style: context.text.caption.copyWith(color: colors.textSecondary),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _paymentSection(BuildContext context, CheckoutController checkout) {
-    final methods = checkout.paymentMethods;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeading(eyebrow: 'Pago', title: 'Cómo pagas'),
-        const SizedBox(height: Brand.s12),
-        Wrap(
-          spacing: Brand.s8,
-          runSpacing: Brand.s8,
-          children: [
-            for (final PaymentMethod method in methods)
-              FilterPill(
-                label: method.label,
-                selected: checkout.selectedPaymentMethod.id == method.id,
-                onTap: () => checkout.selectPaymentMethod(method.id),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _totals(
-    BuildContext context,
-    CartController cart,
-    CheckoutController checkout,
-  ) {
-    final colors = context.colors;
-    return Container(
-      padding: const EdgeInsets.all(Brand.s12),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: Brand.cardRadius,
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
-        children: [
-          _row(context, 'Subtotal', Money.format(cart.subtotalSoles)),
-          if (cart.discountSoles > 0)
-            _row(
-              context,
-              'Descuento',
-              '- ${Money.format(cart.discountSoles)}',
-              accent: true,
-            ),
-          _row(
-            context,
-            checkout.type == OrderType.pickup ? 'Recojo en tienda' : 'Envío',
-            checkout.shippingSoles == 0
-                ? 'Sin costo'
-                : Money.format(checkout.shippingSoles),
-          ),
-          const Divider(height: Brand.s24),
-          Row(
-            children: [
-              Text(
-                'TOTAL',
-                style: Brand.ui(
-                  12,
-                  weight: FontWeight.w700,
-                  color: colors.textSecondary,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                Money.format(checkout.totalSoles),
-                style: Brand.ui(
-                  22,
-                  weight: FontWeight.w700,
-                  color: colors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _row(
-    BuildContext context,
-    String label,
-    String value, {
-    bool accent = false,
-  }) {
-    final colors = context.colors;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: context.text.bodySm.copyWith(color: colors.textSecondary),
+            'Si no pones teléfono, el repartidor contacta al comprador.',
+            style: context.text.caption.copyWith(
+              color: colors.textSecondary,
             ),
           ),
+        ] else
           Text(
-            value,
-            style: Brand.ui(
-              13,
-              weight: FontWeight.w700,
-              color: accent ? colors.action : colors.textPrimary,
+            auth.isSignedIn
+                ? '${auth.account?.name ?? ''} · ${auth.account?.phone ?? ''}'
+                : 'Inicia sesión para usar tus datos al confirmar el pedido.',
+            style: context.text.caption.copyWith(
+              color: colors.textSecondary,
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _issues(BuildContext context, CheckoutController checkout) {
-    final issues = checkout.validate();
-    if (issues.isEmpty && checkout.error == null) {
-      return const SizedBox.shrink();
-    }
-    final colors = context.colors;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(Brand.s12),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: Brand.cardRadius,
-        border: Border.all(color: colors.action),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (checkout.error != null)
-            Text(checkout.error!, style: Brand.ui(12, color: colors.action)),
-          for (final issue in issues)
-            Padding(
-              padding: const EdgeInsets.only(top: Brand.s4),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.info_outline_rounded,
-                    size: 14,
-                    color: colors.action,
-                  ),
-                  const SizedBox(width: Brand.s4),
-                  Expanded(
-                    child: Text(issue.message, style: context.text.caption),
-                  ),
-                ],
-              ),
-            ),
-          if (issues.any(
-            (issue) =>
-                issue == CheckoutIssue.noPhone ||
-                issue == CheckoutIssue.noAddress,
-          ))
-            Padding(
-              padding: const EdgeInsets.only(top: Brand.s8),
-              child: OutlinedButton(
-                onPressed: widget.onOpenProfile,
-                child: const Text('COMPLETAR PERFIL'),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _submit(
-    BuildContext context,
-    CheckoutController checkout,
-  ) async {
-    final order = await checkout.submit();
-    if (!context.mounted) return;
-    if (order == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(checkout.error ?? 'No se pudo registrar el pedido.'),
-        ),
-      );
-      return;
-    }
-    _note.clear();
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => _ConfirmationSheet(order: order),
+      ],
     );
   }
 }
 
 class _CartLine extends StatelessWidget {
-  const _CartLine({required this.item, required this.cart});
+  const _CartLine({
+    required this.item,
+    required this.cart,
+    required this.onEdit,
+  });
 
   final CartItem item;
   final CartController cart;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -485,86 +564,95 @@ class _CartLine extends StatelessWidget {
         borderRadius: Brand.cardRadius,
         border: Border.all(color: colors.border),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          SizedBox(
-            height: 72,
-            width: 72,
-            child: DriveImage(
-              media: item.image == null ? null : _media(item.image!),
-              placeholderLabel: item.name,
-              borderRadius: Brand.cardRadius,
-            ),
-          ),
-          const SizedBox(width: Brand.s8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.name.toUpperCase(),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Brand.ui(
-                    13,
-                    weight: FontWeight.w700,
-                    color: colors.textPrimary,
-                  ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 72,
+                width: 72,
+                child: DriveImage(
+                  media: item.image == null ? null : _media(item.image!),
+                  placeholderLabel: item.name,
+                  borderRadius: Brand.cardRadius,
                 ),
-                Text(
-                  item.variantLabel,
-                  style: context.text.caption.copyWith(
-                    color: colors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: Brand.s4),
-                Row(
+              ),
+              const SizedBox(width: Brand.s8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (item.isOnPromo)
-                      Padding(
-                        padding: const EdgeInsets.only(right: Brand.s4),
-                        child: Text(
-                          Money.format(item.originalUnitPriceSoles!),
-                          style: Brand.ui(
-                            10,
-                            color: colors.textSecondary,
-                          ).copyWith(decoration: TextDecoration.lineThrough),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 70),
+                      child: Text(
+                        item.name.toUpperCase(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Brand.ui(
+                          13,
+                          weight: FontWeight.w700,
+                          color: colors.textPrimary,
                         ),
                       ),
-                    Text(
-                      Money.format(item.lineTotalSoles),
-                      style: Brand.ui(
-                        13,
-                        weight: FontWeight.w700,
-                        color: colors.textPrimary,
-                      ),
+                    ),
+                    const SizedBox(height: Brand.s16),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Precio',
+                                style: context.text.caption.copyWith(
+                                  color: colors.textSecondary,
+                                ),
+                              ),
+                              Text(
+                                Money.format(item.lineTotalSoles),
+                                style: Brand.ui(
+                                  16,
+                                  weight: FontWeight.w700,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: Brand.s16),
+                        RemoveLineButton(
+                          onTap: () => cart.remove(item.key),
+                          productName: item.name,
+                        ),
+                        const SizedBox(width: Brand.s16),
+                        QuantityStepper(
+                          quantity: item.quantity,
+                          compact: true,
+                          onIncrement: () => cart.increment(item.key),
+                          onDecrement: () => cart.decrement(item.key),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  RemoveLineButton(
-                    onTap: () => cart.remove(item.key),
-                    productName: item.name,
-                  ),
-                  const SizedBox(width: Brand.s4),
-                  QuantityStepper(
-                    quantity: item.quantity,
-                    compact: true,
-                    onIncrement: () => cart.increment(item.key),
-                    onDecrement: () => cart.decrement(item.key),
-                  ),
-                ],
               ),
             ],
+          ),
+          Positioned(
+            top: 0,
+            right: 0,
+            child: TextButton.icon(
+              onPressed: onEdit,
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(0, 26),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              icon: const EditIcon(size: 13),
+              label: const Text('EDITAR'),
+            ),
           ),
         ],
       ),
@@ -574,139 +662,206 @@ class _CartLine extends StatelessWidget {
   MediaRef _media(String value) => MediaRef.fromValue(value) ?? MediaRef.none;
 }
 
-class _ConfirmationSheet extends StatelessWidget {
-  const _ConfirmationSheet({required this.order});
+class _CartDetails extends StatelessWidget {
+  const _CartDetails({required this.items});
 
-  final Order order;
+  final List<CartItem> items;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final settings = Provider.of<SettingsService>(context, listen: false);
-    final checkout = context.read<CheckoutController>();
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(Brand.s24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Brand.s10,
-                vertical: Brand.s4,
-              ),
-              decoration: BoxDecoration(
-                color: colors.action,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                'PEDIDO REGISTRADO',
-                style: Brand.ui(
-                  9,
-                  weight: FontWeight.w700,
-                  color: colors.onAction,
-                ),
-              ),
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: Brand.cardRadius,
+        border: Border.all(color: colors.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        color: colors.surface,
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: Brand.s12),
+            childrenPadding: const EdgeInsets.fromLTRB(
+              Brand.s12,
+              0,
+              Brand.s12,
+              Brand.s12,
             ),
-            const SizedBox(height: Brand.s12),
-            Text(
-              '#${order.code}',
-              style: Brand.display(26, h: 1, color: colors.textPrimary),
-            ),
-            const SizedBox(height: Brand.s8),
-            Text(
-              'Queda pendiente de confirmación. No se cobró nada en la app: '
-              'continuamos por WhatsApp para coordinar el pago y la entrega.',
-              style: context.text.bodySm.copyWith(color: colors.textSecondary),
-            ),
-            const SizedBox(height: Brand.s16),
-            Row(
+            iconColor: colors.textSecondary,
+            collapsedIconColor: colors.textSecondary,
+            title: Row(
               children: [
-                Text(
-                  'Subtotal',
-                  style: context.text.bodySm.copyWith(
-                    color: colors.textSecondary,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  Money.format(order.subtotalSoles),
-                  style: Brand.ui(12),
-                ),
-              ],
-            ),
-            if (order.discountSoles > 0)
-              Row(
-                children: [
-                  Text(
-                    'Descuento',
-                    style: context.text.bodySm.copyWith(color: colors.action),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '- ${Money.format(order.discountSoles)}',
-                    style: Brand.ui(12, color: colors.action),
-                  ),
-                ],
-              ),
-            Row(
-              children: [
-                Text(
-                  'Envío',
-                  style: context.text.bodySm.copyWith(
-                    color: colors.textSecondary,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  order.shippingSoles == 0
-                      ? 'Sin costo'
-                      : Money.format(order.shippingSoles),
-                  style: Brand.ui(12),
-                ),
-              ],
-            ),
-            const Divider(height: Brand.s24),
-            Row(
-              children: [
-                Text(
-                  Money.format(order.totalSoles),
-                  style: Brand.ui(
-                    22,
-                    weight: FontWeight.w700,
-                    color: colors.textPrimary,
-                  ),
-                ),
-                const Spacer(),
-                StatusPill(
-                  label: order.status.label,
-                  filled: false,
+                Icon(
+                  Icons.receipt_long_outlined,
+                  size: 16,
                   color: colors.action,
                 ),
+                const SizedBox(width: Brand.s8),
+                Expanded(
+                  child: Text(
+                    'VER DETALLE DEL PEDIDO',
+                    style: Brand.ui(
+                      10,
+                      weight: FontWeight.w700,
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: Brand.s16),
-            PillButton(
-              label: 'CONTINUAR POR WHATSAPP',
-              expanded: true,
-              showArrow: true,
-              onPressed: () async {
-                final sent = await ContactLauncher.whatsapp(
-                  phone: settings.whatsapp,
-                  message: OrderMessageBuilder.build(order),
-                );
-                if (sent) await checkout.markWhatsappSent(order);
-              },
+            children: [
+          for (final item in items)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: Brand.s8),
+              padding: const EdgeInsets.all(Brand.s12),
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: Brand.cardRadius,
+                border: Border.all(color: colors.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${item.quantity}× ${item.name}',
+                    style: Brand.ui(12, weight: FontWeight.w700),
+                  ),
+                  if (item.masa != null)
+                    Text(
+                      'Masa: ${item.masa!.label}',
+                      style: context.text.caption.copyWith(
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  Text(
+                    item.variantLabel,
+                    style: context.text.caption.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                  for (final component in item.componentes)
+                    Text(
+                      '- ${component.cantidad}× ${component.nombre}'
+                      '${component.opcion == null ? '' : ' (${component.opcion})'}',
+                      style: context.text.caption.copyWith(
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  for (final extra in item.extras)
+                    Text(
+                      '+ ${extra.nombre} ${Money.format(extra.precioSoles)}',
+                      style: context.text.caption.copyWith(
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  if (item.isOnPromo)
+                    Text(
+                      'Ahorro ${Money.format(item.savingsSoles)}',
+                      style: context.text.caption.copyWith(
+                        color: colors.action,
+                      ),
+                    ),
+                ],
+              ),
             ),
-            const SizedBox(height: Brand.s8),
-            PillButton(
-              label: 'SEGUIR EXPLORANDO',
-              filled: false,
-              expanded: true,
-              onPressed: () => Navigator.of(context).pop(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SuggestionCard extends StatelessWidget {
+  const _SuggestionCard({
+    required this.product,
+    this.onAdd,
+    this.onTap,
+  });
+
+  final Product product;
+  final VoidCallback? onAdd;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 160,
+        padding: const EdgeInsets.all(Brand.s8),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: Brand.cardRadius,
+          border: Border.all(color: colors.border),
+        ),
+        child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: 78,
+            width: double.infinity,
+            child: DriveImage(
+              media: product.image,
+              placeholderLabel: product.name,
+              borderRadius: Brand.cardRadius,
             ),
-          ],
+          ),
+          const SizedBox(height: Brand.s8),
+          Text(
+            product.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Brand.ui(11, weight: FontWeight.w700),
+          ),
+          const SizedBox(height: Brand.s4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ProductFamilyIcon(
+                categoryId: product.categoryId,
+                size: 12,
+              ),
+              const SizedBox(width: Brand.s4),
+              Expanded(
+                child: Text(
+                  ProductSummary.of(product).visibleIngredients,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.text.caption.copyWith(
+                    color: colors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  Money.format(product.minPriceSoles),
+                  style: Brand.ui(12, weight: FontWeight.w700),
+                ),
+              ),
+              IconButton(
+                onPressed: onAdd,
+                icon: const Icon(Icons.add_rounded, size: 18),
+                style: IconButton.styleFrom(
+                  backgroundColor: colors.action,
+                  foregroundColor: colors.onAction,
+                  minimumSize: const Size(32, 32),
+                  padding: EdgeInsets.zero,
+                ),
+                tooltip: 'Agregar ${product.name}',
+              ),
+            ],
+          ),
+        ],
         ),
       ),
     );

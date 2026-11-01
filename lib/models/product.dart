@@ -1,6 +1,8 @@
+import 'masa.dart';
 import 'media_ref.dart';
 import 'model_utils.dart';
 import 'nutrition.dart';
+import 'product_option.dart';
 import 'variant.dart';
 
 /// Producto de la carta con una o más variantes.
@@ -24,6 +26,9 @@ class Product {
     this.summary,
     this.gallery = const [],
     this.nutrition,
+    this.masas = const [],
+    this.extras = const [],
+    this.componentes = const [],
   });
 
   final String id;
@@ -52,6 +57,21 @@ class Product {
 
   /// Ficha nutricional completa (opcional).
   final NutritionInfo? nutrition;
+
+  /// Masas disponibles para este producto.
+  final List<MasaType> masas;
+
+  /// Ingredientes adicionales que se pueden cobrar.
+  final List<ProductExtra> extras;
+
+  /// Partes que componen un combo.
+  final List<ProductComponent> componentes;
+
+  bool get hasMasaOptions => masas.length > 1;
+
+  bool get hasExtras => extras.isNotEmpty;
+
+  bool get hasComponentes => componentes.isNotEmpty;
 
   bool get isGlutenFree => nutrition?.glutenFree ?? false;
 
@@ -150,6 +170,20 @@ class Product {
         json['variantes'] ?? json['variants'],
       ).map(Variant.fromMap).toList(),
       nutrition: nutrition,
+      masas: (json['masas'] is List
+              ? ModelUtils.asStringList(json['masas'])
+              : [
+                  if (json['masa'] != null) json['masa'].toString(),
+                ])
+          .map(MasaType.fromValue)
+          .whereType<MasaType>()
+          .toList(),
+      extras: ModelUtils.asMapList(json['extras'])
+          .map(ProductExtra.fromMap)
+          .toList(),
+      componentes: ModelUtils.asMapList(json['componentes'] ?? json['components'])
+          .map(ProductComponent.fromMap)
+          .toList(),
     );
   }
 
@@ -170,5 +204,9 @@ class Product {
     if (summary != null) 'resumen': summary,
     if (gallery.isNotEmpty) 'galeria': gallery.map((g) => g.toMap()).toList(),
     'variantes': variants.map((v) => v.toMap()).toList(),
+    if (masas.isNotEmpty) 'masas': masas.map((m) => m.value).toList(),
+    if (extras.isNotEmpty) 'extras': extras.map((e) => e.toMap()).toList(),
+    if (componentes.isNotEmpty)
+      'componentes': componentes.map((c) => c.toMap()).toList(),
   };
 }

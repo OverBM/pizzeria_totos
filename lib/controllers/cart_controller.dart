@@ -3,7 +3,9 @@ import 'package:flutter/foundation.dart';
 import '../core/format/money.dart';
 import '../core/storage/cart_storage.dart';
 import '../models/cart_item.dart';
+import '../models/masa.dart';
 import '../models/product.dart';
+import '../models/product_option.dart';
 import '../models/variant.dart';
 import 'promotion_controller.dart';
 
@@ -51,39 +53,70 @@ class CartController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Agrega una variante, aplicando la promoción vigente si existe.
-  void add(Product product, Variant variant, {int quantity = 1}) {
+  /// Agrega una variante, aplicando la promoción vigente y los extras.
+  void add(
+    Product product,
+    Variant variant, {
+    int quantity = 1,
+    MasaType? masa,
+    List<ProductExtra> extras = const [],
+    List<SelectedComponent> componentes = const [],
+  }) {
     final priced = _promotions.priceFor(product, variant);
-    final original = priced.baseSoles;
-    final price = priced.finalSoles;
+    final extrasTotal = Money.sum(
+      extras.map((extra) => extra.precioSoles),
+    );
+    final original = Money.round(priced.baseSoles + extrasTotal);
+    final price = Money.round(priced.finalSoles + extrasTotal);
     final image =
         product.image?.url ??
         product.image?.driveId ??
         product.image?.assetName;
 
     final label = variant.label.toUpperCase();
-    final key = '${product.id}|$label';
-    final index = _items.indexWhere((item) => item.key == key);
+    final candidate = CartItem(
+      productId: product.id,
+      name: product.name,
+      variantLabel: label,
+      unitPriceSoles: price,
+      quantity: quantity,
+      image: image,
+      originalUnitPriceSoles: price < original ? original : null,
+      masa: masa,
+      extras: List.unmodifiable(extras),
+      componentes: List.unmodifiable(componentes),
+    );
+    final index = _items.indexWhere((item) => item.key == candidate.key);
     if (index >= 0) {
       final current = _items[index];
       final next = [..._items];
       next[index] = current.copyWith(quantity: current.quantity + quantity);
       _items = next;
     } else {
-      _items = [
-        ..._items,
-        CartItem(
-          productId: product.id,
-          name: product.name,
-          variantLabel: label,
-          unitPriceSoles: price,
-          quantity: quantity,
-          image: image,
-          originalUnitPriceSoles: price < original ? original : null,
-        ),
-      ];
+      _items = [..._items, candidate];
     }
     _persist();
+  }
+
+  /// Reemplaza una línea existente por una nueva configuración.
+  void replaceLine(
+    String key,
+    Product product,
+    Variant variant, {
+    int quantity = 1,
+    MasaType? masa,
+    List<ProductExtra> extras = const [],
+    List<SelectedComponent> componentes = const [],
+  }) {
+    _items = _items.where((item) => item.key != key).toList();
+    add(
+      product,
+      variant,
+      quantity: quantity,
+      masa: masa,
+      extras: extras,
+      componentes: componentes,
+    );
   }
 
   void setQuantity(String key, int quantity) {

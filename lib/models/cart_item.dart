@@ -1,7 +1,9 @@
 import '../core/format/money.dart';
+import 'masa.dart';
 import 'model_utils.dart';
+import 'product_option.dart';
 
-/// Ítem del carrito: producto + variante + cantidad + precio unitario.
+/// Ítem del carrito: producto + variante + masa + extras + cantidad.
 class CartItem {
   const CartItem({
     required this.productId,
@@ -11,13 +13,16 @@ class CartItem {
     required this.quantity,
     this.image,
     this.originalUnitPriceSoles,
+    this.masa,
+    this.extras = const [],
+    this.componentes = const [],
   });
 
   final String productId;
   final String name;
   final String variantLabel;
 
-  /// Precio unitario en soles (con IGV incluido). Incluye promoción.
+  /// Precio unitario final en soles (con IGV, promoción y extras).
   final double unitPriceSoles;
   final int quantity;
 
@@ -27,8 +32,32 @@ class CartItem {
   /// Precio unitario original en soles cuando hay promoción aplicada.
   final double? originalUnitPriceSoles;
 
-  /// Clave única de la línea (producto + variante).
-  String get key => '$productId|$variantLabel';
+  /// Masa elegida, si el producto la ofrece.
+  final MasaType? masa;
+
+  /// Extras elegidos para esta línea.
+  final List<ProductExtra> extras;
+
+  /// Componentes elegidos de un combo.
+  final List<SelectedComponent> componentes;
+
+  /// Suma de extras por unidad.
+  double get extrasSoles =>
+      Money.sum(extras.map((extra) => extra.precioSoles));
+
+  /// Clave única de la línea. Conserva el formato histórico cuando no hay
+  /// configuración extra para no romper carritos guardados.
+  String get key {
+    final base = '$productId|$variantLabel';
+    final parts = <String>[
+      if (masa != null) 'masa=${masa!.value}',
+      if (extras.isNotEmpty)
+        'extras=${extras.map((e) => e.nombre).join(',')}',
+      if (componentes.isNotEmpty)
+        'componentes=${componentes.map((c) => '${c.nombre}:${c.opcion ?? ''}').join(',')}',
+    ];
+    return parts.isEmpty ? base : '$base|${parts.join('|')}';
+  }
 
   /// Total de la línea, derivado (no se guarda en Firestore).
   double get lineTotalSoles => Money.multiply(unitPriceSoles, quantity);
@@ -53,6 +82,9 @@ class CartItem {
     int? quantity,
     double? unitPriceSoles,
     double? originalUnitPriceSoles,
+    MasaType? masa,
+    List<ProductExtra>? extras,
+    List<SelectedComponent>? componentes,
   }) => CartItem(
     productId: productId,
     name: name,
@@ -62,6 +94,9 @@ class CartItem {
     image: image,
     originalUnitPriceSoles:
         originalUnitPriceSoles ?? this.originalUnitPriceSoles,
+    masa: masa ?? this.masa,
+    extras: extras ?? this.extras,
+    componentes: componentes ?? this.componentes,
   );
 
   factory CartItem.fromMap(Map<String, dynamic> json) => CartItem(
@@ -82,6 +117,15 @@ class CartItem {
       'precioUnitarioOriginal',
       centsKey: 'originalUnitPriceCents',
     ),
+    masa: MasaType.fromValue(
+      ModelUtils.asStringOrNull(json['masa'] ?? json['dough']),
+    ),
+    extras: ModelUtils.asMapList(json['extras'])
+        .map(ProductExtra.fromMap)
+        .toList(),
+    componentes: ModelUtils.asMapList(json['componentes'] ?? json['components'])
+        .map(SelectedComponent.fromMap)
+        .toList(),
   );
 
   Map<String, dynamic> toMap() => {
@@ -93,5 +137,9 @@ class CartItem {
     if (image != null) 'imagen': image,
     if (originalUnitPriceSoles != null)
       'precioUnitarioOriginal': Money.round(originalUnitPriceSoles!),
+    if (masa != null) 'masa': masa!.value,
+    if (extras.isNotEmpty) 'extras': extras.map((e) => e.toMap()).toList(),
+    if (componentes.isNotEmpty)
+      'componentes': componentes.map((c) => c.toMap()).toList(),
   };
 }

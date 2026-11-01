@@ -11,9 +11,15 @@ import 'package:pizzeria_totos/core/load_state.dart';
 import 'package:pizzeria_totos/core/storage/cart_storage.dart';
 import 'package:pizzeria_totos/models/account.dart';
 import 'package:pizzeria_totos/models/catalog_filters.dart';
+import 'package:pizzeria_totos/models/category.dart';
+import 'package:pizzeria_totos/models/delivery_quote.dart';
+import 'package:pizzeria_totos/models/masa.dart';
 import 'package:pizzeria_totos/models/menu_data.dart';
 import 'package:pizzeria_totos/models/order.dart';
+import 'package:pizzeria_totos/models/product.dart';
+import 'package:pizzeria_totos/models/product_option.dart';
 import 'package:pizzeria_totos/models/promotion.dart';
+import 'package:pizzeria_totos/models/variant.dart';
 import 'package:pizzeria_totos/repositories/repository_exception.dart';
 import 'package:pizzeria_totos/services/settings_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -67,9 +73,9 @@ void main() {
       await controller.load();
       expect(
         controller.selectedCategoryId,
-        CatalogController.featuredCategoryId,
+        CatalogController.allCategoryId,
       );
-      expect(controller.selectedCategoryName, 'LAS MÁS PEDIDAS');
+      expect(controller.selectedCategoryName, 'TODOS');
 
       controller.selectCategory('bebidas');
       expect(controller.selectedCategoryName, 'BEBIDAS');
@@ -108,14 +114,87 @@ void main() {
       expect(controller.visibleProducts.single.id, 'coca-600');
 
       controller.clearFilters();
-      controller.setPriceThreshold(10, PriceComparison.below);
+      controller.setPriceRange(null, 10);
       expect(controller.visibleProducts.single.id, 'coca-600');
 
-      controller.setPriceThreshold(10, PriceComparison.above);
+      controller.setPriceRange(10, null);
       expect(controller.visibleProducts.single.id, 'pizza-totos');
 
-      controller.clearPriceThreshold();
+      controller.clearPriceRange();
       expect(controller.visibleProducts.length, 1);
+      controller.dispose();
+    });
+
+    test('filtra por el precio mostrado y por masa, formato y tipo', () async {
+      const menu = MenuData(
+        categories: [
+          MenuCategory(id: 'pizzas', name: 'PIZZAS', order: 1),
+          MenuCategory(id: 'bebidas', name: 'BEBIDAS', order: 2),
+        ],
+        products: [
+          Product(
+            id: 'pizza-americana',
+            categoryId: 'pizzas',
+            name: 'PIZZA AMERICANA',
+            description: '',
+            tags: ['clásica'],
+            masas: [MasaType.normal, MasaType.masaMadre],
+            variants: [
+              Variant(label: 'entera', priceSoles: 27.9),
+              Variant(label: 'media', priceSoles: 14.9),
+            ],
+          ),
+          Product(
+            id: 'pizza-dulce',
+            categoryId: 'pizzas',
+            name: 'PIZZA DULCE',
+            description: '',
+            tags: ['familiar', 'dulce'],
+            masas: [MasaType.dulce],
+            variants: [Variant(label: 'única', priceSoles: 30)],
+          ),
+          Product(
+            id: 'coca-600',
+            categoryId: 'bebidas',
+            name: 'COCA COLA',
+            description: '',
+            variants: [Variant(label: 'única', priceSoles: 5)],
+          ),
+        ],
+      );
+      final controller = CatalogController(
+        repository: FakeCatalogRepository(menu: menu),
+      );
+      await controller.load();
+
+      expect(controller.selectedCategoryId, CatalogController.allCategoryId);
+      expect(controller.priceBounds.max, 30);
+
+      controller.setPriceRange(null, 15);
+      expect(controller.visibleProducts.single.id, 'coca-600');
+
+      controller.setPriceRange(25, null);
+      expect(
+        controller.visibleProducts.map((p) => p.id),
+        containsAll(['pizza-americana', 'pizza-dulce']),
+      );
+      expect(controller.visibleProducts.any((p) => p.id == 'coca-600'), isFalse);
+
+      controller.clearFilters();
+      controller.setMasa(MasaType.masaMadre);
+      expect(controller.visibleProducts.single.id, 'pizza-americana');
+
+      controller.clearFilters();
+      controller.setMasa(MasaType.dulce);
+      expect(controller.visibleProducts.single.id, 'pizza-dulce');
+
+      controller.clearFilters();
+      controller.setFormato('Familiar');
+      expect(controller.visibleProducts.single.id, 'pizza-dulce');
+
+      controller.clearFilters();
+      controller.setTipo('Clásica');
+      expect(controller.visibleProducts.single.id, 'pizza-americana');
       controller.dispose();
     });
 
@@ -405,6 +484,56 @@ void main() {
       cart.dispose();
     });
 
+    test('agrega masa, extras y componentes y calcula el total', () async {
+      final promotions = PromotionController(
+        repository: FakePromotionRepository(),
+      );
+      await promotions.load();
+      final cart = CartController(
+        storage: const CartStorage(),
+        promotions: promotions,
+      );
+      const product = Product(
+        id: 'pizza-americana',
+        categoryId: 'pizzas',
+        name: 'PIZZA AMERICANA',
+        description: '',
+        masas: [MasaType.normal, MasaType.masaMadre],
+        extras: [ProductExtra(nombre: 'Extra queso', precioSoles: 4)],
+        componentes: [
+          ProductComponent(
+            nombre: 'Pizza mediana',
+            cantidad: 1,
+            opciones: ['Americana'],
+          ),
+        ],
+        variants: [Variant(label: 'entera', priceSoles: 27.9)],
+      );
+
+      cart.add(
+        product,
+        product.variants.single,
+        masa: MasaType.masaMadre,
+        extras: product.extras,
+        componentes: const [
+          SelectedComponent(
+            nombre: 'Pizza mediana',
+            cantidad: 1,
+            opcion: 'Americana',
+          ),
+        ],
+      );
+
+      final item = cart.items.single;
+      expect(item.masa, MasaType.masaMadre);
+      expect(item.extrasSoles, 4);
+      expect(item.unitPriceSoles, 31.9);
+      expect(item.key, contains('masa=masaMadre'));
+      expect(cart.totalSoles(), 31.9);
+      cart.dispose();
+      promotions.dispose();
+    });
+
     test('productos sin promoción se guardan con precio de lista', () async {
       final cart = await newCart();
       final product = sampleMenu.byId('coca-600')!;
@@ -462,6 +591,7 @@ void main() {
         auth: auth,
         branches: branches,
         settings: settings,
+        maps: FakeMapsService(),
         // Dentro del horario de las sedes de ejemplo, para que el test no
         // dependa de la hora real a la que se ejecute.
         now: () => DateTime(2026, 10, 15, 13),
@@ -502,6 +632,14 @@ void main() {
       final product = sampleMenu.byId('pizza-totos')!;
       env.cart.add(product, product.variants.first);
       env.checkout.initDefaults();
+      env.checkout.setDeliveryPoint(
+        const DeliveryPoint(
+          lat: -12.0651,
+          lng: -75.2049,
+          label: 'Av. Giráldez 123',
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
       expect(env.checkout.validate(), isEmpty);
       expect(env.checkout.canSubmit, isTrue);
 
@@ -509,7 +647,9 @@ void main() {
       expect(order, isNotNull);
       expect(order!.uid, 'uid-1');
       expect(order.status, OrderStatus.pendienteConfirmacion);
-      expect(order.totalSoles, 37.90);
+      expect(order.totalSoles, 40.90);
+      expect(order.shippingSoles, 6.00);
+      expect(order.distanciaKm, 3.2);
       expect(order.branchId, 'huancayo');
       expect(order.address, 'Av. Giráldez 123');
       expect(order.customerName, 'Ana Torres');
@@ -537,7 +677,10 @@ void main() {
 
       env.checkout.setType(OrderType.pickup);
       expect(env.checkout.shippingSoles, 0);
-      expect(env.checkout.validate(), isEmpty);
+      expect(
+        env.checkout.validate(),
+        contains(CheckoutIssue.noPhone),
+      );
       env.checkout.setType(OrderType.delivery);
       expect(env.checkout.shippingSoles, 3.00);
       env.checkout.dispose();
@@ -599,6 +742,14 @@ void main() {
         sampleMenu.byId('pizza-totos')!,
         sampleMenu.byId('pizza-totos')!.variants.first,
       );
+      env.checkout.setDeliveryPoint(
+        const DeliveryPoint(
+          lat: -12.0651,
+          lng: -75.2049,
+          label: 'Av. Giráldez 123',
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
       env.orders.error = const RepositoryException('Sin permisos en orders.');
 
       expect(await env.checkout.submit(), isNull);

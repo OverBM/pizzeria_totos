@@ -79,6 +79,7 @@ class _EditProfileViewState extends State<EditProfileView> {
             key: _formKey,
             autovalidateMode: AutovalidateMode.onUserInteraction,
             child: ListView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.fromLTRB(
                 Brand.s16,
                 Brand.s24,

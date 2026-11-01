@@ -22,6 +22,7 @@ import '../repositories/order_repository.dart';
 import '../repositories/promotion_repository.dart';
 import '../repositories/settings_repository.dart';
 import '../services/connectivity_service.dart';
+import '../services/location/location_service.dart';
 import '../services/settings_service.dart';
 
 /// Repositorios y controladores construidos sobre Firestore.
@@ -46,6 +47,7 @@ class AppServices {
     required this.orders,
     required this.claims,
     required this.checkout,
+    this.locationService = const GeolocatorLocationService(),
   });
 
   factory AppServices.create() {
@@ -126,6 +128,7 @@ class AppServices {
   final OrderController orders;
   final ClaimController claims;
   final CheckoutController checkout;
+  final LocationService locationService;
 
   String _lastUid = '';
 

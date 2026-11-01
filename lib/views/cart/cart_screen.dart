@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../app/routes.dart';
+import '../../controllers/cart_controller.dart';
+import '../../controllers/checkout_controller.dart';
 import '../../core/theme/brand.dart';
+import '../../models/checkout_step.dart';
 import '../../widgets/widgets.dart';
 import 'cart_view.dart';
 
@@ -19,8 +24,21 @@ class CartScreen extends StatelessWidget {
   final VoidCallback onOpenProfile;
   final VoidCallback onOpenOrders;
 
+  void _continueToDelivery(BuildContext context) {
+    final checkout = context.read<CheckoutController>();
+    final issues = checkout.validateStep(CheckoutStep.pedido);
+    if (issues.isNotEmpty) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(issues.first.message)));
+      return;
+    }
+    Navigator.of(context).push(AppRoutes.checkoutDelivery());
+  }
+
   @override
   Widget build(BuildContext context) {
+    final cart = context.watch<CartController>();
     return Scaffold(
       appBar: TotoTopBar(
         showWordmark: false,
@@ -30,16 +48,10 @@ class CartScreen extends StatelessWidget {
           tooltip: 'Volver',
         ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(44),
+          preferredSize: const Size.fromHeight(58),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'TU PEDIDO',
-                style: Brand.display(22, h: 1),
-              ),
-            ),
+            child: CheckoutProgress(step: CheckoutStep.pedido),
           ),
         ),
       ),
@@ -56,6 +68,26 @@ class CartScreen extends StatelessWidget {
           ),
         ],
       ),
+      bottomNavigationBar: cart.isEmpty
+          ? null
+          : SafeArea(
+              top: false,
+              child: Container(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                padding: const EdgeInsets.fromLTRB(
+                  Brand.s16,
+                  Brand.s8,
+                  Brand.s16,
+                  Brand.s8,
+                ),
+                child: PillButton(
+                  label: 'CONTINUAR CON LA ENTREGA',
+                  expanded: true,
+                  showArrow: true,
+                  onPressed: () => _continueToDelivery(context),
+                ),
+              ),
+            ),
     );
   }
 }

@@ -25,6 +25,9 @@ class ProfileView extends StatefulWidget {
 }
 
 class _ProfileViewState extends State<ProfileView> {
+  bool _signingOut = false;
+  bool _redirectScheduled = false;
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
@@ -53,7 +56,7 @@ class _ProfileViewState extends State<ProfileView> {
             const OfflineBanner(),
             Expanded(
               child: account == null
-                  ? _signedOut(context)
+                  ? _redirectToLogin(context)
                   : _profile(context, auth, account),
             ),
           ],
@@ -62,27 +65,24 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
-  Widget _signedOut(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(top: Brand.s16),
-      child: Column(
-        children: [
-          const SizedBox(height: Brand.s24),
-          EmptyState(
-            title: 'Tu perfil',
-            message:
-                'Inicia sesión para guardar tu teléfono y tus direcciones, '
-                'y confirmar tus pedidos sin volver a escribirlos.',
-            icon: Icons.person_outline_rounded,
-            actionLabel: 'INICIAR SESIÓN',
-            onAction: () => Navigator.of(
-              context,
-            ).push<bool>(MotionRoute(builder: (_) => const LoginView())),
-          ),
-          _versionFooter(context),
-        ],
-      ),
-    );
+  Widget _redirectToLogin(BuildContext context) {
+    if (_signingOut) return const SizedBox.shrink();
+    if (!_redirectScheduled) {
+      _redirectScheduled = true;
+      final navigator = Navigator.of(context);
+      final auth = context.read<AuthController>();
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted || _signingOut) return;
+        await navigator.push(AppRoutes.login());
+        if (!mounted || _signingOut) return;
+        if (auth.isSignedIn) {
+          navigator.pushReplacement(AppRoutes.profile());
+        } else {
+          navigator.popUntil((route) => route.isFirst);
+        }
+      });
+    }
+    return const Center(child: CircularProgressIndicator());
   }
 
   Widget _profile(BuildContext context, AuthController auth, Account account) {
@@ -98,6 +98,7 @@ class _ProfileViewState extends State<ProfileView> {
     ];
 
     return ListView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.fromLTRB(
         Brand.s16,
         Brand.s24,
@@ -696,6 +697,7 @@ class _ProfileViewState extends State<ProfileView> {
       ),
     );
     if (confirmed != true || !mounted) return;
+    setState(() => _signingOut = true);
     final auth = context.read<AuthController>();
     await auth.signOut();
     if (!mounted) return;
@@ -740,6 +742,7 @@ class _AddressSheetState extends State<_AddressSheet> {
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SafeArea(
         child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.all(Brand.s24),
           child: Form(
             key: _formKey,

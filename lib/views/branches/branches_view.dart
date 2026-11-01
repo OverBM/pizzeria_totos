@@ -14,9 +14,11 @@ import '../../core/theme/theme_context.dart';
 import '../../core/time/lima_time.dart';
 import '../../models/branch.dart';
 import '../../services/contact_launcher.dart';
+import '../../services/location/location_service.dart';
 import '../../services/maps/maps_service.dart';
 import '../../services/settings_service.dart';
 import 'branch_detail_sheet.dart';
+import 'branch_route_view.dart';
 
 /// Sedes de Huancayo con mapa real, búsqueda y acciones de contacto.
 class BranchesView extends StatefulWidget {
@@ -37,6 +39,8 @@ class _BranchesViewState extends State<BranchesView> {
   PlaceResult? _focus;
   String? _selectedId;
   bool _searching = false;
+  LatLng? _userPoint;
+  bool _locating = false;
 
   @override
   void dispose() {
@@ -104,10 +108,53 @@ class _BranchesViewState extends State<BranchesView> {
         phoneFallback: settings.phone,
         whatsappFallback: settings.whatsapp,
         distanceLabel: distance == null ? null : 'A ${_distanceText(distance)}',
+        onDirections: () {
+          Navigator.of(context).pop();
+          if (!mounted) return;
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => BranchRouteView(
+                branch: branch,
+                initialUserPoint: _userPoint,
+              ),
+            ),
+          );
+        },
       ),
     );
     if (!mounted || goToMap != true) return;
     setState(() => _selectedId = branch.id);
+  }
+
+  Future<void> _locateMe() async {
+    setState(() => _locating = true);
+    final location = context.read<LocationService>();
+    final result = await location.current();
+    if (!mounted) return;
+    setState(() => _locating = false);
+    if (!result.isSuccess) {
+      final failure = result.failure;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              failure?.message ?? 'No pudimos obtener tu ubicación.',
+            ),
+          ),
+        );
+      if (failure == LocationFailure.permissionDeniedForever) {
+        await location.openSettings();
+      }
+      return;
+    }
+    final point = result.point!;
+    final nearest = _nearestBranch(point);
+    setState(() {
+      _userPoint = point;
+      _focus = null;
+      _selectedId = nearest?.id;
+    });
   }
 
   Branch? _nearestBranch(LatLng point) {
@@ -129,11 +176,11 @@ class _BranchesViewState extends State<BranchesView> {
   }
 
   double? _distanceTo(Branch branch) {
-    final focus = _focus;
-    if (focus == null) return null;
+    final point = _focus?.point ?? _userPoint;
+    if (point == null) return null;
     return Geo.distanceKm(
-      focus.point.latitude,
-      focus.point.longitude,
+      point.latitude,
+      point.longitude,
       branch.lat,
       branch.lng,
     );
@@ -194,7 +241,8 @@ class _BranchesViewState extends State<BranchesView> {
     final visible = _visibleBranches(branches);
     final now = LimaTime.now();
     final focus = _focus;
-    final nearest = focus == null ? null : _nearestBranch(focus.point);
+    final searchPoint = focus?.point ?? _userPoint;
+    final nearest = searchPoint == null ? null : _nearestBranch(searchPoint);
 
     final markers = <TotoMapMarker>[
       for (final branch in branches)
@@ -259,6 +307,7 @@ class _BranchesViewState extends State<BranchesView> {
             child: TotoMap(
               markers: markers,
               focus: focus?.point,
+              userPoint: _userPoint,
               selectedId: _selectedId,
               height: 250,
               onMarkerTap: (marker) {
@@ -271,6 +320,22 @@ class _BranchesViewState extends State<BranchesView> {
                   }
                 }
               },
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              Brand.s16,
+              Brand.s12,
+              Brand.s16,
+              0,
+            ),
+            child: PillButton(
+              label: _locating ? 'UBICANDO…' : 'CERCA DE MÍ',
+              filled: false,
+              expanded: true,
+              onPressed: _locating ? null : _locateMe,
             ),
           ),
         ),

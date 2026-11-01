@@ -116,6 +116,52 @@ class RoundActionButton extends StatelessWidget {
 }
 
 /// Carrito de línea para la acción de agregar.
+/// Icono de edición para acciones de línea.
+class EditIcon extends StatelessWidget {
+  const EditIcon({super.key, this.size});
+
+  final double? size;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.colors.action;
+    return SvgPicture.asset(
+      'assets/icons/edit.svg',
+      width: size,
+      height: size,
+      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      placeholderBuilder: (context) => Icon(
+        Icons.edit_outlined,
+        size: size ?? 14,
+        color: color,
+      ),
+    );
+  }
+}
+
+/// Icono de «Mis pedidos» para la barra superior.
+class OrdersIcon extends StatelessWidget {
+  const OrdersIcon({super.key, this.size});
+
+  final double? size;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.colors.textPrimary;
+    return SvgPicture.asset(
+      'assets/icons/orders.svg',
+      width: size,
+      height: size,
+      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      placeholderBuilder: (context) => Icon(
+        Icons.receipt_long_outlined,
+        size: size ?? 22,
+        color: color,
+      ),
+    );
+  }
+}
+
 class AddToCartIcon extends StatelessWidget {
   const AddToCartIcon({super.key, this.size});
 

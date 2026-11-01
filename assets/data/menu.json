@@ -52,14 +52,14 @@
       "id": "pizza-totos",
       "categoryId": "pizzas",
       "name": "PIZZA TOTO'S",
-      "description": "Nuestra pizza insignia: masa madre de fermentación lenta, salsa de la casa, mozzarella fundida, pepperoni y orégano. Horneada al momento, con la corteza dorada y el centro tierno. Rinde 2 porciones como entera y 4 como media.",
+      "description": "Nuestra pizza insignia: masa normal o masa madre de fermentación lenta, salsa de la casa, mozzarella fundida, pepperoni y orégano. Horneada al momento, con la corteza dorada y el centro tierno. Rinde 2 porciones como entera y 4 como media.",
       "image": "pizza-totos",
       "tags": [
         "casa",
         "picante"
       ],
       "ingredients": [
-        "Masa madre",
+        "Masa",
         "Salsa de la casa",
         "Mozzarella",
         "Pepperoni",
@@ -89,7 +89,7 @@
           "price": 22.9
         }
       ],
-      "summary": "Nuestra insignia: masa madre, pepperoni y orégano.",
+      "summary": "Nuestra insignia: masa normal o masa madre, pepperoni y orégano.",
       "nutricion": {
         "porcion": "1 pizza entera (550 g)",
         "porcionGramos": 550,
@@ -102,13 +102,39 @@
         "fibraG": 11,
         "sodioMg": 3025,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "normal",
+        "masaMadre"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra pepperoni",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra jamón",
+          "precio": 3.5
+        },
+        {
+          "nombre": "Extra champiñones",
+          "precio": 2.5
+        },
+        {
+          "nombre": "Extra aceitunas",
+          "precio": 2
+        }
+      ]
     },
     {
       "id": "pizza-americana",
       "categoryId": "pizzas",
       "name": "PIZZA AMERICANA",
-      "description": "La clásica de la casa: masa madre, salsa de tomate, mozzarella, jamón y queso. Una combinación sencilla y contundente, horneada hasta que el queso burbujea. Ideal para compartir en familia.",
+      "description": "La clásica de la casa: masa normal o masa madre, salsa de tomate, mozzarella, jamón y queso. Una combinación sencilla y contundente, horneada hasta que el queso burbujea. Ideal para compartir en familia.",
       "image": "pizza-americana",
       "tags": [
         "clásica"
@@ -128,7 +154,7 @@
         }
       ],
       "ingredients": [
-        "Masa madre",
+        "Masa",
         "Salsa de tomate",
         "Mozzarella",
         "Jamón",
@@ -140,7 +166,7 @@
       ],
       "portion": "1 pizza entera (550 g)",
       "calories": 950,
-      "summary": "Jamón y queso sobre masa madre.",
+      "summary": "Jamón y queso sobre masa normal o masa madre.",
       "nutricion": {
         "porcion": "1 pizza entera (550 g)",
         "porcionGramos": 550,
@@ -153,19 +179,41 @@
         "fibraG": 11,
         "sodioMg": 3025,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "normal",
+        "masaMadre"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra jamón",
+          "precio": 3.5
+        },
+        {
+          "nombre": "Extra tocino",
+          "precio": 4.5
+        },
+        {
+          "nombre": "Extra champiñones",
+          "precio": 2.5
+        }
+      ]
     },
     {
       "id": "pizza-peperoni",
       "categoryId": "pizzas",
       "name": "PIZZA PEPERONI",
-      "description": "Masa madre, salsa de tomate, mozzarella y pepperoni en cada porción. El punto justo de picante y el borde dorado la hacen la favorita de los que buscan lo clásico. Sirve 2 porciones.",
+      "description": "masa normal o masa madre, salsa de tomate, mozzarella y pepperoni en cada porción. El punto justo de picante y el borde dorado la hacen la favorita de los que buscan lo clásico. Sirve 2 porciones.",
       "image": "pizza-peperoni",
       "tags": [
         "clásica"
       ],
       "ingredients": [
-        "Masa madre",
+        "Masa",
         "Salsa de tomate",
         "Mozzarella",
         "Pepperoni"
@@ -203,20 +251,42 @@
         "fibraG": 11,
         "sodioMg": 3025,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "normal",
+        "masaMadre"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra pepperoni",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra jalapeños",
+          "precio": 1.5
+        },
+        {
+          "nombre": "Extra aceitunas",
+          "precio": 2
+        }
+      ]
     },
     {
       "id": "pizza-hawaiana",
       "categoryId": "pizzas",
       "name": "PIZZA HAWAIANA",
-      "description": "Masa madre, salsa de tomate, mozzarella, jamón y piña. El contraste dulce-salado de siempre, con la piña jugosa y el queso fundido. Una pizza que divide opiniones y gana adeptos.",
+      "description": "masa normal o masa madre, salsa de tomate, mozzarella, jamón y piña. El contraste dulce-salado de siempre, con la piña jugosa y el queso fundido. Una pizza que divide opiniones y gana adeptos.",
       "image": "pizza-hawaiana",
       "tags": [
         "dulce",
         "clásica"
       ],
       "ingredients": [
-        "Masa madre",
+        "Masa",
         "Salsa de tomate",
         "Mozzarella",
         "Jamón",
@@ -255,13 +325,35 @@
         "fibraG": 11,
         "sodioMg": 3025,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "normal",
+        "masaMadre"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra jamón",
+          "precio": 3.5
+        },
+        {
+          "nombre": "Extra piña",
+          "precio": 2
+        },
+        {
+          "nombre": "Extra tocino",
+          "precio": 4.5
+        }
+      ]
     },
     {
       "id": "pizza-vegetales",
       "categoryId": "pizzas",
       "name": "PIZZA CON VEGETALES",
-      "description": "Masa madre, salsa de tomate, mozzarella, pimiento, cebolla y champiñón. Verduras frescas salteadas y horneadas con el queso, para una porción llena de color y sabor. Sirve 2 porciones.",
+      "description": "masa normal o masa madre, salsa de tomate, mozzarella, pimiento, cebolla y champiñón. Verduras frescas salteadas y horneadas con el queso, para una porción llena de color y sabor. Sirve 2 porciones.",
       "image": "pizza-vegetales",
       "tags": [
         "vegetariana"
@@ -281,7 +373,7 @@
         }
       ],
       "ingredients": [
-        "Masa madre",
+        "Masa",
         "Salsa de tomate",
         "Mozzarella",
         "Pimiento",
@@ -307,13 +399,35 @@
         "fibraG": 13.2,
         "sodioMg": 2750,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "normal",
+        "masaMadre"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra champiñones",
+          "precio": 2.5
+        },
+        {
+          "nombre": "Extra aceitunas",
+          "precio": 2
+        },
+        {
+          "nombre": "Extra jalapeños",
+          "precio": 1.5
+        }
+      ]
     },
     {
       "id": "pizza-mexicana",
       "categoryId": "pizzas",
       "name": "PIZZA MEXICANA",
-      "description": "Masa madre, salsa de tomate, mozzarella, carne, jalapeño y maíz. El toque picante del jalapeño con el dulzor del maíz y la carne sazonada. Para los que quieren algo con carácter.",
+      "description": "masa normal o masa madre, salsa de tomate, mozzarella, carne, jalapeño y maíz. El toque picante del jalapeño con el dulzor del maíz y la carne sazonada. Para los que quieren algo con carácter.",
       "image": "pizza-mexicana",
       "tags": [
         "picante"
@@ -333,7 +447,7 @@
         }
       ],
       "ingredients": [
-        "Masa madre",
+        "Masa",
         "Salsa de tomate",
         "Mozzarella",
         "Carne",
@@ -359,13 +473,35 @@
         "fibraG": 11,
         "sodioMg": 3300,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "normal",
+        "masaMadre"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra carne",
+          "precio": 5
+        },
+        {
+          "nombre": "Extra jalapeños",
+          "precio": 1.5
+        },
+        {
+          "nombre": "Extra champiñones",
+          "precio": 2.5
+        }
+      ]
     },
     {
       "id": "pizza-4quesos",
       "categoryId": "pizzas",
       "name": "PIZZA 4 QUESOS",
-      "description": "Masa madre, salsa de tomate, mozzarella, queso parmesano, queso azul y queso edam. Cuatro quesos que se funden en capas: suave, intenso y cremoso a la vez. La favorita de los amantes del queso.",
+      "description": "masa normal o masa madre, salsa de tomate, mozzarella, queso parmesano, queso azul y queso edam. Cuatro quesos que se funden en capas: suave, intenso y cremoso a la vez. La favorita de los amantes del queso.",
       "image": "pizza-4quesos",
       "tags": [
         "clásica",
@@ -386,7 +522,7 @@
         }
       ],
       "ingredients": [
-        "Masa madre",
+        "Masa",
         "Salsa de tomate",
         "Mozzarella",
         "Queso parmesano",
@@ -412,13 +548,31 @@
         "fibraG": 9.9,
         "sodioMg": 3300,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "normal",
+        "masaMadre"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra champiñones",
+          "precio": 2.5
+        },
+        {
+          "nombre": "Extra aceitunas",
+          "precio": 2
+        }
+      ]
     },
     {
       "id": "pizza-chorizo",
       "categoryId": "pizzas",
       "name": "PIZZA CHORIZO",
-      "description": "Masa madre, salsa de tomate, mozzarella y chorizo. El chorizo se hornea con el queso y suelta su sabor en cada porción. Una pizza directa y sabrosa para 2.",
+      "description": "masa normal o masa madre, salsa de tomate, mozzarella y chorizo. El chorizo se hornea con el queso y suelta su sabor en cada porción. Una pizza directa y sabrosa para 2.",
       "image": "pizza-chorizo",
       "tags": [
         "clásica"
@@ -438,7 +592,7 @@
         }
       ],
       "ingredients": [
-        "Masa madre",
+        "Masa",
         "Salsa de tomate",
         "Mozzarella",
         "Chorizo"
@@ -462,13 +616,31 @@
         "fibraG": 9.9,
         "sodioMg": 3575,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "normal",
+        "masaMadre"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra chorizo",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra jalapeños",
+          "precio": 1.5
+        }
+      ]
     },
     {
       "id": "media-totos",
       "categoryId": "medias",
       "name": "MEDIA TOTO'S",
-      "description": "La insignia de la casa en tamaño personal: masa madre, salsa de la casa, mozzarella, pepperoni y orégano. Ideal para una persona o para probar varias. Rinde 1 a 2 porciones.",
+      "description": "La insignia de la casa en tamaño personal: masa normal o masa madre, salsa de la casa, mozzarella, pepperoni y orégano. Ideal para una persona o para probar varias. Rinde 1 a 2 porciones.",
       "image": "media-totos",
       "tags": [
         "casa",
@@ -484,7 +656,7 @@
         }
       ],
       "ingredients": [
-        "Masa madre",
+        "Masa",
         "Salsa de la casa",
         "Mozzarella",
         "Pepperoni",
@@ -509,13 +681,39 @@
         "fibraG": 5.5,
         "sodioMg": 1512,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "normal",
+        "masaMadre"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra pepperoni",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra jamón",
+          "precio": 3.5
+        },
+        {
+          "nombre": "Extra champiñones",
+          "precio": 2.5
+        },
+        {
+          "nombre": "Extra aceitunas",
+          "precio": 2
+        }
+      ]
     },
     {
       "id": "media-americana",
       "categoryId": "medias",
       "name": "MEDIA AMERICANA",
-      "description": "Masa madre, salsa de tomate, mozzarella, jamón y queso en formato mediano. La clásica de siempre, perfecta para una comida individual. Rinde 1 a 2 porciones.",
+      "description": "masa normal o masa madre, salsa de tomate, mozzarella, jamón y queso en formato mediano. La clásica de siempre, perfecta para una comida individual. Rinde 1 a 2 porciones.",
       "image": "media-americana",
       "tags": [
         "individual"
@@ -530,7 +728,7 @@
         }
       ],
       "ingredients": [
-        "Masa madre",
+        "Masa",
         "Salsa de tomate",
         "Mozzarella",
         "Jamón",
@@ -555,13 +753,35 @@
         "fibraG": 5.5,
         "sodioMg": 1512,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "normal",
+        "masaMadre"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra jamón",
+          "precio": 3.5
+        },
+        {
+          "nombre": "Extra tocino",
+          "precio": 4.5
+        },
+        {
+          "nombre": "Extra champiñones",
+          "precio": 2.5
+        }
+      ]
     },
     {
       "id": "media-peperoni",
       "categoryId": "medias",
       "name": "MEDIA PEPERONI",
-      "description": "Masa madre, salsa de tomate, mozzarella y pepperoni, en tamaño mediano. El clásico pepperoni con el borde dorado, para uno o para compartir. Rinde 1 a 2 porciones.",
+      "description": "masa normal o masa madre, salsa de tomate, mozzarella y pepperoni, en tamaño mediano. El clásico pepperoni con el borde dorado, para uno o para compartir. Rinde 1 a 2 porciones.",
       "image": "media-peperoni",
       "tags": [
         "individual"
@@ -576,7 +796,7 @@
         }
       ],
       "ingredients": [
-        "Masa madre",
+        "Masa",
         "Salsa de tomate",
         "Mozzarella",
         "Pepperoni"
@@ -600,13 +820,35 @@
         "fibraG": 5.5,
         "sodioMg": 1512,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "normal",
+        "masaMadre"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra pepperoni",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra jalapeños",
+          "precio": 1.5
+        },
+        {
+          "nombre": "Extra aceitunas",
+          "precio": 2
+        }
+      ]
     },
     {
       "id": "media-hawaiana",
       "categoryId": "medias",
       "name": "MEDIA HAWAIANA",
-      "description": "Masa madre, salsa de tomate, mozzarella, jamón y piña en formato mediano. El dulce y el salado en una porción individual. Rinde 1 a 2 porciones.",
+      "description": "masa normal o masa madre, salsa de tomate, mozzarella, jamón y piña en formato mediano. El dulce y el salado en una porción individual. Rinde 1 a 2 porciones.",
       "image": "media-hawaiana",
       "tags": [
         "individual"
@@ -621,7 +863,7 @@
         }
       ],
       "ingredients": [
-        "Masa madre",
+        "Masa",
         "Salsa de tomate",
         "Mozzarella",
         "Jamón",
@@ -646,13 +888,35 @@
         "fibraG": 5.5,
         "sodioMg": 1512,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "normal",
+        "masaMadre"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra jamón",
+          "precio": 3.5
+        },
+        {
+          "nombre": "Extra piña",
+          "precio": 2
+        },
+        {
+          "nombre": "Extra tocino",
+          "precio": 4.5
+        }
+      ]
     },
     {
       "id": "familiar-totos",
       "categoryId": "familiares",
       "name": "FAMILIAR TOTO'S",
-      "description": "La insignia de la casa en tamaño familiar: masa madre, salsa de la casa, mozzarella, pepperoni y orégano. Pensada para compartir en mesa. Rinde 4 porciones.",
+      "description": "La insignia de la casa en tamaño familiar: masa normal o masa madre, salsa de la casa, mozzarella, pepperoni y orégano. Pensada para compartir en mesa. Rinde 4 porciones.",
       "image": "familiar-totos",
       "tags": [
         "casa",
@@ -668,7 +932,7 @@
         }
       ],
       "ingredients": [
-        "Masa madre",
+        "Masa",
         "Salsa de la casa",
         "Mozzarella",
         "Pepperoni",
@@ -693,13 +957,39 @@
         "fibraG": 18,
         "sodioMg": 4950,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "normal",
+        "masaMadre"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra pepperoni",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra jamón",
+          "precio": 3.5
+        },
+        {
+          "nombre": "Extra champiñones",
+          "precio": 2.5
+        },
+        {
+          "nombre": "Extra aceitunas",
+          "precio": 2
+        }
+      ]
     },
     {
       "id": "familiar-americana",
       "categoryId": "familiares",
       "name": "FAMILIAR AMERICANA",
-      "description": "Masa madre, salsa de tomate, mozzarella, jamón y queso en tamaño familiar. La clásica que nunca falla para una reunión. Rinde 4 porciones.",
+      "description": "masa normal o masa madre, salsa de tomate, mozzarella, jamón y queso en tamaño familiar. La clásica que nunca falla para una reunión. Rinde 4 porciones.",
       "image": "familiar-americana",
       "tags": [
         "para compartir"
@@ -714,7 +1004,7 @@
         }
       ],
       "ingredients": [
-        "Masa madre",
+        "Masa",
         "Salsa de tomate",
         "Mozzarella",
         "Jamón",
@@ -739,13 +1029,35 @@
         "fibraG": 18,
         "sodioMg": 4950,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "normal",
+        "masaMadre"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra jamón",
+          "precio": 3.5
+        },
+        {
+          "nombre": "Extra tocino",
+          "precio": 4.5
+        },
+        {
+          "nombre": "Extra champiñones",
+          "precio": 2.5
+        }
+      ]
     },
     {
       "id": "familiar-peperoni",
       "categoryId": "familiares",
       "name": "FAMILIAR PEPERONI",
-      "description": "Masa madre, salsa de tomate, mozzarella y pepperoni para toda la mesa. El pepperoni bien repartido y el queso fundido en cada rebanada. Rinde 4 porciones.",
+      "description": "masa normal o masa madre, salsa de tomate, mozzarella y pepperoni para toda la mesa. El pepperoni bien repartido y el queso fundido en cada rebanada. Rinde 4 porciones.",
       "image": "familiar-peperoni",
       "tags": [
         "para compartir"
@@ -760,7 +1072,7 @@
         }
       ],
       "ingredients": [
-        "Masa madre",
+        "Masa",
         "Salsa de tomate",
         "Mozzarella",
         "Pepperoni"
@@ -784,13 +1096,35 @@
         "fibraG": 18,
         "sodioMg": 4950,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "normal",
+        "masaMadre"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra pepperoni",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra jalapeños",
+          "precio": 1.5
+        },
+        {
+          "nombre": "Extra aceitunas",
+          "precio": 2
+        }
+      ]
     },
     {
       "id": "familiar-hawaiana",
       "categoryId": "familiares",
       "name": "FAMILIAR HAWAIANA",
-      "description": "Masa madre, salsa de tomate, mozzarella, jamón y piña en tamaño familiar. El contraste dulce-salado que gusta a grandes y chicos. Rinde 4 porciones.",
+      "description": "masa normal o masa madre, salsa de tomate, mozzarella, jamón y piña en tamaño familiar. El contraste dulce-salado que gusta a grandes y chicos. Rinde 4 porciones.",
       "image": "familiar-hawaiana",
       "tags": [
         "para compartir"
@@ -805,7 +1139,7 @@
         }
       ],
       "ingredients": [
-        "Masa madre",
+        "Masa",
         "Salsa de tomate",
         "Mozzarella",
         "Jamón",
@@ -830,7 +1164,29 @@
         "fibraG": 18,
         "sodioMg": 4950,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "normal",
+        "masaMadre"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra jamón",
+          "precio": 3.5
+        },
+        {
+          "nombre": "Extra piña",
+          "precio": 2
+        },
+        {
+          "nombre": "Extra tocino",
+          "precio": 4.5
+        }
+      ]
     },
     {
       "id": "dulce-chocolate",
@@ -874,7 +1230,28 @@
         "fibraG": 10.5,
         "sodioMg": 1750,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "dulce"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra chocolate",
+          "precio": 3
+        },
+        {
+          "nombre": "Extra Nutella",
+          "precio": 3.5
+        },
+        {
+          "nombre": "Extra fresas",
+          "precio": 2.5
+        },
+        {
+          "nombre": "Extra manjar",
+          "precio": 2.5
+        }
+      ]
     },
     {
       "id": "dulce-nutella",
@@ -919,7 +1296,28 @@
         "fibraG": 10.5,
         "sodioMg": 1540,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "dulce"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra Nutella",
+          "precio": 3.5
+        },
+        {
+          "nombre": "Extra fresas",
+          "precio": 2.5
+        },
+        {
+          "nombre": "Extra chocolate",
+          "precio": 3
+        },
+        {
+          "nombre": "Extra manjar",
+          "precio": 2.5
+        }
+      ]
     },
     {
       "id": "dulce-manjar",
@@ -962,7 +1360,28 @@
         "fibraG": 9.1,
         "sodioMg": 1540,
         "sinGluten": false
-      }
+      },
+      "masas": [
+        "dulce"
+      ],
+      "extras": [
+        {
+          "nombre": "Extra manjar",
+          "precio": 2.5
+        },
+        {
+          "nombre": "Extra chocolate",
+          "precio": 3
+        },
+        {
+          "nombre": "Extra fresas",
+          "precio": 2.5
+        },
+        {
+          "nombre": "Extra Nutella",
+          "precio": 3.5
+        }
+      ]
     },
     {
       "id": "tallarin-huancaina",
@@ -1006,7 +1425,21 @@
         "fibraG": 8.1,
         "sodioMg": 2025,
         "sinGluten": false
-      }
+      },
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra pollo",
+          "precio": 5
+        },
+        {
+          "nombre": "Extra carne",
+          "precio": 5
+        }
+      ]
     },
     {
       "id": "tallarin-bolonesa",
@@ -1048,7 +1481,21 @@
         "fibraG": 9.9,
         "sodioMg": 1890,
         "sinGluten": false
-      }
+      },
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra pollo",
+          "precio": 5
+        },
+        {
+          "nombre": "Extra carne",
+          "precio": 5
+        }
+      ]
     },
     {
       "id": "tallarin-alfredo",
@@ -1091,7 +1538,21 @@
         "fibraG": 7.6,
         "sodioMg": 2160,
         "sinGluten": false
-      }
+      },
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra pollo",
+          "precio": 5
+        },
+        {
+          "nombre": "Extra carne",
+          "precio": 5
+        }
+      ]
     },
     {
       "id": "tallarin-carbonara",
@@ -1136,7 +1597,21 @@
         "fibraG": 7.2,
         "sodioMg": 2340,
         "sinGluten": false
-      }
+      },
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra pollo",
+          "precio": 5
+        },
+        {
+          "nombre": "Extra carne",
+          "precio": 5
+        }
+      ]
     },
     {
       "id": "espagueti-bolonesa",
@@ -1178,7 +1653,21 @@
         "fibraG": 8.8,
         "sodioMg": 1680,
         "sinGluten": false
-      }
+      },
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra pollo",
+          "precio": 5
+        },
+        {
+          "nombre": "Extra carne",
+          "precio": 5
+        }
+      ]
     },
     {
       "id": "espagueti-alfredo",
@@ -1221,7 +1710,21 @@
         "fibraG": 6.8,
         "sodioMg": 1920,
         "sinGluten": false
-      }
+      },
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra pollo",
+          "precio": 5
+        },
+        {
+          "nombre": "Extra carne",
+          "precio": 5
+        }
+      ]
     },
     {
       "id": "lasana-bolonesa",
@@ -1265,7 +1768,21 @@
         "fibraG": 6.4,
         "sodioMg": 2000,
         "sinGluten": false
-      }
+      },
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra pollo",
+          "precio": 5
+        },
+        {
+          "nombre": "Extra carne",
+          "precio": 5
+        }
+      ]
     },
     {
       "id": "lasana-huancaina",
@@ -1309,7 +1826,21 @@
         "fibraG": 6,
         "sodioMg": 2080,
         "sinGluten": false
-      }
+      },
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra pollo",
+          "precio": 5
+        },
+        {
+          "nombre": "Extra carne",
+          "precio": 5
+        }
+      ]
     },
     {
       "id": "lasana-pollo",
@@ -1353,7 +1884,21 @@
         "fibraG": 6,
         "sodioMg": 1920,
         "sinGluten": false
-      }
+      },
+      "extras": [
+        {
+          "nombre": "Extra queso",
+          "precio": 4
+        },
+        {
+          "nombre": "Extra pollo",
+          "precio": 5
+        },
+        {
+          "nombre": "Extra carne",
+          "precio": 5
+        }
+      ]
     },
     {
       "id": "combo-1",
@@ -1395,7 +1940,27 @@
         "fibraG": 12.2,
         "sodioMg": 3062,
         "sinGluten": false
-      }
+      },
+      "componentes": [
+        {
+          "nombre": "Pizza mediana",
+          "cantidad": 1,
+          "opciones": [
+            "Americana",
+            "Peperoni",
+            "Hawaiana",
+            "Toto's"
+          ]
+        },
+        {
+          "nombre": "Gaseosa 600 ml",
+          "cantidad": 1,
+          "opciones": [
+            "Coca-Cola",
+            "Inca Kola"
+          ]
+        }
+      ]
     },
     {
       "id": "combo-2",
@@ -1437,7 +2002,27 @@
         "fibraG": 23.1,
         "sodioMg": 5680,
         "sinGluten": false
-      }
+      },
+      "componentes": [
+        {
+          "nombre": "Pizza mediana",
+          "cantidad": 1,
+          "opciones": [
+            "Americana",
+            "Peperoni",
+            "Hawaiana",
+            "Toto's"
+          ]
+        },
+        {
+          "nombre": "Gaseosa 1.5 L",
+          "cantidad": 1,
+          "opciones": [
+            "Coca-Cola",
+            "Inca Kola"
+          ]
+        }
+      ]
     },
     {
       "id": "combo-3",
@@ -1480,7 +2065,27 @@
         "fibraG": 28.7,
         "sodioMg": 7175,
         "sinGluten": false
-      }
+      },
+      "componentes": [
+        {
+          "nombre": "Pizza mediana",
+          "cantidad": 2,
+          "opciones": [
+            "Americana",
+            "Peperoni",
+            "Hawaiana",
+            "Toto's"
+          ]
+        },
+        {
+          "nombre": "Gaseosa 1.5 L",
+          "cantidad": 1,
+          "opciones": [
+            "Coca-Cola",
+            "Inca Kola"
+          ]
+        }
+      ]
     },
     {
       "id": "combo-familiar",
@@ -1523,7 +2128,27 @@
         "fibraG": 33.6,
         "sodioMg": 8160,
         "sinGluten": false
-      }
+      },
+      "componentes": [
+        {
+          "nombre": "Pizza familiar (8 rebanadas)",
+          "cantidad": 1,
+          "opciones": [
+            "Americana",
+            "Peperoni",
+            "Hawaiana",
+            "Toto's"
+          ]
+        },
+        {
+          "nombre": "Gaseosa 1.5 L",
+          "cantidad": 1,
+          "opciones": [
+            "Coca-Cola",
+            "Inca Kola"
+          ]
+        }
+      ]
     },
     {
       "id": "pan-ajo-6",

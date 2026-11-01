@@ -86,6 +86,7 @@ class _AddressSearchSheetState extends State<AddressSearchSheet> {
       ),
       child: SafeArea(
         child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.all(Brand.s16),
           child: Column(
             mainAxisSize: MainAxisSize.min,

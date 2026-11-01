@@ -275,6 +275,26 @@ function productDoc(product, media) {
     ...(product.summary ? { resumen: product.summary } : {}),
     imagen: mediaFor(imageKey, media),
     etiquetas: product.tags ?? [],
+    ...(product.masas?.length ? { masas: product.masas } : {}),
+    ...(product.extras?.length
+      ? {
+          extras: product.extras.map((extra) => ({
+            nombre: extra.nombre,
+            precio: toSoles(extra.precio),
+          })),
+        }
+      : {}),
+    ...(product.componentes?.length
+      ? {
+          componentes: product.componentes.map((component) => ({
+            nombre: component.nombre,
+            cantidad: toInt(component.cantidad ?? 1, 1),
+            ...(component.opciones?.length
+              ? { opciones: component.opciones }
+              : {}),
+          })),
+        }
+      : {}),
     disponible: product.available !== false,
     destacado: product.featured === true,
     ...(product.ingredients?.length ? { ingredientes: product.ingredients } : {}),
@@ -403,8 +423,26 @@ function buildDocuments(media) {
   const delivery = {
     base: toSoles(deliverySeed.base, 3),
     porKm: toSoles(deliverySeed.porKm, 1.5),
-    gratisDesdeKm: Number(deliverySeed.gratisDesdeKm ?? 8),
+    ...(deliverySeed.gratisDesdeKm != null
+      ? { gratisDesdeKm: Number(deliverySeed.gratisDesdeKm) }
+      : {}),
     ...(deliverySeed.maxKm != null ? { maxKm: Number(deliverySeed.maxKm) } : {}),
+    ...(Array.isArray(deliverySeed.tramos)
+      ? {
+          tramos: deliverySeed.tramos.map((band, index) => ({
+            numero: index + 1,
+            desdeKm: Number(band.desdeKm ?? 0),
+            hastaKm: Number(band.hastaKm ?? 0),
+            costo: toSoles(band.costo ?? 0),
+          })),
+        }
+      : {}),
+    ...(deliverySeed.preparacionMin != null
+      ? { preparacionMin: toInt(deliverySeed.preparacionMin, 20) }
+      : {}),
+    ...(deliverySeed.margenMin != null
+      ? { margenMin: toInt(deliverySeed.margenMin, 5) }
+      : {}),
   };
 
   const branchDefaults = {

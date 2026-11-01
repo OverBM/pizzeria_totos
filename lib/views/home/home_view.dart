@@ -6,7 +6,6 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/branch_controller.dart';
-import '../../controllers/cart_controller.dart';
 import '../../controllers/catalog_controller.dart';
 import '../../controllers/order_controller.dart';
 import '../../controllers/promotion_controller.dart';
@@ -21,7 +20,9 @@ import '../../models/branch.dart';
 import '../../models/product.dart';
 import '../../services/contact_launcher.dart';
 import '../../services/settings_service.dart';
+import '../carta/combo_configurator_sheet.dart';
 import '../branches/branch_detail_sheet.dart';
+import '../branches/branch_route_view.dart';
 
 /// Inicio editorial: hero, categorías, favoritas, promoción y sedes.
 class HomeView extends StatefulWidget {
@@ -366,19 +367,11 @@ class _HomeViewState extends State<HomeView> {
   }
 
   /// Agrega la variante por defecto y confirma con un aviso breve.
-  void _addToCart(BuildContext context, Product product) {
+  Future<void> _addToCart(BuildContext context, Product product) async {
     final variant = product.defaultVariantOrNull;
     if (variant == null) return;
-    context.read<CartController>().add(product, variant);
+    await addProductToCart(context, product, variant);
     HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text('${product.name} agregado al pedido'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
   }
 
   Widget _promotions(
@@ -518,6 +511,15 @@ class _HomeViewState extends State<HomeView> {
         branch: branch,
         phoneFallback: settings.phone,
         whatsappFallback: settings.whatsapp,
+        onDirections: () {
+          Navigator.of(context).pop();
+          if (!mounted) return;
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => BranchRouteView(branch: branch),
+            ),
+          );
+        },
       ),
     );
     if (!mounted || goToMap != true) return;

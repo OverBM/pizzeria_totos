@@ -90,7 +90,11 @@ void main() {
 
     expect(find.text('INGREDIENTES'), findsOneWidget);
     expect(find.text('CALORÍAS'), findsOneWidget);
-    expect(find.text('VALORES POR PORCIÓN'), findsOneWidget);
+    expect(find.text('NUTRICIÓN POR PORCIÓN'), findsOneWidget);
+    await tester.ensureVisible(find.text('NUTRICIÓN POR PORCIÓN'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('NUTRICIÓN POR PORCIÓN'));
+    await tester.pumpAndSettle();
     expect(find.text('Proteínas'), findsOneWidget);
     expect(find.text('AGREGAR'), findsOneWidget);
     expect(tester.takeException(), isNull);

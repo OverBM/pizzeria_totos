@@ -11,6 +11,7 @@ import '../controllers/claim_controller.dart';
 import '../controllers/order_controller.dart';
 import '../controllers/promotion_controller.dart';
 import '../services/connectivity_service.dart';
+import '../services/location/location_service.dart';
 import '../services/settings_service.dart';
 
 /// Expone los servicios y controladores a las vistas.
@@ -26,6 +27,7 @@ class AppScope extends StatelessWidget {
       providers: [
         Provider<AppServices>.value(value: services),
         Provider<SettingsService>.value(value: services.settings),
+        Provider<LocationService>.value(value: services.locationService),
         ChangeNotifierProvider<ConnectivityService>.value(
           value: services.connectivity,
         ),
