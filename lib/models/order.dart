@@ -55,6 +55,13 @@ class Order {
     this.note,
     this.discountSoles = 0,
     this.savingsSoles = 0,
+    this.couponCode,
+    this.promotionDiscountSoles,
+    this.couponDiscountSoles = 0,
+    this.shippingOriginalSoles,
+    this.subscriptionApplied = false,
+    this.subscriptionPlanId,
+    this.preparationMinutes,
     this.whatsappSent = false,
     this.paraOtraPersona = false,
     this.receptorNombre,
@@ -95,7 +102,21 @@ class Order {
 
   /// Ahorro por promociones (soles). Alias legacy de [discountSoles].
   final double savingsSoles;
+
+  /// Código de cupón aplicado, si existe.
+  final String? couponCode;
+  final double? promotionDiscountSoles;
+  final double couponDiscountSoles;
+  final double? shippingOriginalSoles;
+  final bool subscriptionApplied;
+  final String? subscriptionPlanId;
+  final int? preparationMinutes;
   final bool whatsappSent;
+
+  double get effectivePromotionDiscountSoles =>
+      promotionDiscountSoles ?? discountSoles;
+  double get effectiveShippingOriginalSoles =>
+      shippingOriginalSoles ?? shippingSoles;
 
   /// Destinatario del pedido.
   final bool paraOtraPersona;
@@ -164,6 +185,33 @@ class Order {
             json.containsKey('savingsCents')
         ? ModelUtils.asMoney(json, 'ahorro', centsKey: 'savingsCents')
         : ModelUtils.asMoney(json, 'descuento', centsKey: 'discountCents'),
+    couponCode: ModelUtils.asStringOrNull(
+      json['cuponCodigo'] ?? json['couponCode'],
+    ),
+    promotionDiscountSoles: ModelUtils.asMoneyOrNull(
+      json,
+      'descuentoPromociones',
+      centsKey: 'promotionDiscountCents',
+    ),
+    couponDiscountSoles: ModelUtils.asMoney(
+      json,
+      'descuentoCupon',
+      centsKey: 'couponDiscountCents',
+    ),
+    shippingOriginalSoles: ModelUtils.asMoneyOrNull(
+      json,
+      'envioOriginal',
+      centsKey: 'shippingOriginalCents',
+    ),
+    subscriptionApplied: ModelUtils.asBool(
+      json['suscripcionAplicada'] ?? json['subscriptionApplied'],
+    ),
+    subscriptionPlanId: ModelUtils.asStringOrNull(
+      json['suscripcionPlanId'] ?? json['subscriptionPlanId'],
+    ),
+    preparationMinutes: ModelUtils.asIntOrNull(
+      json['preparacionMinutos'] ?? json['preparationMinutes'],
+    ),
     whatsappSent: ModelUtils.asBool(
       json['enviadoWhatsapp'] ?? json['whatsappSent'],
     ),
@@ -204,7 +252,17 @@ class Order {
     if (address != null) 'direccion': address,
     if (reference != null) 'referencia': reference,
     if (note != null) 'nota': note,
-    'ahorro': Money.round(discountSoles),
+    'ahorro': Money.round(effectivePromotionDiscountSoles),
+    if (couponCode != null) 'cuponCodigo': couponCode,
+    if (promotionDiscountSoles != null)
+      'descuentoPromociones': Money.round(promotionDiscountSoles!),
+    if (couponDiscountSoles > 0)
+      'descuentoCupon': Money.round(couponDiscountSoles),
+    if (shippingOriginalSoles != null)
+      'envioOriginal': Money.round(shippingOriginalSoles!),
+    if (subscriptionApplied) 'suscripcionAplicada': true,
+    if (subscriptionPlanId != null) 'suscripcionPlanId': subscriptionPlanId,
+    if (preparationMinutes != null) 'preparacionMinutos': preparationMinutes,
     'enviadoWhatsapp': whatsappSent,
     if (paraOtraPersona) 'paraOtraPersona': true,
     if (receptorNombre != null) 'receptorNombre': receptorNombre,

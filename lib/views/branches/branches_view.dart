@@ -97,6 +97,21 @@ class _BranchesViewState extends State<BranchesView> {
     });
   }
 
+  /// Cierra el aviso de sede más cercana y también olvida la ubicación usada
+  /// para calcularla; de otro modo el aviso volvía a aparecer tras pulsar la X.
+  void _dismissNearest() {
+    _debounce?.cancel();
+    _searchSeq++;
+    _query.clear();
+    setState(() {
+      _places = const [];
+      _focus = null;
+      _userPoint = null;
+      _selectedId = null;
+      _searching = false;
+    });
+  }
+
   Future<void> _openBranch(Branch branch, {double? distance}) async {
     final settings = context.read<SettingsService>();
     final goToMap = await showModalBottomSheet<bool>(
@@ -113,10 +128,8 @@ class _BranchesViewState extends State<BranchesView> {
           if (!mounted) return;
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => BranchRouteView(
-                branch: branch,
-                initialUserPoint: _userPoint,
-              ),
+              builder: (_) =>
+                  BranchRouteView(branch: branch, initialUserPoint: _userPoint),
             ),
           );
         },
@@ -201,9 +214,8 @@ class _BranchesViewState extends State<BranchesView> {
     return matches.isEmpty ? branches : matches;
   }
 
-  String _distanceText(double km) => km < 1
-      ? '${(km * 1000).round()} m'
-      : '${km.toStringAsFixed(1)} km';
+  String _distanceText(double km) =>
+      km < 1 ? '${(km * 1000).round()} m' : '${km.toStringAsFixed(1)} km';
 
   @override
   Widget build(BuildContext context) {
@@ -427,9 +439,9 @@ class _BranchesViewState extends State<BranchesView> {
                           ),
                         ),
                         IconButton(
-                          onPressed: _clearSearch,
+                          onPressed: _dismissNearest,
                           icon: const Icon(Icons.close_rounded, size: 18),
-                          tooltip: 'Quitar búsqueda',
+                          tooltip: 'Cerrar aviso de sede cercana',
                         ),
                       ],
                     ),

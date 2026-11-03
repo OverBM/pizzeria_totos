@@ -100,6 +100,9 @@ class CartBadge extends StatelessWidget {
     return IconButton(
       onPressed: onPressed,
       tooltip: 'Ver pedido',
+      padding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
       icon: Stack(
         clipBehavior: Clip.none,
         children: [

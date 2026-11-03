@@ -1,0 +1,121 @@
+{
+  "_note": "Configuración de la pizza personalizada. Los precios están en SOLES. La base incluye masa, salsa y queso estándar. Los ajustes de masa/salsa/queso y los ingredientes se multiplican por el multiplicador del tamaño. La capacidad de horno real se puede sobrescribir en sedes/{id}.",
+  "config": {
+    "activa": true,
+    "minutosBase": 15,
+    "minutosPorIngrediente": 1,
+    "capacidadHornoDefecto": 4,
+    "recuperacionMinDefecto": 0,
+    "margenSinMedicionMin": 5,
+    "maxIngredientesGlobal": 7
+  },
+  "tamanos": [
+    {
+      "id": "personal",
+      "nombre": "Personal",
+      "diametroCm": 24,
+      "porciones": 4,
+      "precioBase": 15.9,
+      "maxIngredientes": 3,
+      "multiplicadorIngredientes": 1.0,
+      "minutosExtra": 0,
+      "pesoHorno": 0.5
+    },
+    {
+      "id": "mediana",
+      "nombre": "Mediana",
+      "diametroCm": 30,
+      "porciones": 6,
+      "precioBase": 22.9,
+      "maxIngredientes": 5,
+      "multiplicadorIngredientes": 1.4,
+      "minutosExtra": 2,
+      "pesoHorno": 1.0
+    },
+    {
+      "id": "familiar",
+      "nombre": "Familiar",
+      "diametroCm": 36,
+      "porciones": 8,
+      "precioBase": 32.9,
+      "maxIngredientes": 7,
+      "multiplicadorIngredientes": 1.8,
+      "minutosExtra": 4,
+      "pesoHorno": 1.5
+    }
+  ],
+  "masas": [
+    {
+      "id": "normal",
+      "nombre": "Normal",
+      "descripcion": "Masa clásica, textura suave",
+      "ajustePorcentaje": 0,
+      "minutosExtra": 0
+    },
+    {
+      "id": "masa-madre",
+      "nombre": "Masa madre",
+      "descripcion": "Fermentación lenta, borde dorado",
+      "ajustePorcentaje": 12,
+      "minutosExtra": 3
+    }
+  ],
+  "salsas": [
+    {
+      "id": "tomate",
+      "nombre": "Tomate de la casa",
+      "descripcion": "Salsa de tomate y orégano",
+      "ajuste": 0
+    },
+    {
+      "id": "bbq",
+      "nombre": "BBQ",
+      "descripcion": "Salsa barbacoa ahumada",
+      "ajuste": 2.0
+    },
+    {
+      "id": "ajo",
+      "nombre": "Ajo",
+      "descripcion": "Salsa cremosa de ajo",
+      "ajuste": 2.0
+    },
+    {
+      "id": "picante",
+      "nombre": "Picante",
+      "descripcion": "Salsa de ají y especias",
+      "ajuste": 1.5
+    },
+    {
+      "id": "alfredo",
+      "nombre": "Alfredo",
+      "descripcion": "Salsa cremosa con parmesano",
+      "ajuste": 2.5
+    }
+  ],
+  "quesos": [
+    {
+      "id": "estandar",
+      "nombre": "Mozzarella estándar",
+      "descripcion": "Incluido en la base",
+      "ajuste": 0
+    },
+    {
+      "id": "extra",
+      "nombre": "Extra mozzarella",
+      "descripcion": "Doble porción de mozzarella",
+      "ajuste": 4.0
+    },
+    {
+      "id": "especial",
+      "nombre": "Especial 4 quesos",
+      "descripcion": "Mozzarella, azul, parmesano y andino",
+      "ajuste": 4.5
+    },
+    {
+      "id": "sin-queso",
+      "nombre": "Sin queso",
+      "descripcion": "Se retira el queso estándar",
+      "ajuste": -3.0
+    }
+  ]
+}

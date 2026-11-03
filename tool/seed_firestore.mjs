@@ -309,6 +309,7 @@ function productDoc(product, media) {
 
 function branchDoc(branch, defaults) {
   const meta = BRANCH_META[branch.id] ?? {};
+  const medidoEn = toLimaDate(branch.medidoEn);
   return {
     id: branch.id,
     nombre: branch.name,
@@ -330,6 +331,113 @@ function branchDoc(branch, defaults) {
     orden: meta.sortOrder ?? 1,
     activa: branch.active !== false,
     fechasCerradas: branch.closedDates ?? [],
+    capacidadHorno: toInt(branch.capacidadHorno, 4),
+    recuperacionMin: toInt(branch.recuperacionMin, 0),
+    ...(medidoEn ? { medidoEn: Timestamp.fromDate(medidoEn) } : {}),
+  };
+}
+
+function ingredientDoc(ingredient) {
+  return {
+    id: ingredient.id,
+    nombre: ingredient.nombre,
+    categoria: ingredient.categoria ?? 'otros',
+    precio: toSoles(ingredient.precio),
+    disponible: ingredient.disponible !== false,
+    alergenos: ingredient.alergenos ?? [],
+    orden: toInt(ingredient.orden),
+  };
+}
+
+function pizzaConfigDoc(seed) {
+  return {
+    ...(seed.config ?? {}),
+    tamanos: (seed.tamanos ?? []).map((size) => ({
+      id: size.id,
+      nombre: size.nombre,
+      diametroCm: toInt(size.diametroCm),
+      porciones: toInt(size.porciones),
+      precioBase: toSoles(size.precioBase),
+      maxIngredientes: toInt(size.maxIngredientes),
+      multiplicadorIngredientes: Number(size.multiplicadorIngredientes ?? 1),
+      minutosExtra: toInt(size.minutosExtra),
+      pesoHorno: Number(size.pesoHorno ?? 1),
+    })),
+    masas: (seed.masas ?? []).map((dough) => ({
+      id: dough.id,
+      nombre: dough.nombre,
+      descripcion: dough.descripcion ?? '',
+      ajustePorcentaje: Number(dough.ajustePorcentaje ?? 0),
+      ajusteSoles: toSoles(dough.ajuste ?? 0),
+      minutosExtra: toInt(dough.minutosExtra),
+    })),
+    salsas: (seed.salsas ?? []).map((sauce) => ({
+      id: sauce.id,
+      nombre: sauce.nombre,
+      descripcion: sauce.descripcion ?? '',
+      ajuste: toSoles(sauce.ajuste),
+    })),
+    quesos: (seed.quesos ?? []).map((cheese) => ({
+      id: cheese.id,
+      nombre: cheese.nombre,
+      descripcion: cheese.descripcion ?? '',
+      ajuste: toSoles(cheese.ajuste),
+    })),
+  };
+}
+
+function couponDoc(coupon) {
+  const ends = toLimaDate(coupon.fechaVencimiento);
+  return {
+    id: coupon.id,
+    codigo: String(coupon.codigo ?? coupon.id).trim().toUpperCase(),
+    descripcion: coupon.descripcion ?? '',
+    tipo: coupon.tipo ?? 'porcentaje',
+    valor: toSoles(coupon.valor),
+    ...(coupon.compraMinima != null
+      ? { compraMinima: toSoles(coupon.compraMinima) }
+      : {}),
+    maxUsos: toInt(coupon.maxUsos, 0),
+    usos: toInt(coupon.usos, 0),
+    ...(ends ? { fechaVencimiento: Timestamp.fromDate(ends) } : {}),
+    estado: coupon.estado ?? 'activo',
+  };
+}
+
+function planDoc(plan, media) {
+  const image = plan.imagen
+    ? mediaFor(plan.imagen, media, { assetFallback: null })
+    : null;
+  return {
+    id: plan.id,
+    nombre: plan.nombre,
+    descripcion: plan.descripcion ?? '',
+    descripcionLarga: plan.descripcionLarga ?? '',
+    precio: toSoles(plan.precio),
+    dias: toInt(plan.dias),
+    compraMinimaEnvioGratis: toSoles(plan.compraMinimaEnvioGratis, 20),
+    ...(plan.ahorroSoles != null
+      ? { ahorroSoles: toSoles(plan.ahorroSoles) }
+      : {}),
+    etiqueta: plan.etiqueta ?? '',
+    beneficios: plan.beneficios ?? [],
+    ...(image ? { imagen: image } : {}),
+    iconoSvg: plan.iconoSvg ?? 'calendar',
+    activo: plan.activo !== false,
+    orden: toInt(plan.orden),
+  };
+}
+
+function planBaseDoc(base, media) {
+  const image = base?.imagen
+    ? mediaFor(base.imagen, media, { assetFallback: null })
+    : null;
+  return {
+    nombre: base?.nombre ?? 'El Antojo',
+    descripcion: base?.descripcion ?? 'Sin suscripción · Sin envío gratis',
+    descripcionLarga: base?.descripcionLarga ?? '',
+    ...(image ? { imagen: image } : {}),
+    iconoSvg: base?.iconoSvg ?? 'base_plan',
   };
 }
 
@@ -402,6 +510,11 @@ function buildDocuments(media) {
   const deliverySeed = readJson(join(DATA_DIR, 'delivery.json'));
   const claimsSeed = readJson(join(DATA_DIR, 'claims.json'));
   const paymentsSeed = readJson(join(DATA_DIR, 'payment_methods.json'));
+  const ingredientSeed = readJson(join(DATA_DIR, 'ingredients.json'));
+  const pizzaSeed = readJson(join(DATA_DIR, 'custom_pizza.json'));
+  const couponSeed = readJson(join(DATA_DIR, 'coupons.json'));
+  const plansSeed = readJson(join(DATA_DIR, 'delivery_plans.json'));
+  const aliasesSeed = readJson(join(DATA_DIR, 'reserved_aliases.json'));
 
   // La categoría virtual «Las más pedidas» no es un grupo real de productos:
   // la app la antepone en la Carta y el documento heredado
@@ -475,7 +588,23 @@ function buildDocuments(media) {
     media,
   });
 
-  return { categories, products, branches, promotions, settings };
+  const ingredients = (ingredientSeed.ingredients ?? []).map(ingredientDoc);
+  const coupons = (couponSeed.coupons ?? []).map(couponDoc);
+  const plans = (plansSeed.plans ?? []).map((plan) => planDoc(plan, media));
+
+  return {
+    categories,
+    products,
+    branches,
+    promotions,
+    settings,
+    ingredients,
+    pizzaConfig: pizzaConfigDoc(pizzaSeed),
+    coupons,
+    plans,
+    planBase: planBaseDoc(plansSeed.planBase, media),
+    reservedAliases: aliasesSeed,
+  };
 }
 
 // ── Escritura ───────────────────────────────────────────────────────────────
@@ -500,7 +629,13 @@ function documentEntries(documents) {
     ...documents.products.map((doc) => [`productos/${doc.id}`, doc]),
     ...documents.branches.map((doc) => [`sedes/${doc.id}`, doc]),
     ...documents.promotions.map((doc) => [`promociones/${doc.id}`, doc]),
+    ...documents.ingredients.map((doc) => [`ingredientes/${doc.id}`, doc]),
+    ...documents.coupons.map((doc) => [`cupones/${doc.id}`, doc]),
+    ...documents.plans.map((doc) => [`planesDelivery/${doc.id}`, doc]),
     ['configuracion/app', documents.settings],
+    ['configuracion/pizzaPersonalizada', documents.pizzaConfig],
+    ['configuracion/planBase', documents.planBase],
+    ['configuracion/aliases.reservados', documents.reservedAliases],
   ];
 }
 
@@ -579,7 +714,10 @@ async function main() {
   log(`Productos: ${documents.products.length}`);
   log(`Sedes publicadas: ${documents.branches.map((b) => b.id).join(', ')}`);
   log(`Promociones: ${documents.promotions.length}`);
-  log('Configuración: configuracion/app');
+  log(`Ingredientes de pizza: ${documents.ingredients.length}`);
+  log(`Cupones: ${documents.coupons.length}`);
+  log(`Planes: ${documents.plans.map((plan) => plan.nombre).join(', ')}`);
+  log('Configuración: configuracion/app, pizzaPersonalizada, planBase y aliases.reservados');
   log(`Carpeta de Drive: ${documents.settings.carpetaDrive ?? '(sin definir)'}`);
   const sinImagen = documents.promotions.filter((p) => !p.imagen).length;
   if (sinImagen) {

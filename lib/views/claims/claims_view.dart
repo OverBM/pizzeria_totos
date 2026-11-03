@@ -58,9 +58,9 @@ class _ClaimsViewState extends State<ClaimsView> {
           children: [
             const ClaimsIllustration(),
             EmptyState(
-              title: 'Reclamos',
+              title: 'Soporte',
               message:
-                  'Inicia sesión para enviar un reclamo y hacer seguimiento '
+                  'Inicia sesión para enviar un caso y hacer seguimiento '
                   'de tus casos.',
               actionLabel: 'INICIAR SESIÓN',
               onAction: widget.onOpenAuth,
@@ -112,7 +112,7 @@ class _ClaimsViewState extends State<ClaimsView> {
           style: Brand.ui(11, weight: FontWeight.w700, color: colors.action),
         ),
         const SizedBox(height: Brand.s4),
-        const OutlinedDisplayTitle('RECLAMOS', size: 38),
+        const OutlinedDisplayTitle('SOPORTE', size: 38),
         const SizedBox(height: Brand.s8),
         Text(
           'Cuéntanos qué pasó y te respondemos por WhatsApp. Este es un canal '
@@ -146,7 +146,7 @@ class _ClaimsViewState extends State<ClaimsView> {
                 Icon(Icons.check_circle_outline_rounded, color: colors.action),
                 const SizedBox(width: Brand.s8),
                 Text(
-                  'RECLAMO ENVIADO',
+                  'CASO ENVIADO',
                   style: Brand.ui(
                     12,
                     weight: FontWeight.w700,
@@ -185,7 +185,7 @@ class _ClaimsViewState extends State<ClaimsView> {
               onPressed: () => ContactLauncher.whatsapp(
                 phone: settings.whatsapp,
                 message:
-                    'Hola TOTO\'S, hago seguimiento a mi reclamo '
+                    'Hola TOTO\'S, hago seguimiento a mi caso '
                     '#${claim.code}.',
               ),
             ),
@@ -213,7 +213,7 @@ class _ClaimsViewState extends State<ClaimsView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'NUEVO RECLAMO',
+            'NUEVO CASO',
             style: Brand.ui(11, weight: FontWeight.w700, color: colors.action),
           ),
           const SizedBox(height: Brand.s12),
@@ -274,7 +274,7 @@ class _ClaimsViewState extends State<ClaimsView> {
           ],
           const SizedBox(height: Brand.s16),
           PillButton(
-            label: claims.isSubmitting ? 'ENVIANDO…' : 'ENVIAR RECLAMO',
+            label: claims.isSubmitting ? 'ENVIANDO…' : 'ENVIAR CASO',
             expanded: true,
             showArrow: true,
             onPressed: claims.isSubmitting
@@ -303,7 +303,7 @@ class _ClaimsViewState extends State<ClaimsView> {
             Icon(Icons.inbox_outlined, color: context.colors.textSecondary),
             const SizedBox(height: Brand.s8),
             Text(
-              claims.error ?? 'Todavía no has enviado reclamos.',
+              claims.error ?? 'Todavía no has enviado casos de soporte.',
               textAlign: TextAlign.center,
               style: context.text.bodySm,
             ),

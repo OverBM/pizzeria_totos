@@ -92,6 +92,9 @@ class Branch {
     this.sortOrder = 0,
     this.active = true,
     this.closedDates = const [],
+    this.ovenCapacity = 4,
+    this.recoveryMinutes = 0,
+    this.measuredAt,
   });
 
   final String id;
@@ -113,6 +116,17 @@ class Branch {
 
   /// Fechas de cierre excepcional en formato `yyyy-MM-dd`.
   final List<String> closedDates;
+
+  /// Capacidad del horno medida en pizzas medianas equivalentes.
+  final int ovenCapacity;
+
+  /// Minutos de recuperación entre lotes.
+  final int recoveryMinutes;
+
+  /// Última medición; `null` significa que se usan los valores por defecto.
+  final DateTime? measuredAt;
+
+  bool get hasOvenMeasurement => measuredAt != null;
 
   /// ¿La sede está abierta en [instant] (se espera hora de Lima) y no está en
   /// [closedDates]?
@@ -163,6 +177,16 @@ class Branch {
     closedDates: ModelUtils.asStringList(
       json['fechasCerradas'] ?? json['closedDates'],
     ),
+    ovenCapacity: ModelUtils.asInt(
+      json['capacidadHorno'] ?? json['ovenCapacity'],
+      fallback: 4,
+    ),
+    recoveryMinutes: ModelUtils.asInt(
+      json['recuperacionMin'] ?? json['recoveryMinutes'],
+    ),
+    measuredAt: ModelUtils.asDateTime(
+      json['medidoEn'] ?? json['measuredAt'],
+    ),
   );
 
   Map<String, dynamic> toMap() => {
@@ -183,5 +207,8 @@ class Branch {
     'orden': sortOrder,
     'activa': active,
     'fechasCerradas': closedDates,
+    'capacidadHorno': ovenCapacity,
+    'recuperacionMin': recoveryMinutes,
+    if (measuredAt != null) 'medidoEn': measuredAt!.toIso8601String(),
   };
 }

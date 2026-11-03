@@ -1,0 +1,149 @@
+{
+  "_note": "Ingredientes de pizza personalizada. `precio` está en SOLES para el tamaño personal; el tamaño aplica su multiplicador. Los precios son de beta y el negocio los ajusta en Firestore.",
+  "ingredients": [
+    {
+      "id": "extra-mozzarella",
+      "nombre": "Extra mozzarella",
+      "categoria": "quesos",
+      "precio": 4.0,
+      "disponible": true,
+      "alergenos": ["lacteos"],
+      "orden": 1
+    },
+    {
+      "id": "pepperoni",
+      "nombre": "Pepperoni",
+      "categoria": "carnes",
+      "precio": 4.0,
+      "disponible": true,
+      "alergenos": [],
+      "orden": 2
+    },
+    {
+      "id": "jamon",
+      "nombre": "Jamón inglés",
+      "categoria": "carnes",
+      "precio": 3.5,
+      "disponible": true,
+      "alergenos": [],
+      "orden": 3
+    },
+    {
+      "id": "tocino",
+      "nombre": "Tocino",
+      "categoria": "carnes",
+      "precio": 4.0,
+      "disponible": true,
+      "alergenos": [],
+      "orden": 4
+    },
+    {
+      "id": "salchicha-italiana",
+      "nombre": "Salchicha italiana",
+      "categoria": "carnes",
+      "precio": 3.5,
+      "disponible": true,
+      "alergenos": [],
+      "orden": 5
+    },
+    {
+      "id": "carne-res",
+      "nombre": "Carne de res",
+      "categoria": "carnes",
+      "precio": 4.5,
+      "disponible": true,
+      "alergenos": [],
+      "orden": 6
+    },
+    {
+      "id": "champinones",
+      "nombre": "Champiñones",
+      "categoria": "vegetales",
+      "precio": 2.5,
+      "disponible": true,
+      "alergenos": [],
+      "orden": 7
+    },
+    {
+      "id": "aceitunas",
+      "nombre": "Aceitunas negras",
+      "categoria": "vegetales",
+      "precio": 2.0,
+      "disponible": true,
+      "alergenos": [],
+      "orden": 8
+    },
+    {
+      "id": "cebolla",
+      "nombre": "Cebolla",
+      "categoria": "vegetales",
+      "precio": 1.5,
+      "disponible": true,
+      "alergenos": [],
+      "orden": 9
+    },
+    {
+      "id": "pimiento",
+      "nombre": "Pimiento",
+      "categoria": "vegetales",
+      "precio": 1.5,
+      "disponible": true,
+      "alergenos": [],
+      "orden": 10
+    },
+    {
+      "id": "pina",
+      "nombre": "Piña",
+      "categoria": "vegetales",
+      "precio": 1.5,
+      "disponible": true,
+      "alergenos": [],
+      "orden": 11
+    },
+    {
+      "id": "jalapeno",
+      "nombre": "Jalapeño",
+      "categoria": "vegetales",
+      "precio": 1.5,
+      "disponible": true,
+      "alergenos": [],
+      "orden": 12
+    },
+    {
+      "id": "queso-azul",
+      "nombre": "Queso azul",
+      "categoria": "quesos",
+      "precio": 4.0,
+      "disponible": true,
+      "alergenos": ["lacteos"],
+      "orden": 13
+    },
+    {
+      "id": "parmesano",
+      "nombre": "Parmesano",
+      "categoria": "quesos",
+      "precio": 3.5,
+      "disponible": true,
+      "alergenos": ["lacteos"],
+      "orden": 14
+    },
+    {
+      "id": "tomate-fresco",
+      "nombre": "Tomate fresco",
+      "categoria": "vegetales",
+      "precio": 1.5,
+      "disponible": true,
+      "alergenos": [],
+      "orden": 15
+    },
+    {
+      "id": "oregano",
+      "nombre": "Orégano",
+      "categoria": "vegetales",
+      "precio": 1.0,
+      "disponible": true,
+      "alergenos": [],
+      "orden": 16
+    }
+  ]
+}

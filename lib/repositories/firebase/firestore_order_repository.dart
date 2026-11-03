@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 
+import '../../core/time/lima_time.dart';
+import '../../models/coupon.dart';
 import '../../models/order.dart';
 import '../../services/firestore_mapper.dart';
 import '../order_repository.dart';
@@ -31,29 +33,88 @@ class FirestoreOrderRepository implements OrderRepository {
           .get();
       return _build(snapshot);
     } catch (error) {
-      throw RepositoryException(
-        _readMessage(error),
-        code: error.toString(),
-      );
+      throw RepositoryException(_readMessage(error), code: error.toString());
     }
   }
 
   @override
-  Future<String> createOrder(Order order) async {
+  Future<String> createOrder(
+    Order order, {
+    String? couponCode,
+    String? couponUid,
+    bool registerShipment = false,
+  }) async {
     try {
       final reference = _orders.doc();
-      await reference.set(
-        FirestoreMapper.toFirestore({
-          ...order.toMap(),
-          'id': reference.id,
-        }, dateFields: {'createdAt'}),
-      );
+      await _firestore.runTransaction((transaction) async {
+        if (couponCode != null && couponUid != null) {
+          final couponRef = _firestore
+              .collection('cupones')
+              .doc(couponCode.trim());
+          final redemptionRef = _firestore
+              .collection('redenciones')
+              .doc('${couponCode.trim()}_$couponUid');
+          final couponSnapshot = await transaction.get(couponRef);
+          final redemptionSnapshot = await transaction.get(redemptionRef);
+          if (!couponSnapshot.exists) {
+            throw const RepositoryException('Cupón no válido.');
+          }
+          if (redemptionSnapshot.exists) {
+            throw const RepositoryException('Ya usaste este cupón.');
+          }
+          final coupon = Coupon.fromMap(
+            FirestoreMapper.fromDocument(couponSnapshot),
+          );
+          final failure = coupon.validate(
+            baseSoles:
+                order.subtotalSoles - order.effectivePromotionDiscountSoles,
+            limaWallClock: LimaTime.now(),
+          );
+          if (failure != null) {
+            throw RepositoryException(
+              failure.message(
+                minimumSoles: coupon.minimumSubtotalSoles ?? 0,
+                missingSoles:
+                    ((coupon.minimumSubtotalSoles ?? 0) -
+                            (order.subtotalSoles -
+                                order.effectivePromotionDiscountSoles))
+                        .clamp(0, double.infinity)
+                        .toDouble(),
+              ),
+            );
+          }
+          transaction.update(couponRef, {'usos': coupon.uses + 1});
+          transaction.set(redemptionRef, {
+            'uid': couponUid,
+            'codigo': coupon.code,
+            'pedidoId': reference.id,
+            'creadoEn': FieldValue.serverTimestamp(),
+          });
+        }
+        if (registerShipment && couponUid != null) {
+          final subscriptionRef = _firestore
+              .collection('suscripciones')
+              .doc(couponUid);
+          final snapshot = await transaction.get(subscriptionRef);
+          if (snapshot.exists) {
+            transaction.update(subscriptionRef, {
+              'enviosUsados': FieldValue.increment(1),
+              'actualizadoEn': FieldValue.serverTimestamp(),
+            });
+          }
+        }
+        transaction.set(
+          reference,
+          FirestoreMapper.toFirestore(
+            {...order.toMap(), 'id': reference.id},
+            dateFields: {'createdAt'},
+          ),
+        );
+      });
       return reference.id;
     } catch (error) {
-      throw RepositoryException(
-        _writeMessage(error),
-        code: error.toString(),
-      );
+      if (error is RepositoryException) rethrow;
+      throw RepositoryException(_writeMessage(error), code: error.toString());
     }
   }
 

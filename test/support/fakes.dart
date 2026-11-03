@@ -6,25 +6,34 @@ import 'package:pizzeria_totos/models/branch.dart';
 import 'package:pizzeria_totos/models/cart_item.dart';
 import 'package:pizzeria_totos/models/category.dart';
 import 'package:pizzeria_totos/models/claim.dart';
+import 'package:pizzeria_totos/models/coupon.dart';
 import 'package:pizzeria_totos/models/delivery_config.dart';
+import 'package:pizzeria_totos/models/delivery_plan.dart';
 import 'package:pizzeria_totos/models/delivery_quote.dart';
+import 'package:pizzeria_totos/models/ingredient.dart';
 import 'package:pizzeria_totos/models/menu_data.dart';
 import 'package:pizzeria_totos/models/nutrition.dart';
 import 'package:pizzeria_totos/models/order.dart';
 import 'package:pizzeria_totos/models/payment_method.dart';
+import 'package:pizzeria_totos/models/pizza_config.dart';
 import 'package:pizzeria_totos/models/product.dart';
 import 'package:pizzeria_totos/models/promotion.dart';
 import 'package:pizzeria_totos/models/settings.dart';
+import 'package:pizzeria_totos/models/subscription.dart';
 import 'package:pizzeria_totos/models/variant.dart';
+import 'package:pizzeria_totos/repositories/alias_repository.dart';
 import 'package:pizzeria_totos/repositories/auth_repository.dart';
 import 'package:pizzeria_totos/repositories/branch_repository.dart';
 import 'package:pizzeria_totos/repositories/catalog_repository.dart';
 import 'package:pizzeria_totos/repositories/claim_repository.dart';
+import 'package:pizzeria_totos/repositories/coupon_repository.dart';
 import 'package:pizzeria_totos/repositories/order_repository.dart';
+import 'package:pizzeria_totos/repositories/pizza_repository.dart';
 import 'package:pizzeria_totos/repositories/profile_repository.dart';
 import 'package:pizzeria_totos/repositories/promotion_repository.dart';
 import 'package:pizzeria_totos/repositories/repository_exception.dart';
 import 'package:pizzeria_totos/repositories/settings_repository.dart';
+import 'package:pizzeria_totos/repositories/subscription_repository.dart';
 import 'package:pizzeria_totos/services/location/location_service.dart';
 import 'package:pizzeria_totos/services/maps/maps_service.dart';
 
@@ -295,6 +304,7 @@ class FakeProfileRepository implements ProfileRepository {
     required String uid,
     required String name,
     required String email,
+    String alias = '',
   }) async {
     if (profiles.containsKey(uid)) return;
     final now = DateTime.now();
@@ -303,6 +313,7 @@ class FakeProfileRepository implements ProfileRepository {
         uid: uid,
         name: name,
         email: email,
+        alias: alias,
         createdAt: now,
         updatedAt: now,
       ),
@@ -313,6 +324,7 @@ class FakeProfileRepository implements ProfileRepository {
   Future<void> updateProfile({
     required String uid,
     String? name,
+    String? alias,
     String? phone,
     List<Address>? addresses,
   }) async {
@@ -323,6 +335,7 @@ class FakeProfileRepository implements ProfileRepository {
     _save(
       current.copyWith(
         name: name,
+        alias: alias,
         phone: phone,
         addresses: addresses,
         updatedAt: DateTime.now(),
@@ -389,7 +402,12 @@ class FakeOrderRepository implements OrderRepository {
   }
 
   @override
-  Future<String> createOrder(Order order) async {
+  Future<String> createOrder(
+    Order order, {
+    String? couponCode,
+    String? couponUid,
+    bool registerShipment = false,
+  }) async {
     if (error != null) throw error!;
     final id = 'order-${orders.length + 1}';
     orders.add(Order.fromMap({...order.toMap(), 'id': id}, id: id));
@@ -694,3 +712,274 @@ const Product sampleFourCheese = Product(
   calories: 1120,
   variants: [Variant(label: 'entera', priceSoles: 38)],
 );
+
+const PizzaConfig samplePizzaConfig = PizzaConfig(
+  active: true,
+  minutesBase: 15,
+  minutesPerIngredient: 1,
+  defaultOvenCapacity: 4,
+  defaultRecoveryMinutes: 0,
+  unmeasuredMarginMinutes: 5,
+  maxIngredientsGlobal: 7,
+  sizes: [
+    PizzaSize(
+      id: 'personal',
+      name: 'Personal',
+      diameterCm: 24,
+      slices: 4,
+      basePriceSoles: 15.9,
+      maxIngredients: 3,
+      ingredientMultiplier: 1,
+      ovenWeight: 0.5,
+    ),
+    PizzaSize(
+      id: 'mediana',
+      name: 'Mediana',
+      diameterCm: 30,
+      slices: 6,
+      basePriceSoles: 22.9,
+      maxIngredients: 5,
+      ingredientMultiplier: 1.4,
+      extraMinutes: 2,
+      ovenWeight: 1,
+    ),
+  ],
+  doughs: [
+    PizzaOption(id: 'normal', name: 'Normal'),
+    PizzaOption(
+      id: 'masa-madre',
+      name: 'Masa madre',
+      adjustmentPercent: 12,
+      extraMinutes: 3,
+    ),
+  ],
+  sauces: [
+    PizzaOption(id: 'tomate', name: 'Tomate'),
+    PizzaOption(id: 'bbq', name: 'BBQ', adjustmentSoles: 2),
+  ],
+  cheeses: [
+    PizzaOption(id: 'estandar', name: 'Estándar'),
+    PizzaOption(id: 'sin-queso', name: 'Sin queso', adjustmentSoles: -3),
+  ],
+);
+
+const List<Ingredient> sampleIngredients = [
+  Ingredient(
+    id: 'pepperoni',
+    name: 'Pepperoni',
+    category: 'carnes',
+    priceSoles: 4,
+    sortOrder: 1,
+  ),
+  Ingredient(
+    id: 'champinones',
+    name: 'Champiñones',
+    category: 'vegetales',
+    priceSoles: 2.5,
+    sortOrder: 2,
+  ),
+];
+
+class FakeAliasRepository implements AliasRepository {
+  final Map<String, String> aliases = {};
+
+  @override
+  Future<String?> emailForAlias(String alias) async =>
+      aliases[alias.trim().toLowerCase()];
+
+  @override
+  Future<void> claimAlias({
+    required String uid,
+    required String alias,
+    required String email,
+  }) async {
+    final key = alias.trim().toLowerCase();
+    if (aliases.containsKey(key)) {
+      throw const RepositoryException('Ese alias ya está en uso. Elige otro.');
+    }
+    aliases[key] = email;
+  }
+
+  @override
+  Future<void> releaseAlias({
+    required String uid,
+    required String alias,
+  }) async {
+    aliases.remove(alias.trim().toLowerCase());
+  }
+
+  @override
+  Future<String?> aliasForUid(String uid) async => null;
+
+  @override
+  String suggestFromEmail(String email) => email.split('@').first;
+
+  @override
+  Future<String> uniqueAlias(String base) async {
+    var candidate = base;
+    var suffix = 1;
+    while (aliases.containsKey(candidate)) {
+      candidate = '$base$suffix';
+      suffix += 1;
+    }
+    return candidate;
+  }
+}
+
+class FakePizzaRepository implements PizzaRepository {
+  FakePizzaRepository({PizzaConfig? config, List<Ingredient>? ingredients})
+    : config = config ?? samplePizzaConfig,
+      ingredients = ingredients ?? sampleIngredients;
+
+  PizzaConfig config;
+  List<Ingredient> ingredients;
+
+  @override
+  Future<List<Ingredient>> fetchIngredients() async => ingredients;
+
+  @override
+  Stream<List<Ingredient>> watchIngredients() async* {
+    yield ingredients;
+  }
+
+  @override
+  Future<PizzaConfig> fetchConfig() async => config;
+
+  @override
+  Stream<PizzaConfig> watchConfig() async* {
+    yield config;
+  }
+}
+
+class FakeCouponRepository implements CouponRepository {
+  FakeCouponRepository({Map<String, Coupon>? coupons})
+    : coupons = coupons ?? {};
+
+  final Map<String, Coupon> coupons;
+  final Set<String> redeemed = {};
+  Object? error;
+
+  @override
+  Future<Coupon?> fetchByCode(String code) async {
+    if (error != null) throw error!;
+    return coupons[code.trim()];
+  }
+
+  @override
+  Future<bool> wasRedeemed({required String code, required String uid}) async =>
+      redeemed.contains('${code.trim()}_$uid');
+
+  @override
+  Future<void> redeem({
+    required String code,
+    required String uid,
+    required String orderId,
+  }) async {
+    redeemed.add('${code.trim()}_$uid');
+  }
+}
+
+class FakeSubscriptionRepository implements SubscriptionRepository {
+  FakeSubscriptionRepository({
+    List<DeliveryPlan>? plans,
+    PlanBase? planBase,
+    Subscription? subscription,
+  }) : plans = plans ?? samplePlans,
+       planBase = planBase ?? PlanBase.fallback,
+       subscription = subscription;
+
+  List<DeliveryPlan> plans;
+  PlanBase planBase;
+  Subscription? subscription;
+  Object? error;
+  final StreamController<Subscription?> _subscriptionUpdates =
+      StreamController<Subscription?>.broadcast();
+
+  @override
+  Stream<List<DeliveryPlan>> watchPlans() async* {
+    if (error != null) throw error!;
+    yield plans;
+  }
+
+  @override
+  Stream<PlanBase> watchPlanBase() async* {
+    yield planBase;
+  }
+
+  @override
+  Stream<Subscription?> watchSubscription(String uid) async* {
+    yield subscription;
+    yield* _subscriptionUpdates.stream;
+  }
+
+  @override
+  Future<void> activate({
+    required String uid,
+    required DeliveryPlan plan,
+  }) async {
+    if (error != null) throw error!;
+    final now = DateTime(2026, 10, 15, 13);
+    final current = subscription;
+    final base = current != null && current.isActiveAt(now)
+        ? current.endAt
+        : now;
+    subscription = Subscription(
+      uid: uid,
+      planId: plan.id,
+      planName: plan.name,
+      priceSoles: plan.priceSoles,
+      startAt: current?.startAt ?? now,
+      endAt: base.add(Duration(days: plan.days)),
+      periodStart: current?.periodStart ?? now,
+      shipmentsUsed: current?.shipmentsUsed ?? 0,
+    );
+    _subscriptionUpdates.add(subscription);
+  }
+
+  @override
+  Future<void> cancel({
+    required String uid,
+    required String reason,
+    required bool immediate,
+  }) async {
+    final current = subscription;
+    if (current == null) return;
+    subscription = current.copyWith(
+      status: SubscriptionStatus.cancelled,
+      cancelledAt: DateTime(2026, 10, 15, 13),
+      cancelReason: reason,
+      endAt: immediate ? DateTime(2026, 10, 15, 13) : current.endAt,
+    );
+    _subscriptionUpdates.add(subscription);
+  }
+
+  @override
+  Future<void> registerShipment(String uid) async {
+    final current = subscription;
+    if (current == null) return;
+    subscription = current.copyWith(shipmentsUsed: current.shipmentsUsed + 1);
+    _subscriptionUpdates.add(subscription);
+  }
+}
+
+const List<DeliveryPlan> samplePlans = [
+  DeliveryPlan(
+    id: 'la-previa',
+    name: 'La Previa',
+    description: '30 días',
+    priceSoles: 14.9,
+    days: 30,
+    minimumOrderSoles: 20,
+    label: 'PARA PROBAR',
+  ),
+  DeliveryPlan(
+    id: 'la-fija',
+    name: 'La Fija',
+    description: '90 días',
+    priceSoles: 39.9,
+    days: 90,
+    minimumOrderSoles: 15,
+    savingsSoles: 4.8,
+    label: 'MEJOR PRECIO',
+  ),
+];

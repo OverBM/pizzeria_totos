@@ -6,8 +6,10 @@ import 'package:pizzeria_totos/controllers/cart_controller.dart';
 import 'package:pizzeria_totos/controllers/catalog_controller.dart';
 import 'package:pizzeria_totos/controllers/checkout_controller.dart';
 import 'package:pizzeria_totos/controllers/claim_controller.dart';
+import 'package:pizzeria_totos/controllers/coupon_controller.dart';
 import 'package:pizzeria_totos/controllers/order_controller.dart';
 import 'package:pizzeria_totos/controllers/promotion_controller.dart';
+import 'package:pizzeria_totos/controllers/subscription_controller.dart';
 import 'package:pizzeria_totos/core/load_state.dart';
 import 'package:pizzeria_totos/core/storage/cart_storage.dart';
 import 'package:pizzeria_totos/models/account.dart';
@@ -223,6 +225,29 @@ void main() {
       expect(controller.visibleProducts, isEmpty);
       controller.dispose();
     });
+
+    test(
+      'tolera coincidencias parciales y errores pequeños de tipeo',
+      () async {
+        final controller = CatalogController(
+          repository: FakeCatalogRepository(),
+        );
+        await controller.load();
+
+        controller.setQuery('piza');
+        expect(controller.visibleProducts.single.id, 'pizza-totos');
+
+        controller.setQuery('mozarela');
+        expect(controller.visibleProducts.single.id, 'pizza-totos');
+
+        controller.setQuery('coc');
+        expect(controller.visibleProducts.single.id, 'coca-600');
+
+        controller.setQuery('zzzz');
+        expect(controller.visibleProducts, isEmpty);
+        controller.dispose();
+      },
+    );
 
     test('el stream del negocio refresca la carta sin recargar', () async {
       final repository = FakeCatalogRepository();
@@ -605,6 +630,10 @@ void main() {
         auth: auth,
         branches: branches,
         settings: settings,
+        coupons: CouponController(repository: FakeCouponRepository()),
+        subscriptions: SubscriptionController(
+          repository: FakeSubscriptionRepository(),
+        ),
         maps: maps ?? FakeMapsService(),
         // Dentro del horario de las sedes de ejemplo, para que el test no
         // dependa de la hora real a la que se ejecute.
@@ -832,6 +861,10 @@ void main() {
         branches: env.branches,
         settings: SettingsService(repository: FakeSettingsRepository())
           ..apply(sampleSettings),
+        coupons: CouponController(repository: FakeCouponRepository()),
+        subscriptions: SubscriptionController(
+          repository: FakeSubscriptionRepository(),
+        ),
         now: () => DateTime(2026, 10, 15, 3),
       )..initDefaults();
 

@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../app/routes.dart';
 import '../../controllers/catalog_controller.dart';
+import '../../controllers/custom_pizza_controller.dart';
 import '../../controllers/promotion_controller.dart';
 import '../../core/data/product_summary.dart';
 import '../../core/format/money.dart';
@@ -221,6 +223,15 @@ class _CartaViewState extends State<CartaView>
                 color: context.colors.textSecondary,
               ),
             ),
+            if (context.watch<CustomPizzaController>().isReady) ...[
+              const SizedBox(height: Brand.s12),
+              OutlinedButton.icon(
+                onPressed: () =>
+                    Navigator.of(context).push(AppRoutes.customPizza()),
+                icon: const Icon(Icons.local_pizza_outlined, size: 18),
+                label: const Text('ARMA TU PIZZA'),
+              ),
+            ],
           ],
         ),
       ),

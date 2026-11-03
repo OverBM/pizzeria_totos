@@ -49,6 +49,72 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── Contenido de pizza personalizada ─────────────────────────────────
+    match /ingredientes/{ingredienteId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ── Cupones: solo get por código, nunca list ─────────────────────────
+    match /cupones/{codigo} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if false;
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data)
+             .affectedKeys()
+             .hasOnly(['usos'])
+        && request.resource.data.usos == resource.data.usos + 1
+        && request.resource.data.usos <= resource.data.maxUsos;
+    }
+
+    // ── Redenciones: una por usuario; el cliente no las lista ────────────
+    match /redenciones/{redencionId} {
+      allow get: if signedIn() && resource.data.uid == request.auth.uid;
+      allow list: if false;
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.codigo is string
+        && request.resource.data.pedidoId is string;
+      allow update, delete: if false;
+    }
+
+    // ── Alias: el fallback solo permite get, nunca list ──────────────────
+    match /aliases/{alias} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email is string;
+      allow delete: if signedIn()
+        && resource.data.uid == request.auth.uid;
+      allow update: if false;
+    }
+
+    // ── Planes pagos (El Antojo no se publica aquí) ─────────────────────
+    match /planesDelivery/{planId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ── Suscripciones propias ────────────────────────────────────────────
+    match /suscripciones/{uid} {
+      allow read: if isOwner(uid);
+
+      allow create, update: if isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.planId is string
+        && request.resource.data.inicio is timestamp
+        && request.resource.data.vence is timestamp
+        && request.resource.data.vence > request.resource.data.inicio
+        && request.resource.data.enviosUsados is int
+        && request.resource.data.enviosUsados >= 0
+        && (!('renuevaAutomatico' in request.resource.data)
+             || request.resource.data.renuevaAutomatico == false);
+
+      allow delete: if false;
+    }
+
     // ── Perfil propio (`usuarios/{uid}`) ──────────────────────────────────
     // El perfil nunca guarda un rol. El uid y el email no se pueden cambiar
     // desde el cliente.

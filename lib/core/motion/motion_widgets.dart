@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../format/money.dart';
 import 'motion.dart';
 
 /// Entrada escalonada: fade + desplazamiento corto.
@@ -83,6 +84,41 @@ class _RevealBodyState extends State<_RevealBody>
           ),
         );
       },
+    );
+  }
+}
+
+/// Importe que se anima cuando cambia de valor.
+class AnimatedMoney extends StatelessWidget {
+  const AnimatedMoney({
+    super.key,
+    required this.value,
+    this.style,
+    this.textAlign,
+  });
+
+  final double value;
+  final TextStyle? style;
+  final TextAlign? textAlign;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!Motion.enabled(context)) {
+      return Text(
+        Money.format(value),
+        style: style,
+        textAlign: textAlign,
+      );
+    }
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: value),
+      duration: Motion.resolve(context, Motion.base),
+      curve: Motion.enter,
+      builder: (context, animated, _) => Text(
+        Money.format(animated),
+        style: style,
+        textAlign: textAlign,
+      ),
     );
   }
 }

@@ -101,13 +101,15 @@ class DeliveryConfig {
     double km, {
     int routeMinutes = 0,
     bool estimated = false,
+    int? preparationMinutesOverride,
   }) {
+    final prep = preparationMinutesOverride ?? preparationMinutes;
     if (!isDeliverable(km)) {
       return DeliveryQuote(
         distanceKm: km,
         feeSoles: 0,
         deliverable: false,
-        etaMinutes: _roundEta(routeMinutes + preparationMinutes + marginMinutes),
+        etaMinutes: _roundEta(routeMinutes + prep + marginMinutes),
         isEstimated: estimated,
         source: estimated
             ? DeliveryQuoteSource.flatFee
@@ -122,7 +124,7 @@ class DeliveryConfig {
       distanceKm: km,
       feeSoles: Money.round(fee),
       deliverable: true,
-      etaMinutes: _roundEta(routeMinutes + preparationMinutes + marginMinutes),
+      etaMinutes: _roundEta(routeMinutes + prep + marginMinutes),
       isEstimated: estimated,
       source: estimated
           ? DeliveryQuoteSource.flatFee

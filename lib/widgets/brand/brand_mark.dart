@@ -1,6 +1,5 @@
 part of '../widgets.dart';
 
-
 /// Lockup horizontal de la marca: logo oficial pequeño + bajada de marca.
 ///
 /// No se redibuja el wordmark: se usa el asset oficial.
@@ -24,23 +23,29 @@ class BrandWordmark extends StatelessWidget {
         BrandLogo(surface: LogoSurface.transparent, height: height),
         if (showTagline) ...[
           const SizedBox(width: Brand.s8),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "TOTO'S",
-                style: Brand.display(15, h: 1, color: context.colors.onBar),
-              ),
-              Text(
-                'PIZZERÍA · HUANCAYO',
-                style: Brand.ui(
-                  7,
-                  weight: FontWeight.w500,
-                  color: context.colors.onBar.withValues(alpha: 0.7),
+          Flexible(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "TOTO'S",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Brand.display(15, h: 1, color: context.colors.onBar),
                 ),
-              ),
-            ],
+                Text(
+                  'PIZZERÍA · HUANCAYO',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Brand.ui(
+                    7,
+                    weight: FontWeight.w500,
+                    color: context.colors.onBar.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ],

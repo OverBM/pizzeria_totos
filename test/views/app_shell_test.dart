@@ -24,7 +24,7 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(logicalWidth(tester), 360);
 
-    for (final label in ['Inicio', 'Carta', 'Promos', 'Sedes', 'Reclamos']) {
+    for (final label in ['Inicio', 'Carta', 'Promos', 'Sedes', 'Soporte']) {
       expect(
         find.text(label),
         findsOneWidget,
@@ -32,8 +32,12 @@ void main() {
       );
     }
 
-    int tabIndex() =>
-        tester.widget<IndexedStack>(find.byType(IndexedStack)).index ?? -1;
+    int tabIndex() {
+      final pager = tester.widget<PageView>(
+        find.byKey(const ValueKey('shell-pager')),
+      );
+      return (pager.controller?.page ?? 0).round();
+    }
 
     expect(tabIndex(), 0);
     await tester.tap(find.text('Carta'));
@@ -52,7 +56,7 @@ void main() {
     expect(find.text('HUANCAYO'), findsWidgets);
     expect(tester.takeException(), isNull);
 
-    await tester.tap(find.text('Reclamos'));
+    await tester.tap(find.text('Soporte'));
     await tester.pumpAndSettle();
     expect(tabIndex(), 4);
     expect(tester.takeException(), isNull);
@@ -64,7 +68,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('sin sesión no muestra Reclamos en la barra inferior', (
+  testWidgets('sin sesión no muestra Soporte ni Planes en la barra inferior', (
     tester,
   ) async {
     usePhoneViewport(tester);
@@ -78,7 +82,8 @@ void main() {
     for (final label in ['Inicio', 'Carta', 'Promos', 'Sedes']) {
       expect(find.text(label), findsOneWidget);
     }
-    expect(find.text('Reclamos'), findsNothing);
+    expect(find.text('Soporte'), findsNothing);
+    expect(find.text('Planes'), findsNothing);
     expect(find.text('Pedido'), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -95,12 +100,17 @@ void main() {
     await tester.tap(find.text('Carta'));
     await tester.pumpAndSettle();
 
-    int tabIndex() =>
-        tester.widget<IndexedStack>(find.byType(IndexedStack)).index ?? -1;
+    int tabIndex() {
+      final pager = tester.widget<PageView>(
+        find.byKey(const ValueKey('shell-pager')),
+      );
+      return (pager.controller?.page ?? 0).round();
+    }
+
     expect(tabIndex(), 1);
 
     await tester.fling(
-      find.byType(IndexedStack),
+      find.byKey(const ValueKey('shell-pager')),
       const Offset(-320, 0),
       1200,
     );
@@ -108,7 +118,7 @@ void main() {
     expect(tabIndex(), 2);
 
     await tester.fling(
-      find.byType(IndexedStack),
+      find.byKey(const ValueKey('shell-pager')),
       const Offset(320, 0),
       1200,
     );

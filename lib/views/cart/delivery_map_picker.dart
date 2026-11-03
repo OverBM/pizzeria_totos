@@ -19,6 +19,8 @@ class DeliveryMapPicker extends StatelessWidget {
     this.userPoint,
     this.route,
     this.quote,
+    this.chargedFeeSoles,
+    this.included = false,
     this.quoting = false,
     this.locating = false,
     this.error,
@@ -33,6 +35,8 @@ class DeliveryMapPicker extends StatelessWidget {
   final LatLng? userPoint;
   final MapRoute? route;
   final DeliveryQuote? quote;
+  final double? chargedFeeSoles;
+  final bool included;
   final bool quoting;
   final bool locating;
   final String? error;
@@ -218,7 +222,10 @@ class DeliveryMapPicker extends StatelessWidget {
         const SizedBox(width: Brand.s4),
         Expanded(
           child: Text(
-            '${quote!.bandLabel} · Envío ${Money.format(quote!.feeSoles)}',
+            included
+                ? '${quote!.bandLabel} · Envío incluido con tu plan'
+                : '${quote!.bandLabel} · Envío '
+                    '${Money.format(chargedFeeSoles ?? quote!.feeSoles)}',
             style: caption,
           ),
         ),

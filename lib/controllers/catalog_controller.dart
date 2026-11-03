@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 
@@ -91,7 +92,7 @@ class CatalogController extends ChangeNotifier {
           ...product.tags,
         ].join(' '),
       );
-      if (!haystack.contains(query)) return false;
+      if (!_matchesQuery(query, haystack)) return false;
     }
 
     if (!_filters.calorieBand.matches(product.calories)) return false;
@@ -303,6 +304,53 @@ class CatalogController extends ChangeNotifier {
     if (!_filters.isActive) return;
     _filters = const CatalogFilters();
     notifyListeners();
+  }
+
+  /// Coincidencia tolerante: acepta subcadenas y errores pequeños de tipeo,
+  /// pero no palabras completamente distintas.
+  static bool _matchesQuery(String query, String haystack) {
+    if (haystack.contains(query)) return true;
+    final words = haystack
+        .split(RegExp(r'[^a-z0-9]+'))
+        .where((word) => word.isNotEmpty);
+    final tokens = query
+        .split(RegExp(r'\s+'))
+        .where((token) => token.isNotEmpty);
+    for (final token in tokens) {
+      if (!words.any((word) => _wordMatches(token, word))) return false;
+    }
+    return true;
+  }
+
+  static bool _wordMatches(String token, String word) {
+    if (word.contains(token)) return true;
+    // Las palabras muy cortas solo valen por coincidencia directa; así una
+    // letra suelta no trae toda la carta.
+    if (token.length < 3) return false;
+    final allowed = token.length <= 5
+        ? 1
+        : token.length <= 8
+        ? 2
+        : 3;
+    if ((word.length - token.length).abs() > allowed) return false;
+    return _withinEditDistance(token, word, allowed);
+  }
+
+  static bool _withinEditDistance(String a, String b, int maxDistance) {
+    var previous = List<int>.generate(b.length + 1, (index) => index);
+    for (var i = 1; i <= a.length; i++) {
+      final current = List<int>.filled(b.length + 1, 0);
+      current[0] = i;
+      for (var j = 1; j <= b.length; j++) {
+        final cost = a.codeUnitAt(i - 1) == b.codeUnitAt(j - 1) ? 0 : 1;
+        current[j] = math.min(
+          math.min(previous[j] + 1, current[j - 1] + 1),
+          previous[j - 1] + cost,
+        );
+      }
+      previous = current;
+    }
+    return previous[b.length] <= maxDistance;
   }
 
   static String _normalize(String value) {

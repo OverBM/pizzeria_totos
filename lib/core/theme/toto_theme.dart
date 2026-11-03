@@ -111,6 +111,7 @@ ThemeData totoTheme() {
         disabledForegroundColor: Brand.boneWhite70,
         minimumSize: const Size(0, Brand.minTouch),
         elevation: 0,
+        overlayColor: Colors.transparent,
         textStyle: text.label,
         shape: const RoundedRectangleBorder(borderRadius: Brand.buttonRadius),
       ),
@@ -120,6 +121,7 @@ ThemeData totoTheme() {
         foregroundColor: Brand.boneWhite,
         minimumSize: const Size(0, Brand.minTouch),
         side: const BorderSide(color: Brand.boneWhite70),
+        overlayColor: Colors.transparent,
         textStyle: text.label,
         shape: const RoundedRectangleBorder(borderRadius: Brand.buttonRadius),
       ),
@@ -127,7 +129,13 @@ ThemeData totoTheme() {
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: Brand.boneWhite,
+        overlayColor: Colors.transparent,
         textStyle: text.label,
+      ),
+    ),
+    iconButtonTheme: const IconButtonThemeData(
+      style: ButtonStyle(
+        overlayColor: WidgetStatePropertyAll(Colors.transparent),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(

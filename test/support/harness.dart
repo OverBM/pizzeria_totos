@@ -3,14 +3,18 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pizzeria_totos/app/app_services.dart';
 import 'package:pizzeria_totos/app/providers.dart';
+import 'package:pizzeria_totos/controllers/alias_controller.dart';
 import 'package:pizzeria_totos/controllers/auth_controller.dart';
 import 'package:pizzeria_totos/controllers/branch_controller.dart';
 import 'package:pizzeria_totos/controllers/cart_controller.dart';
 import 'package:pizzeria_totos/controllers/catalog_controller.dart';
 import 'package:pizzeria_totos/controllers/checkout_controller.dart';
 import 'package:pizzeria_totos/controllers/claim_controller.dart';
+import 'package:pizzeria_totos/controllers/coupon_controller.dart';
+import 'package:pizzeria_totos/controllers/custom_pizza_controller.dart';
 import 'package:pizzeria_totos/controllers/order_controller.dart';
 import 'package:pizzeria_totos/controllers/promotion_controller.dart';
+import 'package:pizzeria_totos/controllers/subscription_controller.dart';
 import 'package:pizzeria_totos/core/storage/cart_storage.dart';
 import 'package:pizzeria_totos/core/theme/toto_theme.dart';
 import 'package:pizzeria_totos/models/account.dart';
@@ -36,9 +40,18 @@ class TestApp {
     FakeClaimRepository? claimRepository,
     FakeProfileRepository? profileRepository,
     FakeAuthRepository? authRepository,
+    FakeAliasRepository? aliasRepository,
+    FakePizzaRepository? pizzaRepository,
+    FakeCouponRepository? couponRepository,
+    FakeSubscriptionRepository? subscriptionRepository,
     FakeLocationService? locationService,
     FakeMapsService? mapsService,
   }) : authRepository = authRepository ?? FakeAuthRepository(),
+       aliasRepository = aliasRepository ?? FakeAliasRepository(),
+       pizzaRepository = pizzaRepository ?? FakePizzaRepository(),
+       couponRepository = couponRepository ?? FakeCouponRepository(),
+       subscriptionRepository =
+           subscriptionRepository ?? FakeSubscriptionRepository(),
        locationService = locationService ?? FakeLocationService(),
        mapsService = mapsService ?? FakeMapsService(),
        profileRepository = profileRepository ?? FakeProfileRepository(),
@@ -58,6 +71,10 @@ class TestApp {
   final FakeSettingsRepository settingsRepository;
   final FakeOrderRepository orderRepository;
   final FakeClaimRepository claimRepository;
+  final FakeAliasRepository aliasRepository;
+  final FakePizzaRepository pizzaRepository;
+  final FakeCouponRepository couponRepository;
+  final FakeSubscriptionRepository subscriptionRepository;
   final FakeLocationService locationService;
   final FakeMapsService mapsService;
   final ConnectivityService connectivity;
@@ -69,6 +86,9 @@ class TestApp {
     repository: authRepository,
     profiles: profileRepository,
   );
+  late final AliasController alias = AliasController(
+    repository: aliasRepository,
+  );
   late final CatalogController catalog = CatalogController(
     repository: catalogRepository,
     promotions: promotions,
@@ -78,6 +98,15 @@ class TestApp {
   );
   late final PromotionController promotions = PromotionController(
     repository: promotionRepository,
+  );
+  late final CustomPizzaController customPizza = CustomPizzaController(
+    repository: pizzaRepository,
+  );
+  late final CouponController coupons = CouponController(
+    repository: couponRepository,
+  );
+  late final SubscriptionController subscriptions = SubscriptionController(
+    repository: subscriptionRepository,
   );
   late final CartController cart = CartController(
     storage: const CartStorage(),
@@ -96,6 +125,8 @@ class TestApp {
     auth: auth,
     branches: branches,
     settings: settings,
+    coupons: coupons,
+    subscriptions: subscriptions,
     maps: mapsService,
     // Instante fijo dentro del horario de las sedes de ejemplo (12:45â€“21:30).
     now: () => DateTime(2026, 10, 15, 13),
@@ -108,12 +139,20 @@ class TestApp {
     promotionRepository: promotionRepository,
     orderRepository: orderRepository,
     claimRepository: claimRepository,
+    aliasRepository: aliasRepository,
+    pizzaRepository: pizzaRepository,
+    couponRepository: couponRepository,
+    subscriptionRepository: subscriptionRepository,
     settings: settings,
     connectivity: connectivity,
     auth: auth,
+    alias: alias,
     catalog: catalog,
     branches: branches,
     promotions: promotions,
+    customPizza: customPizza,
+    coupons: coupons,
+    subscriptions: subscriptions,
     cart: cart,
     orders: orders,
     claims: claims,

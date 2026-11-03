@@ -3,18 +3,24 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../app/routes.dart';
+import '../../controllers/alias_controller.dart';
 import '../../controllers/auth_controller.dart';
+import '../../controllers/subscription_controller.dart';
 import '../../core/app_info.dart';
+import '../../core/auth/alias_policy.dart';
 import '../../core/motion/motion_widgets.dart';
 import '../../core/theme/brand.dart';
 import '../../core/theme/theme_context.dart';
 import '../../core/validation/validators.dart';
 import '../../models/account.dart';
+import '../../models/delivery_quote.dart';
+import '../../services/location/location_service.dart';
 import '../../services/maps/maps_service.dart';
 import '../../widgets/widgets.dart';
 import '../auth/login_view.dart';
 import '../cart/orders_view.dart';
 import '../common/address_search_sheet.dart';
+import '../common/location_picker_map.dart';
 import 'edit_profile_view.dart';
 
 /// Perfil del usuario: resumen, direcciones y accesos.
@@ -300,6 +306,28 @@ class _ProfileViewState extends State<ProfileView> {
             _addressTile(context, auth, account, account.addresses[i], i == 0),
             const SizedBox(height: Brand.s8),
           ],
+        const SizedBox(height: Brand.s16),
+        _linkTile(
+          context,
+          icon: Icons.alternate_email_rounded,
+          label: account.alias.isEmpty
+              ? 'Crear alias'
+              : 'Tu alias: ${account.alias}',
+          subtitle: 'Puedes entrar con tu alias o con tu correo',
+          onTap: () => _editAlias(context, auth, account),
+        ),
+        const SizedBox(height: Brand.s24),
+        _sectionTitle(context, 'TU PLAN'),
+        const SizedBox(height: Brand.s8),
+        _linkTile(
+          context,
+          icon: Icons.local_offer_outlined,
+          label: context.watch<SubscriptionController>().currentPlanName,
+          subtitle: context.watch<SubscriptionController>().isActive
+              ? 'Envío gratis activo · gestionar plan'
+              : 'Sin suscripción · ver La Previa y La Fija',
+          onTap: () => Navigator.of(context).push(AppRoutes.subscription()),
+        ),
         const SizedBox(height: Brand.s24),
         _sectionTitle(context, 'ACTIVIDAD'),
         const SizedBox(height: Brand.s8),
@@ -316,8 +344,8 @@ class _ProfileViewState extends State<ProfileView> {
         _linkTile(
           context,
           icon: Icons.chat_bubble_outline_rounded,
-          label: 'Reclamos',
-          subtitle: 'Enviar y revisar tus casos',
+          label: 'Soporte',
+          subtitle: 'Ayuda y seguimiento de tus casos',
           onTap: () => Navigator.of(context).push(
             AppRoutes.claims(
               onOpenAuth: () => Navigator.of(context)
@@ -667,13 +695,88 @@ class _ProfileViewState extends State<ProfileView> {
       );
   }
 
+  Future<void> _editAlias(
+    BuildContext context,
+    AuthController auth,
+    Account account,
+  ) async {
+    final controller = TextEditingController(text: account.alias);
+    final formKey = GlobalKey<FormState>();
+    final alias = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('TU ALIAS'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            autofocus: true,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            validator: AliasPolicy.validate,
+            decoration: const InputDecoration(
+              hintText: 'tunombre',
+              helperText:
+                  'Minúsculas, sin @. También puedes entrar con tu correo.',
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('CANCELAR'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (!(formKey.currentState?.validate() ?? false)) return;
+              Navigator.of(dialogContext)
+                  .pop(controller.text.trim().toLowerCase());
+            },
+            child: const Text('GUARDAR'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (alias == null || !context.mounted) return;
+    final aliases = context.read<AliasController>();
+    final claimed = await aliases.claim(
+      uid: account.uid,
+      alias: alias,
+      email: account.email,
+    );
+    if (!context.mounted) return;
+    if (claimed == null) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(aliases.error ?? 'No se pudo guardar el alias.'),
+          ),
+        );
+      return;
+    }
+    final updated = await auth.updateProfile(alias: alias);
+    if (!context.mounted) return;
+    if (updated && account.alias.isNotEmpty && account.alias != alias) {
+      await aliases.release(uid: account.uid, alias: account.alias);
+    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(updated ? 'Alias actualizado.' : 'No se pudo guardar.'),
+        ),
+      );
+  }
+
   Future<void> _confirmSignOut() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('CERRAR SESIÓN'),
         content: const Text(
-          'Tu perfil, tus pedidos y tus reclamos se conservan en tu cuenta. '
+          'Tu perfil, tus pedidos y tus casos de soporte se conservan en tu cuenta. '
           'El carrito de este dispositivo no se borra.',
         ),
         actions: [
@@ -721,6 +824,9 @@ class _AddressSheetState extends State<_AddressSheet> {
 
   /// Coordenadas elegidas al buscar la dirección, para poder cotizar delivery.
   LatLng? _point;
+  bool _locating = false;
+  bool _resolving = false;
+  String? _locationError;
 
   @override
   void initState() {
@@ -742,6 +848,7 @@ class _AddressSheetState extends State<_AddressSheet> {
   @override
   Widget build(BuildContext context) {
     final isNew = widget.address == null;
+    final colors = context.colors;
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SafeArea(
@@ -798,6 +905,90 @@ class _AddressSheetState extends State<_AddressSheet> {
                     hintText: 'Frente al parque, portón negro…',
                   ),
                 ),
+                const SizedBox(height: Brand.s12),
+                Container(
+                  padding: const EdgeInsets.all(Brand.s12),
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    borderRadius: Brand.cardRadius,
+                    border: Border.all(
+                      color: _point == null ? colors.border : colors.action,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.my_location_rounded,
+                            size: 18,
+                            color: colors.action,
+                          ),
+                          const SizedBox(width: Brand.s8),
+                          Expanded(
+                            child: Text(
+                              _point == null
+                                  ? 'Ubicación de entrega'
+                                  : 'Ubicación marcada',
+                              style: Brand.ui(
+                                11,
+                                weight: FontWeight.w700,
+                                color: colors.textPrimary,
+                              ),
+                            ),
+                          ),
+                          if (_resolving)
+                            const SizedBox(
+                              height: 16,
+                              width: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: Brand.s4),
+                      Text(
+                        _point == null
+                            ? 'Usa tu ubicación actual o marca el punto exacto '
+                                  'en el mapa para completar la dirección.'
+                            : '${_point!.latitude.toStringAsFixed(5)}, '
+                                  '${_point!.longitude.toStringAsFixed(5)}',
+                        style: context.text.caption.copyWith(
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                      if (_locationError != null) ...[
+                        const SizedBox(height: Brand.s4),
+                        Text(
+                          _locationError!,
+                          style: context.text.caption.copyWith(
+                            color: colors.action,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: Brand.s10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: PillButton(
+                              label: _locating ? 'UBICANDO…' : 'MI UBICACIÓN',
+                              filled: false,
+                              onPressed: _locating ? null : _useMyLocation,
+                            ),
+                          ),
+                          const SizedBox(width: Brand.s8),
+                          Expanded(
+                            child: PillButton(
+                              label: 'MARCAR EN MAPA',
+                              filled: false,
+                              onPressed: _openMapPicker,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: Brand.s24),
                 PillButton(
                   label: isNew ? 'GUARDAR DIRECCIÓN' : 'ACTUALIZAR',
@@ -822,7 +1013,102 @@ class _AddressSheetState extends State<_AddressSheet> {
     setState(() {
       _line.text = place.label;
       _point = place.point;
+      _locationError = null;
     });
+  }
+
+  Future<void> _useMyLocation() async {
+    final location = context.read<LocationService>();
+    setState(() {
+      _locating = true;
+      _locationError = null;
+    });
+    final result = await location.current();
+    if (!mounted) return;
+    if (!result.isSuccess) {
+      setState(() {
+        _locating = false;
+        _locationError =
+            result.failure?.message ?? 'No pudimos obtener tu ubicación.';
+      });
+      if (result.failure == LocationFailure.permissionDeniedForever) {
+        await _offerLocationSettings(location);
+      }
+      return;
+    }
+    final point = result.point!;
+    setState(() {
+      _locating = false;
+      _point = point;
+    });
+    await _fillLineFromPoint(point, fallback: 'Mi ubicación');
+  }
+
+  Future<void> _openMapPicker() async {
+    final point = await Navigator.of(context).push<DeliveryPoint>(
+      MaterialPageRoute(
+        builder: (_) => LocationPickerMap(
+          initialPoint: _point == null
+              ? null
+              : DeliveryPoint(
+                  lat: _point!.latitude,
+                  lng: _point!.longitude,
+                  label: _line.text.trim(),
+                ),
+          initialLabel: _line.text.trim(),
+          title: 'Ubicación de entrega',
+        ),
+      ),
+    );
+    if (point == null || !mounted) return;
+    setState(() {
+      _point = point.latLng;
+      if (point.label.trim().isNotEmpty) _line.text = point.label;
+      _locationError = null;
+    });
+  }
+
+  Future<void> _fillLineFromPoint(
+    LatLng point, {
+    required String fallback,
+  }) async {
+    setState(() => _resolving = true);
+    final place = await mapsService.reverse(point);
+    if (!mounted) return;
+    setState(() {
+      _resolving = false;
+      final label = place?.label.trim() ?? '';
+      if (label.isNotEmpty) {
+        _line.text = label;
+      } else if (_line.text.trim().isEmpty) {
+        _line.text = fallback;
+      }
+    });
+  }
+
+  Future<void> _offerLocationSettings(LocationService location) async {
+    if (!mounted) return;
+    final open = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('PERMISO DE UBICACIÓN'),
+        content: const Text(
+          'Abre los ajustes del sistema para permitir la ubicación y volver '
+          'a intentarlo.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('CANCELAR'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('ABRIR AJUSTES'),
+          ),
+        ],
+      ),
+    );
+    if (open == true) await location.openSettings();
   }
 
   void _save() {

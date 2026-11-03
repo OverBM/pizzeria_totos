@@ -17,16 +17,32 @@ class OrderMessageBuilder {
         '- ${item.quantity}x ${item.name.toUpperCase()} '
         '(${item.variantLabel}) — ${Money.format(item.lineTotalSoles)}$promo',
       );
+      final custom = item.customPizza;
+      if (custom != null) {
+        for (final line in custom.detailLines) {
+          buffer.writeln('   $line');
+        }
+      }
     }
     buffer.writeln('--------------------------------');
     buffer.writeln('Subtotal: ${Money.format(order.subtotalSoles)}');
     if (order.shippingSoles > 0) {
       buffer.writeln('Envío: ${Money.format(order.shippingSoles)}');
+    } else if (order.subscriptionApplied) {
+      buffer.writeln('Envío incluido con tu plan');
     }
     if (order.savingsSoles > 0) {
       buffer.writeln(
         'Ahorro por promociones: ${Money.format(order.savingsSoles)}',
       );
+    }
+    if (order.couponDiscountSoles > 0 && order.couponCode != null) {
+      buffer.writeln(
+        'Cupón ${order.couponCode}: -${Money.format(order.couponDiscountSoles)}',
+      );
+    }
+    if (order.preparationMinutes != null) {
+      buffer.writeln('Preparación: ~${order.preparationMinutes} min');
     }
     buffer.writeln('*TOTAL: ${Money.format(order.totalSoles)}*');
     buffer.writeln('Tipo: ${order.type.label}');

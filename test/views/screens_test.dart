@@ -150,6 +150,24 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('el aviso de sede más cercana se puede cerrar', (tester) async {
+    usePhoneViewport(tester);
+    final app = await ready();
+    addTearDown(app.dispose);
+
+    await tester.pumpWidget(app.wrap(const Scaffold(body: BranchesView())));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('CERCA DE MÍ'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('La sede más cercana'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Cerrar aviso de sede cercana'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('La sede más cercana'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('promociones con precio promocional', (tester) async {
     usePhoneViewport(tester);
     final app = await ready();
@@ -182,6 +200,38 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('SIN PROMOCIONES POR AHORA'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('el buscador de promos conserva el foco sin resultados', (
+    tester,
+  ) async {
+    usePhoneViewport(tester, height: 1000);
+    final app = await ready();
+    addTearDown(app.dispose);
+
+    await tester.pumpWidget(
+      app.wrap(
+        Scaffold(
+          body: PromotionsView(
+            embedded: true,
+            onOpenProduct: (_, {variantLabel}) {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final field = find.byType(TextField).first;
+    await tester.tap(field);
+    await tester.pump();
+    await tester.enterText(field, 'zzzz');
+    await tester.pumpAndSettle();
+
+    final current = tester.widget<TextField>(find.byType(TextField).first);
+    expect(current.controller?.text, 'zzzz');
+    expect(current.focusNode?.hasFocus, isTrue);
+    expect(find.text('SIN PROMOCIONES CON ESOS FILTROS'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -257,13 +307,33 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Mis pedidos'), findsOneWidget);
-    expect(find.text('Reclamos'), findsOneWidget);
+    expect(find.text('Soporte'), findsOneWidget);
     expect(find.text('Promos'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Editar perfil'));
     await tester.pumpAndSettle();
     expect(find.text('DATOS PERSONALES'), findsOneWidget);
     expect(find.text('Aún no verificado'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('la dirección permite usar ubicación o marcar en mapa', (
+    tester,
+  ) async {
+    usePhoneViewport(tester, height: 2000);
+    final app = await ready();
+    addTearDown(app.dispose);
+    await app.signIn();
+
+    await tester.pumpWidget(app.wrap(const ProfileView()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('AGREGAR'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('NUEVA DIRECCIÓN'), findsOneWidget);
+    expect(find.text('MI UBICACIÓN'), findsOneWidget);
+    expect(find.text('MARCAR EN MAPA'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

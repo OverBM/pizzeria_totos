@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../core/format/money.dart';
 import '../core/storage/cart_storage.dart';
 import '../models/cart_item.dart';
+import '../models/custom_pizza.dart';
 import '../models/masa.dart';
 import '../models/product.dart';
 import '../models/product_option.dart';
@@ -24,9 +25,13 @@ class CartController extends ChangeNotifier {
 
   List<CartItem> _items = const [];
   bool _loaded = false;
+  int _feedbackId = 0;
+  String? _feedbackMessage;
 
   List<CartItem> get items => _items;
   bool get isLoaded => _loaded;
+  int get feedbackId => _feedbackId;
+  String? get feedbackMessage => _feedbackMessage;
   bool get isEmpty => _items.isEmpty;
   bool get isNotEmpty => _items.isNotEmpty;
 
@@ -42,6 +47,29 @@ class CartController extends ChangeNotifier {
 
   /// Ahorro total en soles. Alias de [discountSoles].
   double get savingsSoles => discountSoles;
+
+  /// Subtotal de productos después de promociones, antes de cupón y envío.
+  double get subtotalAfterPromotionsSoles =>
+      Money.round(subtotalSoles - discountSoles);
+
+  bool get hasCustomPizza => _items.any((item) => item.isCustomPizza);
+
+  /// Carga del horno en unidades de pizza mediana.
+  double get customPizzaWeight => _items.fold<double>(
+    0,
+    (total, item) =>
+        total + (item.customPizza?.ovenWeight ?? 0) * item.quantity,
+  );
+
+  /// Tiempo del lote más largo de pizzas personalizadas.
+  int get customPizzaBatchMinutes {
+    var minutes = 0;
+    for (final item in _items) {
+      final line = item.customPizza?.preparationMinutes ?? 0;
+      if (line > minutes) minutes = line;
+    }
+    return minutes;
+  }
 
   /// Total en soles: subtotal de lista − descuento + envío.
   double totalSoles({double shippingSoles = 0}) =>
@@ -95,6 +123,52 @@ class CartController extends ChangeNotifier {
     } else {
       _items = [..._items, candidate];
     }
+    _emitFeedback('${product.name} agregado al carrito');
+    _persist();
+  }
+
+  /// Agrega una pizza personalizada como línea propia.
+  void addCustomPizza(
+    CustomPizzaSelection selection, {
+    int quantity = 1,
+  }) {
+    final candidate = CartItem(
+      productId: 'pizza-personalizada',
+      name: 'Pizza personalizada',
+      variantLabel: selection.label.toUpperCase(),
+      unitPriceSoles: selection.unitPriceSoles,
+      quantity: quantity,
+      customPizza: selection,
+      masa: MasaType.fromValue(selection.dough.id),
+      preparationMinutes: selection.preparationMinutes,
+    );
+    final index = _items.indexWhere((item) => item.key == candidate.key);
+    if (index >= 0) {
+      final current = _items[index];
+      final next = [..._items];
+      next[index] = current.copyWith(quantity: current.quantity + quantity);
+      _items = next;
+    } else {
+      _items = [..._items, candidate];
+    }
+    _emitFeedback('Pizza personalizada agregada al carrito');
+    _persist();
+  }
+
+  /// Reemplaza una línea personalizada existente.
+  void replaceCustomPizza(
+    String key,
+    CustomPizzaSelection selection, {
+    int quantity = 1,
+  }) {
+    _items = _items.where((item) => item.key != key).toList();
+    addCustomPizza(selection, quantity: quantity);
+  }
+
+  /// Restaura una línea eliminada (deshacer).
+  void restore(CartItem item) {
+    if (_items.any((current) => current.key == item.key)) return;
+    _items = [..._items, item];
     _persist();
   }
 
@@ -145,6 +219,11 @@ class CartController extends ChangeNotifier {
   void remove(String key) {
     _items = _items.where((item) => item.key != key).toList();
     _persist();
+  }
+
+  void _emitFeedback(String message) {
+    _feedbackMessage = message;
+    _feedbackId += 1;
   }
 
   Future<void> clear() async {

@@ -358,6 +358,8 @@ class _CheckoutDeliveryViewState extends State<CheckoutDeliveryView> {
                     userPoint: _userPoint,
                     route: checkout.deliveryRoute,
                     quote: checkout.deliveryQuote,
+                    chargedFeeSoles: checkout.shippingSoles,
+                    included: checkout.subscriptionBenefitApplies,
                     quoting: checkout.isQuoting,
                     locating: _locating,
                     error: checkout.routeError,

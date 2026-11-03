@@ -77,6 +77,7 @@ class Account {
     required this.uid,
     required this.name,
     required this.email,
+    this.alias = '',
     this.phone = '',
     this.addresses = const [],
     this.createdAt,
@@ -86,6 +87,9 @@ class Account {
   final String uid;
   final String name;
   final String email;
+
+  /// Alias de acceso editable; vacío si aún no se migró.
+  final String alias;
   final String phone;
   final List<Address> addresses;
   final DateTime? createdAt;
@@ -103,6 +107,7 @@ class Account {
     uid: uid ?? ModelUtils.asString(json['uid']),
     name: ModelUtils.asString(json['nombre'] ?? json['name']),
     email: ModelUtils.asString(json['email']),
+    alias: ModelUtils.asString(json['usuario'] ?? json['alias']),
     phone: ModelUtils.asString(json['telefono'] ?? json['phone']),
     addresses: ModelUtils.asMapList(
       json['direcciones'] ?? json['addresses'],
@@ -115,6 +120,7 @@ class Account {
     'uid': uid,
     'nombre': name,
     'email': email,
+    if (alias.isNotEmpty) 'usuario': alias,
     'telefono': phone,
     'direcciones': addresses.map((a) => a.toMap()).toList(),
     if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
@@ -124,6 +130,7 @@ class Account {
   Account copyWith({
     String? name,
     String? email,
+    String? alias,
     String? phone,
     List<Address>? addresses,
     DateTime? updatedAt,
@@ -131,6 +138,7 @@ class Account {
     uid: uid,
     name: name ?? this.name,
     email: email ?? this.email,
+    alias: alias ?? this.alias,
     phone: phone ?? this.phone,
     addresses: addresses ?? this.addresses,
     createdAt: createdAt,

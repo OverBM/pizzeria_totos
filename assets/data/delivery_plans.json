@@ -1,0 +1,55 @@
+{
+  "_note": "Planes pagos de TOTO'S. El Antojo no es un plan: es la etiqueta de ausencia de suscripción y vive en configuracion/planBase. Las imágenes se suben a Drive y se referencian por driveId; dejar null mientras no existan.",
+  "plans": [
+    {
+      "id": "la-previa",
+      "nombre": "La Previa",
+      "descripcion": "30 días de envío gratis para probar la casa.",
+      "descripcionLarga": "La Previa es el plan de entrada: durante 30 días no pagas envío en tus pedidos delivery dentro de cobertura. Ideal si pides dos o tres veces al mes y quieres probar el beneficio sin compromiso largo.",
+      "precio": 14.9,
+      "dias": 30,
+      "compraMinimaEnvioGratis": 20.0,
+      "ahorroSoles": null,
+      "etiqueta": "PARA PROBAR",
+      "beneficios": [
+        "Envío gratis en delivery dentro de cobertura",
+        "Compra mínima de S/ 20.00",
+        "Sin renovación automática",
+        "Cancela cuando quieras; el beneficio dura hasta el vencimiento"
+      ],
+      "imagen": "plan-la-previa",
+      "iconoSvg": "calendar",
+      "activo": true,
+      "orden": 1
+    },
+    {
+      "id": "la-fija",
+      "nombre": "La Fija",
+      "descripcion": "90 días de envío gratis al mejor precio.",
+      "descripcionLarga": "La Fija es el plan de tres meses: pagas menos por día que con La Previa y mantienes el envío gratis en todos tus pedidos delivery dentro de cobertura. Pensada para quien ya sabe que TOTO'S es su pizza de la semana.",
+      "precio": 39.9,
+      "dias": 90,
+      "compraMinimaEnvioGratis": 15.0,
+      "ahorroSoles": 4.8,
+      "etiqueta": "MEJOR PRECIO",
+      "beneficios": [
+        "Envío gratis en delivery dentro de cobertura",
+        "Compra mínima de S/ 15.00",
+        "Ahorras S/ 4.80 frente a tres meses de La Previa",
+        "Sin renovación automática",
+        "Cancela cuando quieras; el beneficio dura hasta el vencimiento"
+      ],
+      "imagen": "plan-la-fija",
+      "iconoSvg": "sparkle",
+      "activo": true,
+      "orden": 2
+    }
+  ],
+  "planBase": {
+    "nombre": "El Antojo",
+    "descripcion": "Sin suscripción · Sin envío gratis",
+    "descripcionLarga": "El Antojo no es un plan contratable: es el estado de tu cuenta cuando no tienes una suscripción paga. Puedes seguir pidiendo toda la carta, pero el envío se cobra según la sede y la distancia.",
+    "imagen": "plan-el-antojo",
+    "iconoSvg": "base_plan"
+  }
+}

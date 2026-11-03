@@ -12,11 +12,13 @@ abstract interface class ProfileRepository {
     required String uid,
     required String name,
     required String email,
+    String alias,
   });
 
   Future<void> updateProfile({
     required String uid,
     String? name,
+    String? alias,
     String? phone,
     List<Address>? addresses,
   });

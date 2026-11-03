@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'app_services.dart';
+import '../controllers/alias_controller.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/branch_controller.dart';
 import '../controllers/cart_controller.dart';
 import '../controllers/catalog_controller.dart';
 import '../controllers/checkout_controller.dart';
 import '../controllers/claim_controller.dart';
+import '../controllers/coupon_controller.dart';
+import '../controllers/custom_pizza_controller.dart';
 import '../controllers/order_controller.dart';
 import '../controllers/promotion_controller.dart';
+import '../controllers/subscription_controller.dart';
 import '../services/connectivity_service.dart';
 import '../services/location/location_service.dart';
 import '../services/settings_service.dart';
@@ -32,6 +36,7 @@ class AppScope extends StatelessWidget {
           value: services.connectivity,
         ),
         ChangeNotifierProvider<AuthController>.value(value: services.auth),
+        ChangeNotifierProvider<AliasController>.value(value: services.alias),
         ChangeNotifierProvider<CatalogController>.value(
           value: services.catalog,
         ),
@@ -40,6 +45,15 @@ class AppScope extends StatelessWidget {
         ),
         ChangeNotifierProvider<PromotionController>.value(
           value: services.promotions,
+        ),
+        ChangeNotifierProvider<CustomPizzaController>.value(
+          value: services.customPizza,
+        ),
+        ChangeNotifierProvider<CouponController>.value(
+          value: services.coupons,
+        ),
+        ChangeNotifierProvider<SubscriptionController>.value(
+          value: services.subscriptions,
         ),
         ChangeNotifierProvider<CartController>.value(value: services.cart),
         ChangeNotifierProvider<OrderController>.value(value: services.orders),

@@ -73,15 +73,6 @@ Future<bool> addProductToCart(
     );
   }
 
-  if (!context.mounted) return true;
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(
-        content: Text('${product.name} agregado al pedido'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
   return true;
 }
 

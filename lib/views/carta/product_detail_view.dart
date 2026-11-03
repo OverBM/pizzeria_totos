@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/catalog_controller.dart';
 import '../../controllers/promotion_controller.dart';
 import '../../core/format/money.dart';
+import '../../core/motion/motion_widgets.dart';
 import '../../core/theme/brand.dart';
 import '../../widgets/widgets.dart';
 import '../../core/theme/product_family.dart';
@@ -480,14 +481,24 @@ class _ProductDetailViewState extends State<ProductDetailView> {
                           color: colors.textSecondary,
                         ).copyWith(decoration: TextDecoration.lineThrough),
                       ),
-                    Text(
-                      sellable ? Money.format(total) : 'No disponible',
-                      style: Brand.ui(
-                        18,
-                        weight: FontWeight.w700,
-                        color: colors.onBar,
+                    if (sellable)
+                      AnimatedMoney(
+                        value: total,
+                        style: Brand.ui(
+                          18,
+                          weight: FontWeight.w700,
+                          color: colors.onBar,
+                        ),
+                      )
+                    else
+                      Text(
+                        'No disponible',
+                        style: Brand.ui(
+                          18,
+                          weight: FontWeight.w700,
+                          color: colors.onBar,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../controllers/alias_controller.dart';
 import '../../controllers/auth_controller.dart';
+import '../../core/auth/alias_policy.dart';
 import '../../core/motion/motion_widgets.dart';
 import '../../core/theme/brand.dart';
 import '../../widgets/widgets.dart';
@@ -68,7 +70,7 @@ class _LoginViewState extends State<LoginView> {
                 Text(
                   widget.message ??
                       'Entra para confirmar tu pedido con tus datos guardados '
-                          'y hacer seguimiento de tus reclamos.',
+                          'y hacer seguimiento de tus casos de soporte.',
                   style: context.text.bodySm.copyWith(
                     color: colors.textSecondary,
                   ),
@@ -82,13 +84,14 @@ class _LoginViewState extends State<LoginView> {
                       TextFormField(
                         controller: _email,
                         keyboardType: TextInputType.emailAddress,
-                        autofillHints: const [AutofillHints.email],
+                        autofillHints: const [AutofillHints.username],
                         textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
-                          labelText: 'Correo electrónico',
-                          hintText: 'tucorreo@ejemplo.com',
+                          labelText: 'Alias o correo',
+                          hintText: 'tunombre o tunombre@correo.com',
+                          helperText: 'Puedes entrar solo con tu alias.',
                         ),
-                        validator: Validators.emailError,
+                        validator: AliasPolicy.validateIdentifier,
                       ),
                       const SizedBox(height: Brand.s12),
                       TextFormField(
@@ -183,10 +186,17 @@ class _LoginViewState extends State<LoginView> {
 
   Future<void> _submit() async {
     final auth = context.read<AuthController>();
+    final alias = context.read<AliasController>();
     auth.clearError();
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    final email = await alias.resolveEmail(_email.text);
+    if (!mounted) return;
+    if (email == null) {
+      auth.showError(alias.error ?? 'Alias o contraseña incorrectos.');
+      return;
+    }
     final ok = await auth.signIn(
-      email: _email.text.trim(),
+      email: email,
       password: _password.text,
     );
     if (!mounted || !ok) return;
@@ -202,9 +212,12 @@ class _LoginViewState extends State<LoginView> {
 
   Future<void> _recover() async {
     final auth = context.read<AuthController>();
+    final initial = _email.text.trim();
     final email = await showDialog<String>(
       context: context,
-      builder: (_) => _RecoveryDialog(initialEmail: _email.text.trim()),
+      builder: (_) => _RecoveryDialog(
+        initialEmail: initial.contains('@') ? initial : '',
+      ),
     );
     if (email == null || !mounted) return;
     final ok = await auth.sendPasswordReset(email);

@@ -6,6 +6,7 @@ import '../../controllers/auth_controller.dart';
 import '../../controllers/cart_controller.dart';
 import '../../controllers/checkout_controller.dart';
 import '../../core/format/money.dart';
+import '../../core/motion/motion_widgets.dart';
 import '../../core/theme/brand.dart';
 import '../../core/theme/theme_context.dart';
 import '../../models/checkout_step.dart';
@@ -13,6 +14,7 @@ import '../../models/order.dart';
 import '../../models/payment_method.dart';
 import '../../widgets/widgets.dart';
 import 'checkout_navigation.dart';
+import 'coupon_field.dart';
 import 'order_confirmation_sheet.dart';
 
 /// Paso 3 del checkout: pago, nota, resumen y confirmación.
@@ -225,6 +227,8 @@ class _CheckoutConfirmViewState extends State<CheckoutConfirmView> {
                   ),
                 ),
                 const SizedBox(height: Brand.s20),
+                const CouponField(),
+                const SizedBox(height: Brand.s20),
                 const SectionHeading(eyebrow: 'Pedido', title: 'Tu detalle'),
                 const SizedBox(height: Brand.s12),
                 for (final item in cart.items) ...[
@@ -272,13 +276,24 @@ class _CheckoutConfirmViewState extends State<CheckoutConfirmView> {
                       if (cart.discountSoles > 0)
                         _row(
                           context,
-                          'Descuento',
+                          'Promociones',
                           '- ${Money.format(cart.discountSoles)}',
+                          accent: true,
+                        ),
+                      if (checkout.couponDiscountSoles > 0)
+                        _row(
+                          context,
+                          'Cupón',
+                          '- ${Money.format(checkout.couponDiscountSoles)}',
                           accent: true,
                         ),
                       _row(
                         context,
-                        delivery ? 'Envío' : 'Recojo',
+                        checkout.subscriptionBenefitApplies
+                            ? 'Envío incluido'
+                            : delivery
+                            ? 'Envío'
+                            : 'Recojo',
                         checkout.shippingSoles == 0
                             ? 'Sin costo'
                             : Money.format(checkout.shippingSoles),
@@ -295,8 +310,8 @@ class _CheckoutConfirmViewState extends State<CheckoutConfirmView> {
                             ),
                           ),
                           const Spacer(),
-                          Text(
-                            Money.format(checkout.totalSoles),
+                          AnimatedMoney(
+                            value: checkout.totalSoles,
                             style: Brand.ui(22, weight: FontWeight.w700),
                           ),
                         ],

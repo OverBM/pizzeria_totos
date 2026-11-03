@@ -41,6 +41,7 @@ class FirestoreProfileRepository implements ProfileRepository {
     required String uid,
     required String name,
     required String email,
+    String alias = '',
   }) async {
     try {
       final reference = _doc(uid);
@@ -52,6 +53,7 @@ class FirestoreProfileRepository implements ProfileRepository {
           'uid': uid,
           'nombre': name,
           'email': email,
+          if (alias.isNotEmpty) 'usuario': alias,
           'telefono': '',
           'direcciones': <Map<String, dynamic>>[],
           'createdAt': now,
@@ -70,6 +72,7 @@ class FirestoreProfileRepository implements ProfileRepository {
   Future<void> updateProfile({
     required String uid,
     String? name,
+    String? alias,
     String? phone,
     List<Address>? addresses,
   }) async {
@@ -77,6 +80,7 @@ class FirestoreProfileRepository implements ProfileRepository {
       await _doc(uid).set(
         FirestoreMapper.toFirestore({
           'nombre': ?name,
+          'usuario': ?alias,
           'telefono': ?phone,
           if (addresses != null)
             'direcciones': addresses.map((a) => a.toMap()).toList(),

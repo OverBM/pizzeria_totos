@@ -14,9 +14,4 @@ class StorageKeys {
   /// Caché del perfil para arranques sin red.
   static const String profileCache = 'totos.profile.v2';
 
-  /// Pedidos locales de la beta anterior, en solo lectura.
-  static const String legacyOrders = 'totos.orders.v1';
-
-  /// Reclamos locales de la beta anterior, en solo lectura.
-  static const String legacyClaims = 'totos.claims.v1';
 }

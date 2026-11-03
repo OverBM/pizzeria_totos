@@ -1,10 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/auth_controller.dart';
 import '../controllers/cart_controller.dart';
 import '../controllers/catalog_controller.dart';
+import '../core/motion/motion.dart';
+import '../core/theme/brand.dart';
+import '../core/theme/theme_context.dart';
 import '../widgets/widgets.dart';
 import '../models/claim.dart';
 import '../models/product.dart';
@@ -27,19 +33,16 @@ class _AppShellState extends State<AppShell> {
   static const int _cartaTab = 1;
   static const int _promosTab = 2;
   static const int _sedesTab = 3;
-  static const int _claimsTab = 4;
+  static const int _supportTab = 4;
 
   int _index = 0;
+  int _lastFeedbackId = 0;
+  Timer? _feedbackTimer;
 
   void _goTo(int index) {
     if (_index == index) return;
     HapticFeedback.selectionClick();
     setState(() => _index = index);
-  }
-
-  void _moveBy(int delta, int maxIndex) {
-    final current = _index.clamp(0, maxIndex);
-    _goTo((current + delta).clamp(0, maxIndex));
   }
 
   void _openProduct(Product product, {String? variantLabel}) {
@@ -65,6 +68,10 @@ class _AppShellState extends State<AppShell> {
     Navigator.of(context).push(AppRoutes.orders());
   }
 
+  void _openPlans() {
+    Navigator.of(context).push(AppRoutes.subscription());
+  }
+
   void _openCart() {
     Navigator.of(context).push(
       AppRoutes.cart(
@@ -80,12 +87,107 @@ class _AppShellState extends State<AppShell> {
   }
 
   @override
+  void dispose() {
+    _feedbackTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartController>();
     final auth = context.watch<AuthController>();
-    final maxIndex = auth.isSignedIn ? _claimsTab : _sedesTab;
-    final selected = _index > maxIndex ? 0 : _index;
-    if (_index > maxIndex) {
+    if (cart.feedbackId != _lastFeedbackId) {
+      _lastFeedbackId = cart.feedbackId;
+      final message = cart.feedbackMessage;
+      if (message != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          HapticFeedback.lightImpact();
+          final messenger = ScaffoldMessenger.of(context);
+          final colors = context.colors;
+          messenger
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                duration: const Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
+                margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
+                backgroundColor: colors.bar,
+                elevation: 8,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(
+                    color: colors.action.withValues(alpha: 0.9),
+                    width: 1.2,
+                  ),
+                ),
+                content: Semantics(
+                  liveRegion: true,
+                  label: message,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        padding: const EdgeInsets.all(7),
+                        decoration: BoxDecoration(
+                          color: colors.action.withValues(alpha: 0.16),
+                          shape: BoxShape.circle,
+                        ),
+                        child: SvgPicture.asset(
+                          'assets/icons/add_to_cart.svg',
+                          colorFilter: ColorFilter.mode(
+                            colors.action,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          message,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Brand.ui(
+                            12.5,
+                            weight: FontWeight.w600,
+                            color: colors.onBar,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      TextButton(
+                        onPressed: _openCart,
+                        style: TextButton.styleFrom(
+                          foregroundColor: colors.action,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          minimumSize: const Size(0, 30),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          textStyle: Brand.ui(10, weight: FontWeight.w700),
+                        ),
+                        child: const Text('VER'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          // En algunos dispositivos con navegación accesible el SnackBar con
+          // acción no expira solo; lo cerramos nosotros para que no se quede
+          // tapando la pantalla.
+          _feedbackTimer?.cancel();
+          _feedbackTimer = Timer(const Duration(seconds: 2), () {
+            if (mounted) messenger.hideCurrentSnackBar();
+          });
+        });
+      }
+    }
+    final visibleOrder = auth.isSignedIn
+        ? const [0, _cartaTab, _promosTab, _sedesTab, _supportTab]
+        : const [0, _cartaTab, _promosTab, _sedesTab];
+    final selected = visibleOrder.contains(_index) ? _index : 0;
+    if (!visibleOrder.contains(_index)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) setState(() => _index = 0);
       });
@@ -95,16 +197,39 @@ class _AppShellState extends State<AppShell> {
       appBar: TotoTopBar(
         onWordmarkTap: () => _goTo(0),
         actions: [
-          if (auth.isSignedIn)
+          if (auth.isSignedIn) ...[
+            IconButton(
+              onPressed: _openPlans,
+              tooltip: 'Planes',
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              icon: SvgPicture.asset(
+                'assets/icons/plans/base_plan.svg',
+                width: 20,
+                height: 20,
+                colorFilter: ColorFilter.mode(
+                  context.colors.onBar,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
             IconButton(
               onPressed: _openOrders,
               tooltip: 'Mis pedidos',
-              icon: const OrdersIcon(size: 22),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              icon: const OrdersIcon(size: 20),
             ),
+          ],
           CartBadge(count: cart.count, onPressed: _openCart),
           IconButton(
             onPressed: _openProfile,
             tooltip: auth.isSignedIn ? 'Mi perfil' : 'Iniciar sesión',
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
             icon: Icon(
               auth.isSignedIn
                   ? Icons.person_rounded
@@ -117,20 +242,15 @@ class _AppShellState extends State<AppShell> {
         children: [
           const OfflineBanner(margin: EdgeInsets.fromLTRB(16, 8, 16, 0)),
           Expanded(
-            // `HeroMode` desactiva los `Hero` de las pestañas ocultas: el
-            // `IndexedStack` las mantiene montadas y, con el mismo producto en
-            // Inicio y Carta, la transición a cualquier ruta abortaba con
-            // «multiple heroes that share the same tag».
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onHorizontalDragEnd: (details) {
-                final velocity = details.primaryVelocity ?? 0;
-                if (velocity.abs() < 260) return;
-                _moveBy(velocity < 0 ? 1 : -1, maxIndex);
-              },
-              child: IndexedStack(
-                index: selected,
-                children: [
+            // `HeroMode` desactiva los `Hero` de las pestañas no visibles:
+            // con el mismo producto en Inicio y Carta, una transición a
+            // cualquier ruta abortaba con «multiple heroes that share the same
+            // tag».
+            child: _SwipeTabs(
+              index: selected,
+              order: visibleOrder,
+              onChanged: _goTo,
+              children: [
                 HeroMode(
                   enabled: selected == 0,
                   child: HomeView(
@@ -163,7 +283,7 @@ class _AppShellState extends State<AppShell> {
                   child: const BranchesView(),
                 ),
                 HeroMode(
-                  enabled: selected == _claimsTab,
+                  enabled: selected == _supportTab,
                   child: ClaimsView(
                     onOpenAuth: _openLogin,
                     onOpenClaim: (Claim claim) =>
@@ -173,7 +293,6 @@ class _AppShellState extends State<AppShell> {
               ],
             ),
           ),
-        ),
         ],
       ),
       bottomNavigationBar: TotoBottomNav(
@@ -201,16 +320,131 @@ class _AppShellState extends State<AppShell> {
             pageIndex: 3,
           ),
           if (auth.isSignedIn)
-            TotoNavItem(
-              icon: Icons.chat_bubble_outline_rounded,
-              label: 'Reclamos',
+            const TotoNavItem(
+              icon: Icons.support_agent_rounded,
+              label: 'Soporte',
               pageIndex: 4,
-              iconWidget: ClaimsTabIcon(
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
             ),
         ],
       ),
     );
+  }
+}
+
+/// Pestañas deslizables horizontalmente, con el mismo gesto y animación que
+/// un `PageView`, conservando el estado de cada destino.
+class _SwipeTabs extends StatefulWidget {
+  const _SwipeTabs({
+    required this.index,
+    required this.order,
+    required this.onChanged,
+    required this.children,
+  });
+
+  final int index;
+  final List<int> order;
+  final ValueChanged<int> onChanged;
+  final List<Widget> children;
+
+  @override
+  State<_SwipeTabs> createState() => _SwipeTabsState();
+}
+
+class _SwipeTabsState extends State<_SwipeTabs> {
+  late final PageController _controller;
+  late int _page;
+  int? _animatingTo;
+
+  int get _lastPage => widget.order.isEmpty ? 0 : widget.order.length - 1;
+
+  int _pageFor(int stackIndex) {
+    final page = widget.order.indexOf(stackIndex);
+    return page < 0 ? 0 : page.clamp(0, _lastPage);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _page = _pageFor(widget.index);
+    _controller = PageController(initialPage: _page);
+  }
+
+  @override
+  void didUpdateWidget(covariant _SwipeTabs oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final target = _pageFor(widget.index);
+    final orderChanged = oldWidget.order.length != widget.order.length;
+    if (orderChanged) {
+      _page = target;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_controller.hasClients) return;
+        if ((_controller.page ?? 0).round() != target) {
+          _controller.jumpToPage(target);
+        }
+      });
+      return;
+    }
+    if (target == _page || !_controller.hasClients) return;
+    _page = target;
+    _animatingTo = target;
+    _controller
+        .animateToPage(
+          target,
+          duration: Motion.resolve(context, Motion.base),
+          curve: Motion.standard,
+        )
+        .whenComplete(() {
+          if (mounted && _animatingTo == target) _animatingTo = null;
+        });
+  }
+
+  void _onPageChanged(int page) {
+    if (_animatingTo != null || page == _page) return;
+    setState(() => _page = page);
+    widget.onChanged(widget.order[page]);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PageView(
+      key: const ValueKey('shell-pager'),
+      controller: _controller,
+      onPageChanged: _onPageChanged,
+      physics: const ClampingScrollPhysics(),
+      children: [
+        for (final stackIndex in widget.order)
+          _KeepAlivePage(
+            key: ValueKey('shell-tab-$stackIndex'),
+            child: widget.children[stackIndex],
+          ),
+      ],
+    );
+  }
+}
+
+class _KeepAlivePage extends StatefulWidget {
+  const _KeepAlivePage({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<_KeepAlivePage> createState() => _KeepAlivePageState();
+}
+
+class _KeepAlivePageState extends State<_KeepAlivePage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }

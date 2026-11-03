@@ -42,7 +42,7 @@ class ClaimDetailView extends StatelessWidget {
                 ),
                 const SizedBox(height: Brand.s16),
                 Text(
-                  '‹ RECLAMO ›',
+                  '‹ SOPORTE ›',
                   style: Brand.ui(
                     11,
                     weight: FontWeight.w700,
@@ -99,7 +99,7 @@ class ClaimDetailView extends StatelessWidget {
                   onPressed: () => ContactLauncher.whatsapp(
                     phone: settings.whatsapp,
                     message:
-                        'Hola TOTO\'S, hago seguimiento a mi reclamo '
+                        'Hola TOTO\'S, hago seguimiento a mi caso '
                         '#${claim.code}.',
                   ),
                 ),

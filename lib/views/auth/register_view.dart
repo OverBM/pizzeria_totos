@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../controllers/alias_controller.dart';
 import '../../controllers/auth_controller.dart';
 import '../../core/motion/motion_widgets.dart';
 import '../../core/theme/brand.dart';
@@ -168,7 +169,7 @@ class _RegisterViewState extends State<RegisterView> {
                 const SizedBox(height: Brand.s16),
                 Text(
                   'Al crear tu cuenta aceptas que TOTO\'S use tus datos para '
-                  'coordinar tus pedidos y reclamos. La contraseña solo la '
+                  'coordinar tus pedidos y casos de soporte. La contraseña solo la '
                   'gestiona Firebase.',
                   textAlign: TextAlign.center,
                   style: context.text.caption.copyWith(
@@ -185,14 +186,42 @@ class _RegisterViewState extends State<RegisterView> {
 
   Future<void> _submit() async {
     final auth = context.read<AuthController>();
+    final aliases = context.read<AliasController>();
     auth.clearError();
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    final email = _email.text.trim();
     final ok = await auth.signUp(
       name: _name.text.trim(),
-      email: _email.text.trim(),
+      email: email,
       password: _password.text,
     );
     if (!mounted || !ok) return;
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted) return;
+    final uid = auth.uid;
+    if (uid.isNotEmpty) {
+      final base = aliases.suggestFromEmail(email);
+      final unique = await aliases.uniqueAlias(base);
+      final claimed = await aliases.claim(
+        uid: uid,
+        alias: unique,
+        email: email,
+      );
+      if (claimed != null) {
+        await auth.updateProfile(alias: unique);
+      } else if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                aliases.error ?? 'No se pudo asignar tu alias. Cámbialo en tu perfil.',
+              ),
+            ),
+          );
+      }
+    }
+    if (!mounted) return;
     Navigator.of(context).pop(true);
   }
 }

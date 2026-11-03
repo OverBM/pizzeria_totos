@@ -80,46 +80,14 @@ class _PromotionsViewState extends State<PromotionsView> {
       );
     }
 
-    final active = promotions.active
-        .where((promotion) {
-          final product = catalog.byId(promotion.productId);
-          if (product == null || !product.isSellable) return false;
-          return catalog.matchesFilters(
-            product,
-            price: promotion.priceFor(product),
-          );
-        })
-        .toList();
-    if (active.isEmpty) {
-      return SingleChildScrollView(
-        padding: const EdgeInsets.only(top: Brand.s24),
-        child: Column(
-          children: [
-            const CatalogFilterControls(),
-            const SizedBox(height: Brand.s16),
-            EmptyState(
-              title: catalog.hasActiveFilters
-                  ? 'Sin promociones con esos filtros'
-                  : 'Sin promociones por ahora',
-              message: catalog.hasActiveFilters
-                  ? 'Prueba con otra búsqueda o quita algún filtro.'
-                  : promotions.error ??
-                        'Estamos preparando nuevas ofertas. Mientras tanto, '
-                            'revisa toda la carta.',
-              icon: Icons.local_offer_outlined,
-              actionLabel: catalog.hasActiveFilters
-                  ? 'LIMPIAR FILTROS'
-                  : 'VER LA CARTA',
-              onAction: catalog.hasActiveFilters
-                  ? catalog.clearFilters
-                  : () {
-                      Navigator.of(context).maybePop();
-                    },
-            ),
-          ],
-        ),
+    final active = promotions.active.where((promotion) {
+      final product = catalog.byId(promotion.productId);
+      if (product == null || !product.isSellable) return false;
+      return catalog.matchesFilters(
+        product,
+        price: promotion.priceFor(product),
       );
-    }
+    }).toList();
 
     final categories = <String, String>{};
     for (final promotion in active) {
@@ -136,7 +104,11 @@ class _PromotionsViewState extends State<PromotionsView> {
             return product?.categoryId == _categoryId;
           }).toList();
 
+    // Importante: el buscador se mantiene siempre en la misma posición del
+    // `ListView`. Antes, al quedarse sin resultados, se cambiaba a otro árbol
+    // y el `TextField` perdía el foco, cerrando el teclado a media búsqueda.
     return ListView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.fromLTRB(
         Brand.s16,
         Brand.s24,
@@ -191,21 +163,44 @@ class _PromotionsViewState extends State<PromotionsView> {
           ),
         ],
         const SizedBox(height: Brand.s16),
-        for (var i = 0; i < filtered.length; i++) ...[
-          if (i > 0) const SizedBox(height: Brand.s16),
-          MotionReveal(
-            delay: Duration(milliseconds: 40 * (i.clamp(0, 6))),
-            child: _PromotionCard(
-              promotion: filtered[i],
-              product: catalog.byId(filtered[i].productId)!,
-              date: _date,
-              onTap: (variantLabel) => widget.onOpenProduct(
-                catalog.byId(filtered[i].productId)!,
-                variantLabel: variantLabel,
+        if (filtered.isEmpty)
+          EmptyState(
+            title: _categoryId != null
+                ? 'Sin promos en esta categoría'
+                : catalog.hasActiveFilters
+                ? 'Sin promociones con esos filtros'
+                : 'Sin promociones por ahora',
+            message: _categoryId != null
+                ? 'Prueba con otra categoría de la carta.'
+                : catalog.hasActiveFilters
+                ? 'Prueba con otra búsqueda o quita algún filtro.'
+                : promotions.error ??
+                      'Estamos preparando nuevas ofertas. Mientras tanto, '
+                          'revisa toda la carta.',
+            icon: Icons.local_offer_outlined,
+            actionLabel: 'LIMPIAR FILTROS',
+            onAction: catalog.hasActiveFilters
+                ? catalog.clearFilters
+                : _categoryId != null
+                ? () => setState(() => _categoryId = null)
+                : null,
+          )
+        else
+          for (var i = 0; i < filtered.length; i++) ...[
+            if (i > 0) const SizedBox(height: Brand.s16),
+            MotionReveal(
+              delay: Duration(milliseconds: 40 * (i.clamp(0, 6))),
+              child: _PromotionCard(
+                promotion: filtered[i],
+                product: catalog.byId(filtered[i].productId)!,
+                date: _date,
+                onTap: (variantLabel) => widget.onOpenProduct(
+                  catalog.byId(filtered[i].productId)!,
+                  variantLabel: variantLabel,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
       ],
     );
   }

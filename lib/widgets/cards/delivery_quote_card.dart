@@ -6,10 +6,16 @@ class DeliveryQuoteCard extends StatelessWidget {
     super.key,
     required this.quote,
     this.onRetry,
+    this.chargedFeeSoles,
+    this.included = false,
   });
 
   final DeliveryQuote quote;
   final VoidCallback? onRetry;
+
+  /// Envío efectivo; si es null se usa `quote.feeSoles`.
+  final double? chargedFeeSoles;
+  final bool included;
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +90,11 @@ class DeliveryQuoteCard extends StatelessWidget {
           _row(
             context,
             'Envío',
-            quote.feeSoles == 0 ? 'Sin costo' : Money.format(quote.feeSoles),
+            included
+                ? 'Incluido con tu plan'
+                : (chargedFeeSoles ?? quote.feeSoles) == 0
+                ? 'Sin costo'
+                : Money.format(chargedFeeSoles ?? quote.feeSoles),
             accent: true,
           ),
           if (quote.etaMinutes > 0)

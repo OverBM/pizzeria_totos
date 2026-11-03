@@ -7,6 +7,7 @@ import '../models/order.dart';
 import '../models/product.dart';
 import '../views/auth/login_view.dart';
 import '../views/auth/register_view.dart';
+import '../views/carta/custom_pizza_view.dart';
 import '../views/carta/product_detail_view.dart';
 import '../views/cart/cart_screen.dart';
 import '../views/cart/checkout_confirm_view.dart';
@@ -17,6 +18,7 @@ import '../views/claims/claims_screen.dart';
 import '../views/claims/claim_detail_view.dart';
 import '../views/profile/profile_view.dart';
 import '../views/promotions/promotions_view.dart';
+import '../views/subscription/subscription_view.dart';
 
 /// Rutas de la app, todas con la transición breve del sistema de movimiento.
 ///
@@ -33,6 +35,13 @@ class AppRoutes {
 
   static Route<T> profile<T>() =>
       MotionRoute<T>(builder: (_) => const ProfileView());
+
+  static Route<T> customPizza<T>({CartItem? initialItem}) => MotionRoute<T>(
+    builder: (_) => CustomPizzaView(initialItem: initialItem),
+  );
+
+  static Route<T> subscription<T>() =>
+      MotionRoute<T>(builder: (_) => const SubscriptionView());
 
   static Route<T> orders<T>() =>
       MotionRoute<T>(builder: (_) => const OrdersView());

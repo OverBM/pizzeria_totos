@@ -42,6 +42,7 @@ class AuthController extends ChangeNotifier {
       uid: auth.uid,
       name: profile.name.isEmpty ? auth.name : profile.name,
       email: profile.email.isEmpty ? auth.email : profile.email,
+      alias: profile.alias,
       phone: profile.phone,
       addresses: profile.addresses,
       createdAt: profile.createdAt ?? auth.createdAt,
@@ -109,6 +110,7 @@ class AuthController extends ChangeNotifier {
         uid: auth.uid,
         name: auth.name,
         email: auth.email,
+        alias: auth.alias,
       );
     } on RepositoryException catch (error) {
       _error = error.message;
@@ -132,6 +134,7 @@ class AuthController extends ChangeNotifier {
       uid: account.uid,
       name: name,
       email: account.email,
+      alias: account.alias,
     );
     return account;
   });
@@ -177,6 +180,7 @@ class AuthController extends ChangeNotifier {
 
   Future<bool> updateProfile({
     String? name,
+    String? alias,
     String? phone,
     List<Address>? addresses,
   }) async {
@@ -186,6 +190,7 @@ class AuthController extends ChangeNotifier {
       await _profiles.updateProfile(
         uid: uid,
         name: name,
+        alias: alias,
         phone: phone,
         addresses: addresses,
       );
@@ -196,6 +201,7 @@ class AuthController extends ChangeNotifier {
           uid: base.uid,
           name: name ?? base.name,
           email: base.email,
+          alias: alias ?? base.alias,
           phone: phone ?? base.phone,
           addresses: addresses ?? base.addresses,
           createdAt: base.createdAt,

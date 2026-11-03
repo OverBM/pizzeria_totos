@@ -100,9 +100,9 @@ class FirebaseAuthRepository implements AuthRepository {
   String _message(FirebaseAuthException error) => switch (error.code) {
     'invalid-email' => 'El correo no tiene un formato válido.',
     'user-disabled' => 'Esta cuenta está deshabilitada.',
-    'user-not-found' => 'No existe una cuenta con ese correo.',
+    'user-not-found' ||
     'wrong-password' ||
-    'invalid-credential' => 'Correo o contraseña incorrectos.',
+    'invalid-credential' => 'Alias o credenciales incorrectos.',
     'email-already-in-use' => 'Ya existe una cuenta con ese correo.',
     'weak-password' => 'La contraseña es demasiado débil (mínimo 6).',
     'too-many-requests' =>

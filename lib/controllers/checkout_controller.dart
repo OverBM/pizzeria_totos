@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../core/format/money.dart';
+import '../core/pizza/pizza_timing.dart';
+import '../core/pricing/order_pricing.dart';
 import '../core/time/lima_time.dart';
 import '../core/validation/validators.dart';
 import '../models/account.dart';
@@ -18,6 +20,8 @@ import '../services/settings_service.dart';
 import 'auth_controller.dart';
 import 'branch_controller.dart';
 import 'cart_controller.dart';
+import 'coupon_controller.dart';
+import 'subscription_controller.dart';
 
 /// Motivo por el que no se puede confirmar el pedido.
 enum CheckoutIssue {
@@ -33,7 +37,8 @@ enum CheckoutIssue {
   noRecipientPhone,
   noDeliveryPoint,
   outOfCoverage,
-  routeUnavailable;
+  routeUnavailable,
+  couponInvalid;
 
   String get message => switch (this) {
     CheckoutIssue.emptyCart => 'Agrega al menos un producto a tu pedido.',
@@ -59,6 +64,8 @@ enum CheckoutIssue {
       'El punto está fuera del rango de delivery. Elige recojo u otra sede.',
     CheckoutIssue.routeUnavailable =>
       'No pudimos calcular la ruta. Revisa tu conexión e inténtalo de nuevo.',
+    CheckoutIssue.couponInvalid =>
+      'El cupón ya no es válido. Quítalo o corrige el carrito.',
   };
 }
 
@@ -73,6 +80,8 @@ class CheckoutController extends ChangeNotifier {
     required AuthController auth,
     required BranchController branches,
     required SettingsService settings,
+    required CouponController coupons,
+    required SubscriptionController subscriptions,
     MapsService maps = mapsService,
     DateTime Function()? now,
   }) : _orders = orders,
@@ -80,6 +89,8 @@ class CheckoutController extends ChangeNotifier {
        _auth = auth,
        _branches = branches,
        _settings = settings,
+       _coupons = coupons,
+       _subscriptions = subscriptions,
        _maps = maps,
        _now = now ?? LimaTime.now;
 
@@ -88,6 +99,8 @@ class CheckoutController extends ChangeNotifier {
   final AuthController _auth;
   final BranchController _branches;
   final SettingsService _settings;
+  final CouponController _coupons;
+  final SubscriptionController _subscriptions;
   final MapsService _maps;
 
   /// Reloj inyectable: en producción usa la hora de Lima; los tests fijan un
@@ -231,18 +244,66 @@ class CheckoutController extends ChangeNotifier {
     return _deliveryPoint?.label.trim() ?? '';
   }
 
-  double get shippingSoles {
+  double get shippingOriginalSoles {
     if (_type == OrderType.pickup) return 0;
     final quote = _deliveryQuote;
     if (quote != null) return quote.feeSoles;
     return selectedBranch?.deliveryFeeSoles ?? 0;
   }
 
+  /// Compra mínima del plan pago; 0 si no hay plan.
+  double get subscriptionMinimumSoles =>
+      _subscriptions.paidPlan?.minimumOrderSoles ?? 20;
+
+  bool get subscriptionBenefitApplies {
+    if (_type != OrderType.delivery) return false;
+    if (_subscriptions.paidSubscription == null) return false;
+    if (_deliveryQuote != null && !_deliveryQuote!.deliverable) return false;
+    if (_deliveryPoint == null) return false;
+    return _cart.subtotalAfterPromotionsSoles >= subscriptionMinimumSoles;
+  }
+
+  double get shippingSoles =>
+      subscriptionBenefitApplies ? 0 : shippingOriginalSoles;
+
   double get subtotalSoles => _cart.subtotalSoles;
+  double get promotionDiscountSoles => _cart.discountSoles;
   double get discountSoles => _cart.discountSoles;
   double get savingsSoles => _cart.savingsSoles;
-  double get totalSoles => _cart.totalSoles(shippingSoles: shippingSoles);
+  double get couponDiscountSoles =>
+      _coupons.discountFor(_cart.subtotalAfterPromotionsSoles);
+
+  OrderPricing get pricing => OrderPricing.calculate(
+    subtotalSoles: subtotalSoles,
+    promotionDiscountSoles: promotionDiscountSoles,
+    couponDiscountSoles: couponDiscountSoles,
+    shippingOriginalSoles: shippingOriginalSoles,
+    shippingCovered: subscriptionBenefitApplies,
+  );
+
+  double get totalSoles => pricing.totalSoles;
   List<CartItem> get items => _cart.items;
+
+  /// Minutos de preparación del pedido, con capacidad por sede.
+  int get preparationMinutes {
+    if (!_cart.hasCustomPizza) {
+      return _settings.settings.delivery.preparationMinutes;
+    }
+    final branch = selectedBranch;
+    return PizzaTiming.preparationMinutes(
+      batchMinutes: _cart.items
+          .where((item) => item.isCustomPizza)
+          .map((item) => item.preparationMinutes)
+          .toList(),
+      ovenWeight: _cart.customPizzaWeight,
+      ovenCapacity: branch?.ovenCapacity ?? 4,
+      recoveryMinutes: branch?.recoveryMinutes ?? 0,
+      baseMinutes: _settings.settings.delivery.preparationMinutes,
+      measured: branch?.hasOvenMeasurement ?? false,
+    );
+  }
+
+  int? get effectiveEtaMinutes => _deliveryQuote?.etaMinutes;
 
   double? get deliveryDistanceKm => _deliveryQuote?.distanceKm;
   String get deliveryBandLabel => _deliveryQuote?.bandLabel ?? '';
@@ -450,6 +511,21 @@ class CheckoutController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> applyCoupon(String code) async {
+    final ok = await _coupons.apply(
+      code: code,
+      baseSoles: _cart.subtotalAfterPromotionsSoles,
+      uid: _auth.uid.isEmpty ? null : _auth.uid,
+    );
+    notifyListeners();
+    return ok;
+  }
+
+  void removeCoupon() {
+    _coupons.clear();
+    notifyListeners();
+  }
+
   void setNote(String note) {
     _note = note;
   }
@@ -508,6 +584,7 @@ class CheckoutController extends ChangeNotifier {
     _deliveryQuote = _settings.settings.delivery.quoteForKm(
       route.distanceKm,
       routeMinutes: route.durationMinutes,
+      preparationMinutesOverride: preparationMinutes,
     );
     _quoting = false;
     notifyListeners();
@@ -575,6 +652,10 @@ class CheckoutController extends ChangeNotifier {
     if (!_auth.isSignedIn) issues.add(CheckoutIssue.noSession);
     if (contactPhone.trim().isEmpty) issues.add(CheckoutIssue.noPhone);
     if (paymentMethods.isEmpty) issues.add(CheckoutIssue.noPaymentMethod);
+    if (_coupons.hasCoupon &&
+        _coupons.validate(_cart.subtotalAfterPromotionsSoles) != null) {
+      issues.add(CheckoutIssue.couponInvalid);
+    }
     return issues;
   }
 
@@ -624,8 +705,18 @@ class CheckoutController extends ChangeNotifier {
         items: List.unmodifiable(_cart.items),
         subtotalSoles: subtotalSoles,
         shippingSoles: shippingSoles,
-        discountSoles: discountSoles,
+        discountSoles: Money.sum([promotionDiscountSoles, couponDiscountSoles]),
+        savingsSoles: promotionDiscountSoles,
         totalSoles: totalSoles,
+        couponCode: _coupons.applied?.coupon.code,
+        promotionDiscountSoles: promotionDiscountSoles,
+        couponDiscountSoles: couponDiscountSoles,
+        shippingOriginalSoles: shippingOriginalSoles,
+        subscriptionApplied: subscriptionBenefitApplies,
+        subscriptionPlanId: subscriptionBenefitApplies
+            ? _subscriptions.paidSubscription?.planId
+            : null,
+        preparationMinutes: preparationMinutes,
         customerName: account.name,
         phone: contactPhone,
         paymentMethodId: payment.id,
@@ -633,7 +724,6 @@ class CheckoutController extends ChangeNotifier {
         address: _type == OrderType.delivery ? deliveryAddressLabel : null,
         reference: _type == OrderType.delivery ? address?.reference : null,
         note: _note.trim().isEmpty ? null : _note.trim(),
-        savingsSoles: savingsSoles,
         paraOtraPersona: _recipientMode == OrderRecipientMode.other,
         receptorNombre: effectiveRecipientName.isEmpty
             ? null
@@ -650,9 +740,16 @@ class CheckoutController extends ChangeNotifier {
         etaMinutos: quote?.etaMinutes,
         envioEstimado: quote?.isEstimated ?? false,
       );
-      final id = await _orders.createOrder(order);
+      final appliedCoupon = _coupons.applied;
+      final id = await _orders.createOrder(
+        order,
+        couponCode: appliedCoupon?.coupon.code,
+        couponUid: appliedCoupon == null ? null : account.uid,
+        registerShipment: subscriptionBenefitApplies,
+      );
       final saved = Order.fromMap({...order.toMap(), 'id': id}, id: id);
       await _cart.clear();
+      _coupons.clear();
       _lastOrder = saved;
       _resetDraft(keepLastOrder: true);
       return saved;
@@ -688,6 +785,7 @@ class CheckoutController extends ChangeNotifier {
     _addressError = null;
     _resolvingAddress = false;
     _geocodeRequestedFor = null;
+    _coupons.clear();
     if (!keepLastOrder) _lastOrder = null;
     initDefaults();
   }

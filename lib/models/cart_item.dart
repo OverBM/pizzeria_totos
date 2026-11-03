@@ -1,4 +1,5 @@
 import '../core/format/money.dart';
+import 'custom_pizza.dart';
 import 'masa.dart';
 import 'model_utils.dart';
 import 'product_option.dart';
@@ -16,6 +17,8 @@ class CartItem {
     this.masa,
     this.extras = const [],
     this.componentes = const [],
+    this.customPizza,
+    this.preparationMinutes = 0,
   });
 
   final String productId;
@@ -41,6 +44,14 @@ class CartItem {
   /// Componentes elegidos de un combo.
   final List<SelectedComponent> componentes;
 
+  /// Pizza personalizada, si esta línea no viene del catálogo.
+  final CustomPizzaSelection? customPizza;
+
+  /// Minutos de preparación del lote de esta línea.
+  final int preparationMinutes;
+
+  bool get isCustomPizza => customPizza != null;
+
   /// Suma de extras por unidad.
   double get extrasSoles =>
       Money.sum(extras.map((extra) => extra.precioSoles));
@@ -55,6 +66,7 @@ class CartItem {
         'extras=${extras.map((e) => e.nombre).join(',')}',
       if (componentes.isNotEmpty)
         'componentes=${componentes.map((c) => '${c.nombre}:${c.opcion ?? ''}').join(',')}',
+      if (customPizza != null) 'custom=${customPizza!.signature}',
     ];
     return parts.isEmpty ? base : '$base|${parts.join('|')}';
   }
@@ -97,6 +109,8 @@ class CartItem {
     masa: masa ?? this.masa,
     extras: extras ?? this.extras,
     componentes: componentes ?? this.componentes,
+    customPizza: customPizza,
+    preparationMinutes: preparationMinutes,
   );
 
   factory CartItem.fromMap(Map<String, dynamic> json) => CartItem(
@@ -126,6 +140,14 @@ class CartItem {
     componentes: ModelUtils.asMapList(json['componentes'] ?? json['components'])
         .map(SelectedComponent.fromMap)
         .toList(),
+    customPizza: json['customPizza'] is Map
+        ? CustomPizzaSelection.fromMap(
+            Map<String, dynamic>.from(json['customPizza'] as Map),
+          )
+        : null,
+    preparationMinutes: ModelUtils.asInt(
+      json['preparationMinutes'] ?? json['minutosPreparacion'],
+    ),
   );
 
   Map<String, dynamic> toMap() => {
@@ -141,5 +163,7 @@ class CartItem {
     if (extras.isNotEmpty) 'extras': extras.map((e) => e.toMap()).toList(),
     if (componentes.isNotEmpty)
       'componentes': componentes.map((c) => c.toMap()).toList(),
+    if (customPizza != null) 'customPizza': customPizza!.toMap(),
+    if (preparationMinutes > 0) 'preparationMinutes': preparationMinutes,
   };
 }

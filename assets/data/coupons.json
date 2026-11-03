@@ -1,0 +1,41 @@
+{
+  "_note": "Cupones de beta. `maxUsos` es global y cada usuario tiene una sola redención. `compraMinima` se evalúa sobre el subtotal después de promociones. `estado` activo/inactivo.",
+  "coupons": [
+    {
+      "id": "BIENVENIDA10",
+      "codigo": "BIENVENIDA10",
+      "descripcion": "10% de descuento en tu primer pedido",
+      "tipo": "porcentaje",
+      "valor": 10,
+      "compraMinima": 40,
+      "maxUsos": 100,
+      "usos": 0,
+      "fechaVencimiento": "2027-12-31T23:59:00",
+      "estado": "activo"
+    },
+    {
+      "id": "PIZZA5",
+      "codigo": "PIZZA5",
+      "descripcion": "S/ 5.00 de descuento en pedidos desde S/ 40.00",
+      "tipo": "monto_fijo",
+      "valor": 5,
+      "compraMinima": 40,
+      "maxUsos": 200,
+      "usos": 0,
+      "fechaVencimiento": "2027-12-31T23:59:00",
+      "estado": "activo"
+    },
+    {
+      "id": "TOTOS15",
+      "codigo": "TOTOS15",
+      "descripcion": "15% para pedidos desde S/ 60.00",
+      "tipo": "porcentaje",
+      "valor": 15,
+      "compraMinima": 60,
+      "maxUsos": 50,
+      "usos": 0,
+      "fechaVencimiento": "2027-12-31T23:59:00",
+      "estado": "activo"
+    }
+  ]
+}

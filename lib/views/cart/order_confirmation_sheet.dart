@@ -71,16 +71,23 @@ class OrderConfirmationSheet extends StatelessWidget {
             ),
             const SizedBox(height: Brand.s16),
             _row(context, 'Subtotal', Money.format(order.subtotalSoles)),
-            if (order.discountSoles > 0)
+            if (order.effectivePromotionDiscountSoles > 0)
               _row(
                 context,
-                'Descuento',
-                '- ${Money.format(order.discountSoles)}',
+                'Promociones',
+                '- ${Money.format(order.effectivePromotionDiscountSoles)}',
+                accent: true,
+              ),
+            if (order.couponDiscountSoles > 0)
+              _row(
+                context,
+                'Cupón ${order.couponCode ?? ''}',
+                '- ${Money.format(order.couponDiscountSoles)}',
                 accent: true,
               ),
             _row(
               context,
-              'Envío',
+              order.subscriptionApplied ? 'Envío incluido' : 'Envío',
               order.shippingSoles == 0
                   ? 'Sin costo'
                   : Money.format(order.shippingSoles),
