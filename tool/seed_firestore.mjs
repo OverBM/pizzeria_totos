@@ -733,7 +733,7 @@ async function main() {
     if (emulator) {
       log(`Emulador de Firestore: ${emulator}`);
       appOptions = {
-        projectId: process.env.FIREBASE_PROJECT_ID || 'totospizza-3efbe',
+        projectId: process.env.FIREBASE_PROJECT_ID || 'pizzeria-totos',
       };
     } else {
       const credentials = resolveCredentials(args);
@@ -749,7 +749,7 @@ async function main() {
         projectId:
           process.env.FIREBASE_PROJECT_ID ||
           credentials.json.project_id ||
-          'totospizza-3efbe',
+          'pizzeria-totos',
       };
       log(`Clave de servicio: ${credentials.path}`);
     }

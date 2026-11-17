@@ -106,10 +106,13 @@ docs/firebase-setup.md
 .agents/
 .opencode/
 .freebuff/
+# Instrucciones locales para agentes: contienen contexto interno del proyecto.
+AGENTS.md
 
 # ── Logs y temporales ────────────────────────────────────────────────────────
 *.log
 *.tmp
+/.tmp/
 
 # Entregables locales (APK/ZIP)
 /dist/
